@@ -1,0 +1,25 @@
+---
+Checks: 'clang-diagnostic-*,clang-analyzer-*,performance-*,modernize-*,readability-*,bugprone-*,-bugprone-easily-swappable-parameters,-bugprone-narrowing-conversions,-modernize-avoid-c-arrays,-readability-magic-numbers,-modernize-use-trailing-return-type,-readability-uppercase-literal-suffix,-readability-qualified-auto,-readability-function-cognitive-complexity,-bugprone-implicit-widening-of-multiplication-result,-modernize-use-default-member-init,-clang-analyzer-optin.portability.UnixAPI,-clang-analyzer-optin.cplusplus.UninitializedObject,-readability-identifier-length'
+WarningsAsErrors: ''
+HeaderFilterRegex: 'oqmc'
+FormatStyle: file
+CheckOptions:
+  - key:   readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key:   readability-identifier-naming.StructCase
+    value: CamelCase
+  - key:   readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key:   readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key:   readability-identifier-naming.VariableCase
+    value: camelBack
+  - key:   readability-identifier-naming.MethodCase
+    value: camelBack
+  - key:   readability-identifier-naming.MemberCase
+    value: camelBack
+  - key:   readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key:   readability-identifier-naming.GlobalConstantCase
+    value: camelBack
+...

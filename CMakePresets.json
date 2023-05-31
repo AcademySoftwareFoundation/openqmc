@@ -1,0 +1,44 @@
+{
+	"version": 3,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 21,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "base",
+			"binaryDir": "${sourceDir}/build"
+		},
+		{
+			"name": "unix",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -Wpedantic -Wno-unknown-pragmas",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"OPENQMC_BUILD_TOOLS": "ON",
+				"OPENQMC_BUILD_TESTING": "ON"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "base",
+			"configurePreset": "base",
+			"targets": "install"
+		},
+		{
+			"name": "unix",
+			"configurePreset": "unix"
+		}
+	],
+	"testPresets": [
+		{
+			"name": "unix",
+			"configurePreset": "base",
+			"output": {"outputOnFailure": true},
+			"execution": {"noTestsAction": "error", "stopOnFailure": true}
+		}
+	]
+}

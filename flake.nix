@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the OpenQMC Project.
+
+{
+  description = "Quasi-Monte Carlo sampling library for rendering and graphics applications";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs";
+    flake-utils.url = "github:numtide/flake-utils";
+    hypothesis.url = "github:joshbainbridge/hypothesis";
+  };
+
+  outputs = { self, nixpkgs, flake-utils, hypothesis }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let pkgs = nixpkgs.legacyPackages.${system}; in {
+        packages.default = pkgs.stdenv.mkDerivation {
+          name = "openqmc";
+          src = self;
+          buildInputs = [
+            pkgs.cmake
+          ];
+        };
+        devShells.default = pkgs.mkShell {
+          name = "devshell";
+          packages = [
+            pkgs.cmakeCurses
+            pkgs.ninja
+            pkgs.just
+            pkgs.glm
+            pkgs.gtest
+            pkgs.tbb_2021_8
+            pkgs.python310Packages.jupyter
+            pkgs.python310Packages.matplotlib
+            pkgs.python310Packages.numpy
+            pkgs.python310Packages.pillow
+            hypothesis.packages.${system}.default
+          ];
+          inputsFrom = [
+            self.packages.${system}.default
+          ];
+          shellHook = ''
+            export TOOLSPATH=$PWD/build/src/tools/lib
+            export PYTHONPATH=$PYTHONPATH:$PWD/python
+          '';
+        };
+      }
+    );
+}

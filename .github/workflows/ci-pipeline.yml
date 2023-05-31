@@ -1,0 +1,160 @@
+name: ci
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: scripts/check-format.sh
+
+  check-static-analyzer:
+    name: Check static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with: {submodules: true}
+      - run: cmake --preset unix
+      - run: sudo apt-get update && sudo apt-get install clang-tidy-11
+      - run: sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 50
+      - run: scripts/check-lint.sh
+
+  install:
+    name: Install library
+    needs:
+      - check-formatting
+      - check-static-analyzer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
+      - run: cmake --build --preset base
+      - uses: actions/upload-artifact@v2
+        with: {name: install, path: "install"}
+
+  example-config:
+    name: Check config
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v2
+        with: {name: install, path: "install"}
+      - run: cmake -S cmake/examples/config -B build -D CMAKE_INSTALL_PREFIX=install
+      - run: cmake --build build
+      - run: ./build/example-config
+
+  example-submodule:
+    name: Check submodule
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cmake -S cmake/examples/submodule -B build
+      - run: cmake --build build
+      - run: ./build/example-submodule
+
+  example-include:
+    name: Check include
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cmake -S cmake/examples/include -B build
+      - run: cmake --build build
+      - run: ./build/example-include
+
+  test-unit:
+    name: Run unit tests
+    needs:
+      - example-config
+      - example-submodule
+      - example-include
+    strategy:
+      matrix:
+        build: [Release, Debug]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with: {submodules: true}
+      - run: cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
+      - run: cmake --build --preset unix --target tests
+      - run: ctest --preset unix
+
+  build-tools:
+    name: Build tools library
+    needs: test-unit
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, self-hosted]
+        arch: [Scalar, SSE, AVX, ARM, GPU]
+        build: [Release, Debug]
+        exclude:
+          - {os: ubuntu-latest, arch: ARM}
+          - {os: ubuntu-latest, arch: GPU}
+          - {os: macos-latest, arch: AVX}
+          - {os: macos-latest, arch: ARM}
+          - {os: macos-latest, arch: GPU}
+          - {os: self-hosted, arch: Scalar}
+          - {os: self-hosted, arch: SSE}
+          - {os: self-hosted, arch: AVX}
+        include:
+          - {os: ubuntu-latest, save: true}
+          - {os: self-hosted, save: true}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with: {submodules: true}
+      - run: cmake --preset unix -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
+      - run: cmake --build --preset unix
+      - if: ${{ matrix.save }}
+        run: tar -czvf build.tar build
+      - if: ${{ matrix.save }}
+        uses: actions/upload-artifact@v2
+        with: {name: "${{ matrix.build }}-${{ matrix.arch }}", path: build.tar}
+
+  pre-test-generate:
+    name: Pre generate reference data
+    needs: build-tools
+    strategy:
+      matrix:
+        sampler: [pmj, sobol, lattice]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with: {name: Release-Scalar}
+      - run: tar -xzvf build.tar
+      - run: ./build/src/tools/cli/generate ${{ matrix.sampler }} > data
+      - uses: actions/upload-artifact@v2
+        with: {name: "${{ matrix.sampler }}", path: data}
+
+  test-generate:
+    name: Run generate
+    needs: pre-test-generate
+    strategy:
+      matrix:
+        os: [ubuntu-latest, self-hosted]
+        arch: [Scalar, SSE, AVX, ARM, GPU]
+        build: [Release, Debug]
+        sampler: [pmj, sobol, lattice]
+        exclude:
+          - {os: ubuntu-latest, arch: ARM}
+          - {os: ubuntu-latest, arch: GPU}
+          - {os: self-hosted, arch: Scalar}
+          - {os: self-hosted, arch: SSE}
+          - {os: self-hosted, arch: AVX}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@v2
+        with: {name: "${{ matrix.build }}-${{ matrix.arch }}"}
+      - run: tar -xzvf build.tar
+      - uses: actions/download-artifact@v2
+        with: {name: "${{ matrix.sampler }}"}
+      - run: ./build/src/tools/cli/generate ${{ matrix.sampler }} > output
+      - run: diff output data

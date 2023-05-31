@@ -1,0 +1,9 @@
+# Please 'git config commit.template .gitmessage' to set this template.
+# 50-character subject line (no full stop)--------|
+*
+
+# 72-character wrapped longer description on why (with full stop)-------|
+*
+
+# 72-character wrapped longer description on how (with full stop)-------|
+*
