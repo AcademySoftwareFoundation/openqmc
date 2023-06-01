@@ -550,9 +550,9 @@ they relate to one another. You can see that for each implementation there is
 also a blue noise variant. More on this below.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/implementation-diagram-light.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/implementation-diagram-dark.png">
-  <img alt="High level implementation diagram." src="./images/diagrams/implementation-diagram-light.png">
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/high-level-overview-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/high-level-overview-dark.png">
+  <img alt="High level implementation diagram." src="./images/diagrams/high-level-overview-light.png">
 </picture>
 
 ### Rate of convergence
@@ -655,6 +655,12 @@ Sobol implementation. However as the sequence doesn't extend to more than two
 dimensions, the second pair is randomised relative to the first in a single
 domain.
 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/pmj-design-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/pmj-design-dark.png">
+  <img alt="Pmj pair plot." src="./images/diagrams/pmj-design-light.png">
+</picture>
+
 This sampler pre-computes a base 4D pattern for all sample indices during the
 cache initialisation. Permuted index values are then looked up from memory at
 runtime, before being XOR scrambled. This amortises the cost of initialisation.
@@ -676,6 +682,12 @@ limiting the index to 16 bits, pre-inverting the input and output matrices, and
 making use of CPU vector intrinsics. You need to select an `OPENQMC_ARCH_TYPE`
 to make use of the performance from vector intrinsics for a given architecture.
 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/sobol-design-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/sobol-design-dark.png">
+  <img alt="sobol pair plot." src="./images/diagrams/sobol-design-light.png">
+</picture>
+
 This sampler has no cache initialisation cost, it generates all samples on the
 fly without touching memory. However the cost per draw sample call is
 computationally higher than other samplers. The quality of Owen scramble
@@ -695,6 +707,12 @@ construct a 4D lattice. This is then made into a progressive sequence using
 a scalar based on a radical inversion of the sample index. Randomisation uses
 toroidal shifts.
 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/lattice-design-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/lattice-design-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/lattice-design-light.png">
+</picture>
+
 This sampler has no cache initialisation cost, it generates all samples on the
 fly without touching memory. Runtime performance is also high with a relatively
 low computation cost for a single draw sample call. However the rate of
@@ -713,11 +731,23 @@ pixels, with progressive ranking for progressive pixel sampling. This involves
 an offline optimisation process that's based on the work by Belcour and Heitz
 [^4], and extends temporally as described by Wolfe et al. [^5].
 
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/optimise-index-seed-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/optimise-index-seed-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/optimise-index-seed-light.png">
+</picture>
+
 Each variant achieves a blue noise distribution using two pixel tables, one
 holds keys to seed the sequence, and the other index ranks. These tables are
 then randomised by toroidally shifting the table lookups for each domain using
 random offsets. Correlation between the offsets and the pixels allows for a
 single pair of tables to provide keys and ranks for many domains.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/blue-noise-procedure-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/blue-noise-procedure-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/blue-noise-procedure-light.png">
+</picture>
 
 Although the spatial temporal blue noise doesn't reduce the error for an
 individual pixel, it does give a better perceptual result due to less low
