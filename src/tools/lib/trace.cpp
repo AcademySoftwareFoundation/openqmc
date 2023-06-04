@@ -183,7 +183,7 @@ struct Camera
 
 	template <typename Sampler>
 	OQMC_HOST_DEVICE Ray generateRay(int x, int y, int xSize, int ySize,
-	                                 Sampler sampler) const;
+	                                 Sampler cameraDomain) const;
 
 	OQMC_HOST_DEVICE glm::vec3 filmExposure(glm::vec3 radiance) const;
 };
@@ -193,7 +193,7 @@ struct Camera
 // et. al.
 template <typename Sampler>
 Ray Camera::generateRay(int x, int y, int xSize, int ySize,
-                        Sampler sampler) const
+                        Sampler cameraDomain) const
 {
 	const auto sampleTent = [](float radius, float u) {
 		const auto sampleLinear = [](float u) { return 1 - std::sqrt(u); };
@@ -234,6 +234,12 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 		return glm::vec3{r * std::cos(phi), r * std::sin(phi), 0};
 	};
 
+	enum Domains
+	{
+		Raster,
+		LensTime,
+	};
+
 	y = ySize - y - 1;
 	x = xSize - x - 1;
 
@@ -241,12 +247,14 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 	pixelCentre.x = x + 0.5f - (xSize / 2.0f);
 	pixelCentre.y = y + 0.5f - (ySize / 2.0f);
 
-	float rnd[2];
-	sampler.template drawSample<2>(rnd);
+	const auto rasterDomain = cameraDomain.newDomain(Domains::Raster);
+
+	float rasterSamples[2];
+	rasterDomain.template drawSample<2>(rasterSamples);
 
 	glm::vec2 filterSample;
-	filterSample.x = sampleTent(filterWidth, rnd[0]);
-	filterSample.y = sampleTent(filterWidth, rnd[1]);
+	filterSample.x = sampleTent(filterWidth, rasterSamples[0]);
+	filterSample.y = sampleTent(filterWidth, rasterSamples[1]);
 
 	const auto norm = filmSize / ySize;
 
@@ -260,27 +268,26 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 	focalDir.y = filmPoint.y / filmPoint.z;
 	focalDir.z = 1;
 
-	sampler = sampler.newDomain(0);
-	sampler.template drawSample<2>(rnd);
+	const auto lensTimeDomain = cameraDomain.newDomain(Domains::LensTime);
+
+	float lensTimeSamples[3];
+	lensTimeDomain.template drawSample<3>(lensTimeSamples);
 
 	const auto apertureWidth = focalLength / fStop;
 	const auto apertureRadius = apertureWidth / 2;
 
 	const auto focalPoint = focalDir * focalDistance;
-	const auto lensSample = sampleDisk(apertureRadius, rnd);
+	const auto lensSample = sampleDisk(apertureRadius, lensTimeSamples);
 	const auto lensDir = glm::normalize(focalPoint - lensSample);
 
 	const auto w = glm::normalize(dir);
 	const auto u = glm::normalize(glm::cross(up, w));
 	const auto v = glm::cross(w, u);
 
-	sampler = sampler.newDomain(0);
-	sampler.template drawSample<1>(rnd);
-
 	Ray ret;
 	ret.origin = pos + u * lensSample.x + v * lensSample.y;
 	ret.dir = u * lensDir.x + v * lensDir.y + w * lensDir.z;
-	ret.time = rnd[0];
+	ret.time = lensTimeSamples[2];
 
 	return ret;
 }
@@ -320,7 +327,7 @@ struct Material
 
 	template <typename Sampler>
 	OQMC_HOST_DEVICE Sample sample(const Interaction& event, const Ray& ray,
-	                               Sampler sampler) const;
+	                               Sampler materialDomain) const;
 
 	OQMC_HOST_DEVICE bool doDirectLighting() const;
 };
@@ -330,8 +337,8 @@ struct Material
 // an orthonormal basis. The hemisphere sampling is based on 'Sampling
 // Transformations Zoo' by Peter Shirley, et. al.
 template <typename Sampler>
-OQMC_HOST_DEVICE Material::Sample diffuseSample(const Interaction& event,
-                                                const Ray& ray, Sampler sampler)
+OQMC_HOST_DEVICE Material::Sample
+diffuseSample(const Interaction& event, const Ray& ray, Sampler materialDomain)
 {
 	OQMC_MAYBE_UNUSED(ray);
 
@@ -363,17 +370,19 @@ OQMC_HOST_DEVICE Material::Sample diffuseSample(const Interaction& event,
 		return dir;
 	};
 
-	float rnd[2];
-	sampler.template drawSample<2>(rnd);
+	float materialSamples[2];
+	materialDomain.template drawSample<2>(materialSamples);
 
-	return {glm::vec3(1), sampleCosineWeightedHemisphere(rnd), true};
+	return {glm::vec3(1), sampleCosineWeightedHemisphere(materialSamples),
+	        true};
 }
 
 template <typename Sampler>
-OQMC_HOST_DEVICE Material::Sample
-conductorSample(const Interaction& event, const Ray& ray, Sampler sampler)
+OQMC_HOST_DEVICE Material::Sample conductorSample(const Interaction& event,
+                                                  const Ray& ray,
+                                                  Sampler materialDomain)
 {
-	OQMC_MAYBE_UNUSED(sampler);
+	OQMC_MAYBE_UNUSED(materialDomain);
 
 	return {glm::vec3(1), glm::reflect(ray.dir, event.normal), true};
 }
@@ -381,8 +390,9 @@ conductorSample(const Interaction& event, const Ray& ray, Sampler sampler)
 // Dieletric sampling uses a Fresnel Schlick approximation based on the blog
 // post 'Memo on Fresnel equations' by Sébastien Lagarde.
 template <typename Sampler>
-OQMC_HOST_DEVICE Material::Sample
-dielectricSample(const Interaction& event, const Ray& ray, Sampler sampler)
+OQMC_HOST_DEVICE Material::Sample dielectricSample(const Interaction& event,
+                                                   const Ray& ray,
+                                                   Sampler materialDomain)
 {
 	float etaA = 1.0f;
 	float etaB = 1.5f;
@@ -420,10 +430,10 @@ dielectricSample(const Interaction& event, const Ray& ray, Sampler sampler)
 	const float fresnel = schlickFresnel(etaA, etaB, cosine);
 	const float prob = 0.25f + 0.5f * fresnel;
 
-	float rnd;
-	sampler.template drawSample<1>(&rnd);
+	float materialSamples[1];
+	materialDomain.template drawSample<1>(materialSamples);
 
-	if(rnd < prob)
+	if(materialSamples[0] < prob)
 	{
 		return {glm::vec3(fresnel / prob), rdir, true};
 	}
@@ -433,7 +443,7 @@ dielectricSample(const Interaction& event, const Ray& ray, Sampler sampler)
 
 template <typename Sampler>
 Material::Sample Material::sample(const Interaction& event, const Ray& ray,
-                                  Sampler sampler) const
+                                  Sampler materialDomain) const
 {
 	auto sample = Material::Sample{
 	    /*evaluation*/ {0, 0, 0},
@@ -443,19 +453,19 @@ Material::Sample Material::sample(const Interaction& event, const Ray& ray,
 
 	if(type == Material::ScatterType::Diffuse)
 	{
-		sample = diffuseSample(event, ray, sampler);
+		sample = diffuseSample(event, ray, materialDomain);
 		sample.evaluation *= colour;
 	}
 
 	if(type == Material::ScatterType::Conductor)
 	{
-		sample = conductorSample(event, ray, sampler);
+		sample = conductorSample(event, ray, materialDomain);
 		sample.evaluation *= colour;
 	}
 
 	if(type == Material::ScatterType::Dielectric)
 	{
-		sample = dielectricSample(event, ray, sampler);
+		sample = dielectricSample(event, ray, materialDomain);
 		sample.evaluation *= colour;
 	}
 
@@ -698,8 +708,8 @@ void Session::release() const
 // Russian roulette is based on the method descsribed in 'Robust Monte Carlo
 // Methods for Light Transport Simulation' by Eric Veach.
 template <typename Sampler>
-OQMC_HOST_DEVICE bool russianRoulette(glm::vec3 throughput, Sampler sampler,
-                                      float& weight)
+OQMC_HOST_DEVICE bool russianRoulette(glm::vec3 throughput,
+                                      Sampler rouletteDomain, float& weight)
 {
 	constexpr auto threshold = 0.05f;
 	constexpr auto lowProb = 1e-2f;
@@ -711,10 +721,10 @@ OQMC_HOST_DEVICE bool russianRoulette(glm::vec3 throughput, Sampler sampler,
 	const float prob =
 	    std::fmin(std::fmax(maxCoeff / threshold, lowProb), 1.0f);
 
-	float rnd;
-	sampler.template drawSample<1>(&rnd);
+	float rouletteSamples[1];
+	rouletteDomain.template drawSample<1>(rouletteSamples);
 
-	if(rnd > prob)
+	if(rouletteSamples[0] > prob)
 	{
 		return false;
 	}
@@ -762,29 +772,34 @@ OQMC_HOST_DEVICE bool intersect(const Session& session, const Ray& ray,
 }
 
 template <typename Sampler>
-OQMC_HOST_DEVICE bool intersectOpacityCheck(const Session& session,
-                                            int maxOpacity, Ray ray,
-                                            Sampler sampler, Interaction& event)
+OQMC_HOST_DEVICE bool
+intersectOpacityCheck(const Session& session, int maxOpacity, Ray ray,
+                      Sampler opacityDomain, Interaction& event)
 {
 	for(int i = 0; i < maxOpacity; ++i)
 	{
+		enum Domains
+		{
+			Next,
+		};
+
 		if(!intersect(session, ray, event))
 		{
 			break;
 		}
 
-		float rnd;
-		sampler.template drawSample<1>(&rnd);
+		float opacitySamples[1];
+		opacityDomain.template drawSample<1>(opacitySamples);
 
 		const auto& material = session.materials[event.prim.materialId];
 
-		if(rnd < material.presence)
+		if(opacitySamples[0] < material.presence)
 		{
 			return true;
 		}
 
 		ray = Ray(event.pos, ray.dir, ray.time, event.normal);
-		sampler = sampler.newDomain(0);
+		opacityDomain = opacityDomain.newDomain(Domains::Next);
 	}
 
 	return false;
@@ -794,32 +809,40 @@ template <typename Sampler>
 OQMC_HOST_DEVICE glm::vec3
 directLighting(const Session& session, int numLightSamples, int maxOpacity,
                const Ray& pathRay, const Interaction& pathEvent,
-               Sampler sampler)
+               Sampler directDomain)
 {
 	glm::vec3 direct = glm::vec3();
 	for(int i = 0; i < session.numLights; ++i)
 	{
 		const auto& light = session.lights[i];
 
-		Sampler domainA = sampler.newDomainSplit(i, numLightSamples);
+		auto splitDomain = directDomain.newDomainSplit(i, numLightSamples);
 
 		for(int j = 0; j < numLightSamples; ++j)
 		{
-			float rnd[2];
-			domainA.template drawSample<2>(rnd);
+			enum Domains
+			{
+				Light,
+				Opacity,
+			};
 
-			const Sampler domainB = domainA.newDomain(0);
-			domainA = domainA.nextDomainIndex();
+			const auto lightDomain = splitDomain.newDomain(Domains::Light);
+
+			float lightSamples[2];
+			lightDomain.template drawSample<2>(lightSamples);
 
 			float rcpDistSqr;
-			const auto dir = light.sample(pathEvent.pos, rnd, rcpDistSqr);
+			const auto dir =
+			    light.sample(pathEvent.pos, lightSamples, rcpDistSqr);
 
 			const auto shadowRay =
 			    Ray(pathEvent.pos, dir, pathRay.time, pathEvent.normal);
 
+			const auto opacityDomain = splitDomain.newDomain(Domains::Opacity);
+
 			Interaction shadowEvent;
 			const auto shadowHit = intersectOpacityCheck(
-			    session, maxOpacity, shadowRay, domainB, shadowEvent);
+			    session, maxOpacity, shadowRay, opacityDomain, shadowEvent);
 
 			if(shadowHit && shadowEvent.prim.materialId == light.materialId &&
 			   !shadowEvent.exit)
@@ -830,6 +853,8 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 				direct +=
 				    project * illuminance / static_cast<float>(numLightSamples);
 			}
+
+			splitDomain = splitDomain.nextDomainIndex();
 		}
 	}
 
@@ -839,7 +864,7 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 template <typename Sampler>
 OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
                                  int maxDepth, int maxOpacity, Ray ray,
-                                 Sampler sampler)
+                                 Sampler traceDomain)
 {
 	bool computeEmission = true;
 	glm::vec3 throughput = glm::vec3(1);
@@ -847,13 +872,20 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 	glm::vec3 radiance = glm::vec3();
 	for(int depth = 0; depth <= maxDepth; ++depth)
 	{
-		const Sampler domainA = sampler.newDomain(1); // for direct lighting
-		const Sampler domainB = sampler.newDomain(2); // for path sampling
-		const Sampler domainC = sampler.newDomain(3); // for opacity evaluation
-		const Sampler domainD = sampler.newDomain(0); // for next bounce
+		enum Domains
+		{
+			Opacity,
+			Direct,
+			Material,
+			Roulette,
+			Next,
+		};
+
+		const auto opacityDomain = traceDomain.newDomain(Domains::Opacity);
 
 		Interaction event;
-		if(!intersectOpacityCheck(session, maxOpacity, ray, domainC, event))
+		if(!intersectOpacityCheck(session, maxOpacity, ray, opacityDomain,
+		                          event))
 		{
 			break;
 		}
@@ -875,9 +907,11 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		glm::vec3 directLightingContribution;
 		if(material.doDirectLighting())
 		{
+			const auto directDomain = traceDomain.newDomain(Domains::Direct);
+
 			const auto bsdf = glm::vec3(M_1_PI) * material.colour;
-			const auto light = directLighting(session, numLightSamples,
-			                                  maxOpacity, ray, event, domainA);
+			const auto light = directLighting(
+			    session, numLightSamples, maxOpacity, ray, event, directDomain);
 
 			directLightingContribution = throughput * bsdf * light;
 			computeEmission = false;
@@ -890,7 +924,9 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 
 		radiance += directLightingContribution;
 
-		const auto sample = material.sample(event, ray, domainB);
+		const auto materialDomain = traceDomain.newDomain(Domains::Material);
+
+		const auto sample = material.sample(event, ray, materialDomain);
 
 		if(!sample.successful)
 		{
@@ -904,8 +940,10 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 			break;
 		}
 
+		const auto rouletteDomain = traceDomain.newDomain(Domains::Roulette);
+
 		float rr;
-		if(!russianRoulette(throughput, sampler, rr))
+		if(!russianRoulette(throughput, rouletteDomain, rr))
 		{
 			break;
 		}
@@ -913,7 +951,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		throughput *= rr;
 
 		ray = Ray(event.pos, sample.dir, ray.time, event.normal);
-		sampler = domainD;
+		traceDomain = traceDomain.newDomain(Domains::Next);
 	}
 
 	return radiance;
@@ -1366,14 +1404,23 @@ bool run(const char* name, int width, int height, int frame,
 			const auto x = idx % width;
 			const auto y = idx / width;
 
-			const auto domainA = Sampler(x, y, frame, i, buffer.cache);
-			const auto domainB = domainA.newDomain(0);
+			const auto pixelDomain = Sampler(x, y, frame, i, buffer.cache);
+
+			enum Domains
+			{
+				Camera,
+				Trace,
+			};
+
+			const auto cameraDomain = pixelDomain.newDomain(Domains::Camera);
 
 			const auto ray =
-			    session.camera->generateRay(x, y, width, height, domainA);
+			    session.camera->generateRay(x, y, width, height, cameraDomain);
+
+			const auto traceDomain = pixelDomain.newDomain(Domains::Trace);
 
 			const auto radiance = trace(session, numLightSamples, maxDepth,
-			                            maxOpacity, ray, domainB);
+			                            maxOpacity, ray, traceDomain);
 
 			const auto delta =
 			    session.camera->filmExposure(radiance) - buffer.image[idx];
