@@ -240,14 +240,15 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 		LensTime,
 	};
 
+	const auto rasterDomain = cameraDomain.newDomain(Domains::Raster);
+	const auto lensTimeDomain = cameraDomain.newDomain(Domains::LensTime);
+
 	y = ySize - y - 1;
 	x = xSize - x - 1;
 
 	glm::vec2 pixelCentre;
 	pixelCentre.x = x + 0.5f - (xSize / 2.0f);
 	pixelCentre.y = y + 0.5f - (ySize / 2.0f);
-
-	const auto rasterDomain = cameraDomain.newDomain(Domains::Raster);
 
 	float rasterSamples[2];
 	rasterDomain.template drawSample<2>(rasterSamples);
@@ -267,8 +268,6 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 	focalDir.x = filmPoint.x / filmPoint.z;
 	focalDir.y = filmPoint.y / filmPoint.z;
 	focalDir.z = 1;
-
-	const auto lensTimeDomain = cameraDomain.newDomain(Domains::LensTime);
 
 	float lensTimeSamples[3];
 	lensTimeDomain.template drawSample<3>(lensTimeSamples);
@@ -827,6 +826,7 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 			};
 
 			const auto lightDomain = splitDomain.newDomain(Domains::Light);
+			const auto opacityDomain = splitDomain.newDomain(Domains::Opacity);
 
 			float lightSamples[2];
 			lightDomain.template drawSample<2>(lightSamples);
@@ -837,8 +837,6 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 
 			const auto shadowRay =
 			    Ray(pathEvent.pos, dir, pathRay.time, pathEvent.normal);
-
-			const auto opacityDomain = splitDomain.newDomain(Domains::Opacity);
 
 			Interaction shadowEvent;
 			const auto shadowHit = intersectOpacityCheck(
@@ -882,6 +880,8 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		};
 
 		const auto opacityDomain = traceDomain.newDomain(Domains::Opacity);
+		const auto materialDomain = traceDomain.newDomain(Domains::Material);
+		const auto rouletteDomain = traceDomain.newDomain(Domains::Roulette);
 
 		Interaction event;
 		if(!intersectOpacityCheck(session, maxOpacity, ray, opacityDomain,
@@ -907,6 +907,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		glm::vec3 directLightingContribution;
 		if(material.doDirectLighting())
 		{
+			// Moved to within if block, no need to compute if not needed.
 			const auto directDomain = traceDomain.newDomain(Domains::Direct);
 
 			const auto bsdf = glm::vec3(M_1_PI) * material.colour;
@@ -924,8 +925,6 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 
 		radiance += directLightingContribution;
 
-		const auto materialDomain = traceDomain.newDomain(Domains::Material);
-
 		const auto sample = material.sample(event, ray, materialDomain);
 
 		if(!sample.successful)
@@ -939,8 +938,6 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		{
 			break;
 		}
-
-		const auto rouletteDomain = traceDomain.newDomain(Domains::Roulette);
 
 		float rr;
 		if(!russianRoulette(throughput, rouletteDomain, rr))
@@ -976,6 +973,21 @@ const auto camera = Scene::Camera{
     /*filmSpeed*/ 200,
     /*shutterSpeed*/ 100,
     /*exposureValue*/ 0,
+};
+
+const auto cameraNoDof = Scene::Camera{
+    /*name*/ "camera",
+    /*pos*/ {278, 273, -2250},
+    /*dir*/ {0, 0, 1},
+    /*up*/ {0, 1, 0},
+    /*filmSize*/ 24,
+    /*focalLength*/ 100,
+    /*focalDistance*/ 2550,
+    /*filterWidth*/ 1,
+    /*fStop*/ 256,
+    /*filmSpeed*/ 200,
+    /*shutterSpeed*/ 100,
+    /*exposureValue*/ 8,
 };
 
 } // namespace cameras
@@ -1044,7 +1056,7 @@ const auto transparent = Scene::Material{
     /*type*/ "null",
     /*colour*/ {1, 1, 1},
     /*emission*/ {0, 0, 0},
-    /*presence*/ 0.765432f,
+    /*presence*/ 0.2,
 };
 
 const auto matte = Scene::Material{
@@ -1241,13 +1253,13 @@ const auto transparentBlocker = Scene::Object{
 const auto movingBlocker = Scene::Object{
     /*name*/ "moving blocker",
     /*material*/ "matte",
-    /*motion*/ {-330, 330, 0},
+    /*motion*/ {80, 80, 0},
     /*quads*/
     {{
-        {476.4, 74.4, 300},
-        {406.4, 74.4, 300},
-        {406.4, 144.4, 300},
-        {476.4, 144.4, 300},
+        {0, 0, 300},
+        {400, 0, 300},
+        {400, 400, 300},
+        {0, 400, 300},
     }},
 };
 
@@ -1301,7 +1313,7 @@ const auto cornellBox = Scene{
 };
 
 const auto presenceExample = Scene{
-    /*camera*/ cameras::camera,
+    /*camera*/ cameras::cameraNoDof,
     /*materials*/
     {
         materials::emissivE01,
@@ -1316,7 +1328,7 @@ const auto presenceExample = Scene{
 };
 
 const auto motionBlurExample = Scene{
-    /*camera*/ cameras::camera,
+    /*camera*/ cameras::cameraNoDof,
     /*materials*/
     {
         materials::emissivE01,
@@ -1413,11 +1425,10 @@ bool run(const char* name, int width, int height, int frame,
 			};
 
 			const auto cameraDomain = pixelDomain.newDomain(Domains::Camera);
+			const auto traceDomain = pixelDomain.newDomain(Domains::Trace);
 
 			const auto ray =
 			    session.camera->generateRay(x, y, width, height, cameraDomain);
-
-			const auto traceDomain = pixelDomain.newDomain(Domains::Trace);
 
 			const auto radiance = trace(session, numLightSamples, maxDepth,
 			                            maxOpacity, ray, traceDomain);
