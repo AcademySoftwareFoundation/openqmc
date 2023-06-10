@@ -4,10 +4,10 @@
 [![Version](https://img.shields.io/github/v/release/framestore/openqmc)](https://github.com/framestore/openqmc/releases/latest)
 [![CI](https://github.com/framestore/openqmc/workflows/ci/badge.svg)](https://github.com/framestore/openqmc/actions?query=branch%3Amain)
 
-OpenQMC is a small library for sampling high quality Quasi-Monte Carlo (QMC)
-points and generating pseudo random numbers. It's geared towards graphics
-applications, specifically rendering and film production. The library is a
-variant of that developed at Framestore for their production renderer Freak.
+OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
+and generating pseudo random numbers. Designed for graphics applications,
+the library is part of Framestore's proprietry renderer [Freak](https://www.framestore.com/work/rendering)
+and is actively used in VFX production.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/openqmc-example-light.png">
@@ -19,8 +19,9 @@ variant of that developed at Framestore for their production renderer Freak.
 
 This C++14 (CPU, GPU) header only library provides an API to deliver high
 quality QMC sample points. The API aims to be compatible with a variety of
-common use cases found in the wild, while maximising the rate of convergence.
-It also provides multiple state of the art back-end implementations.
+common use cases found in production codebases. The library also provides
+multiple state of the art back-end implementations to maximise rate of
+convergence.
 
 There are three primary aims for the project:
 
@@ -35,7 +36,7 @@ The project doesn't aim to:
 
 Project features are:
 
-- Different architectures (CPU, GPU, etc).
+- Supports different architectures (CPU, GPU, etc).
 - Static interface / zero cost abstraction.
 - Solutions for different sampling use cases.
 - Supports progressive / adaptive pixel sampling.
@@ -45,19 +46,69 @@ Project features are:
 - Modern [CMake](https://cmake.org/) based build system.
 - Header only and binary configurations.
 - No library or STL dependencies.
-- Includes tools and examples.
+- Includes tools, docs and examples.
 
-The project maintainers would like developers to fearlessly leverage QMC
-sampling everywhere. This is what the OpenQMC API and [domain branching](#domain-branching)
-makes possible. It allows you to focus on writing graphics technology, while
-safely and automatically getting the best in class rates of convergence
-possible.
+The API allows you to focus on writing graphics technology, while safely getting
+the best in class rates of convergence possible. The project maintainers would
+like developers to confidently leverage QMC sampling everywhere. This is what
+the OpenQMC API and [domain branching](#domain-branching) makes possible.
 
-A variant of the library is actively used by Framestore's renderer
-[Freak](https://www.framestore.com/work/rendering) to produce rich, feature
-film VFX content. As a result the library has been battle tested in production
+A variant of the library is actively used by Framestore to produce rich, feature
+film VFX content. As a result the project has been battle tested in production
 on a large scale. Framestore are committed to continue contributing any further
 improvements from production to this open initiative.
+
+## Usage
+
+Here is a quick example of what OpenQMC looks like. Feel free to copy paste this
+code to get yourself started, or continue reading to learn more about techniques
+that might help you write unbiased software.
+
+```cpp
+// 1. Initialise the sampler cache.
+auto cache = new char[oqmc::PmjSampler::cacheSize];
+oqmc::PmjSampler::initialiseCache(cache);
+
+// 2. Loop over all pixels in the image.
+for(int x = 0; x < resolution; ++x)
+{
+	for(int y = 0; y < resolution; ++y)
+	{
+		// 3. Loop over all the sample indices.
+		for(int index = 1; index < sampleSize; ++index)
+		{
+			// 4. Create a sampler object for the pixel domain.
+			const auto domain = oqmc::PmjSampler(x, y, 0, index, cache);
+
+			// 5. Draw a sample point from the domain.
+			float samples[2];
+			domain.drawSample<2>(samples);
+
+			// 6. Offset the point into the pixel.
+			const auto xOffset = samples[0] + x;
+			const auto yOffset = samples[1] + y;
+
+			// 7. Add value to the pixel if within disk.
+			if(xOffset * xOffset + yOffset * yOffset < resolution * resolution)
+			{
+				image[x * resolution + y] += 1.0f / sampleSize;
+			}
+		}
+	}
+}
+
+// 8. Deallocate the sampler cache.
+delete[] cache;
+```
+
+This algorithm loops over all pixels and for each sample adds a small value if a
+random pixel offset falls within a quarter disk. The end result is an image of a
+disk with anti-aliased pixels across the edge of the shape.
+
+If you would like to see a more interesting example, have a look at the source
+code for the [path tracer](src/tools/lib/trace.cpp) tool. Or alternatively go to
+the [concepts and examples](#concepts-and-examples) section to learn about using
+OpenQMC to write unbiased code.
 
 ## Requirements
 
@@ -203,59 +254,6 @@ which apply to downstream projects. The options are:
   project is a shared library, you can force enable PIC. Option values can be
   `ON` or `OFF`. Default value is `OFF`.
 
-## Usage
-
-This is an introduction to using the library. The example goes through how to
-create an image of a quarter disk and anti-alias the pixels with supersampling.
-
-The algorithm loops over all pixels and for each sample adds a small value if a
-random pixel offset falls within the quarter disk. The end result is an image
-of the disk with anti-aliased pixels across the edge of the shape.
-
-If you implemented this using OpenQMC it might look like:
-
-```cpp
-// 1. Initialise the sampler cache.
-auto cache = new char[oqmc::PmjSampler::cacheSize];
-oqmc::PmjSampler::initialiseCache(cache);
-
-// 2. Loop over all pixels in the image.
-for(int x = 0; x < resolution; ++x)
-{
-	for(int y = 0; y < resolution; ++y)
-	{
-		// 3. Loop over all the sample indices.
-		for(int index = 1; index < sampleSize; ++index)
-		{
-			// 4. Create a sampler object for the pixel domain.
-			const auto domain = oqmc::PmjSampler(x, y, 0, index, cache);
-
-			// 5. Draw a sample point from the domain.
-			float samples[2];
-			domain.drawSample<2>(samples);
-
-			// 6. Offset the point into the pixel.
-			const auto xOffset = samples[0] + x;
-			const auto yOffset = samples[1] + y;
-
-			// 7. Add value to the pixel if within disk.
-			if(xOffset * xOffset + yOffset * yOffset < resolution * resolution)
-			{
-				image[x * resolution + y] += 1.0f / sampleSize;
-			}
-		}
-	}
-}
-
-// 8. Deallocate the sampler cache.
-delete[] cache;
-```
-
-There are more advanced examples ([path tracer](src/tools/lib/trace.cpp),
-[table generator](src/tools/lib/generate.cpp), etc) under the
-[src/tools/lib](src/tools/lib) directory. To learn more, have a look at the
-[API reference](#api-reference) and [concepts](#concepts-and-examples) below.
-
 ## Versioning
 
 Version numbers follow [Semantic Versioning](http://semver.org/) to indicate
@@ -275,23 +273,14 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## API reference
 
-You have access to individual components used to build the samplers, and are
-free to use these directly. But it's recommended that users take advantage of
-the sampler interface which defines a generic API for all implementations, and
-provides a contract to the calling code.
+Down stream projects have access to individual components used to build the
+samplers, and are free to use these directly. But it's recommended that users
+take advantage of the sampler interface which defines a generic API for all
+implementations, and provides a contract to the calling code.
 
-List of all sampler implementation header files:
-
-- [`oqmc/oqmc.h`](include/oqmc/oqmc.h): Convenience header includes all implementations.
-- [`oqmc/pmj.h`](include/oqmc/pmj.h): Includes low discrepancy `oqmc::PmjSampler`.
-- [`oqmc/pmjbn.h`](include/oqmc/pmjbn.h): Includes blue noise variant `oqmc::PmjBnSampler`.
-- [`oqmc/sobol.h`](include/oqmc/sobol.h): Includes Owen scrambled `oqmc::SobolSampler`.
-- [`oqmc/sobolbn.h`](include/oqmc/sobolbn.h): Includes blue noise variant `oqmc::SobolBnSampler`.
-- [`oqmc/lattice.h`](include/oqmc/lattice.h): Includes rank one `oqmc::LatticeSampler`.
-- [`oqmc/latticebn.h`](include/oqmc/latticebn.h): Includes blue noise variant `oqmc::LatticeBnSampler`.
-
-This is the sampler API reference, which is the generic interface for all
-sampler implementations. As seen used in the [Usage](#usage) section.
+The API is a static (compile-time polymophic) interface. This is an important
+detail, as it allows for implementations to be passed-by-value without dynamic
+memory allocation, while also allowing inlining for zero-cost abstraction.
 
 ```cpp
 /**
@@ -537,24 +526,33 @@ template <int Size>
 void oqmc::Sampler::drawRnd(float rnds[Size]) const;
 ```
 
-## Implementation details
+## Implementation comparison
 
-The generic API described preceding is available from multiple implementations
-which are interchangeable at compile time. Each implementation has different
-strengths that balance performance and quality. This section provides a
-comparison between implementations and details on each.
+The API is common to all back-end implementations. Each implementation has
+different strengths that balance performance and quality. These are all the
+implementations and their required header files:
 
-### Design overview
+- [`oqmc/pmj.h`](include/oqmc/pmj.h): Includes low discrepancy `oqmc::PmjSampler`.
+- [`oqmc/pmjbn.h`](include/oqmc/pmjbn.h): Includes blue noise variant `oqmc::PmjBnSampler`.
+- [`oqmc/sobol.h`](include/oqmc/sobol.h): Includes Owen scrambled `oqmc::SobolSampler`.
+- [`oqmc/sobolbn.h`](include/oqmc/sobolbn.h): Includes blue noise variant `oqmc::SobolBnSampler`.
+- [`oqmc/lattice.h`](include/oqmc/lattice.h): Includes rank one `oqmc::LatticeSampler`.
+- [`oqmc/latticebn.h`](include/oqmc/latticebn.h): Includes blue noise variant `oqmc::LatticeBnSampler`.
+- [`oqmc/oqmc.h`](include/oqmc/oqmc.h): Convenience header includes all implementations.
 
 This diagram gives a high level view of the available implementations and how
-they relate to one another. You can see that for each implementation there is
-also a blue noise variant. More on this below.
+they relate to one another. Each implementation inlcudes a blue noise variant
+which you can read more about [here](#spatial-temporal-blue-noise).
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/high-level-overview-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/high-level-overview-dark.png">
   <img alt="High level implementation diagram." src="./images/diagrams/high-level-overview-light.png">
 </picture>
+
+The following sub-sections will provide some analysis on each of the
+implmentations and outline their tradoffs, so that you can make an informed
+decision on what implementation would be best for your use case.
 
 ### Rate of convergence
 
@@ -619,11 +617,11 @@ set to `ARM` for Neon intrinsics.
 
 ### Pixel sampling
 
-This is the result of rendering the Cornell box with each implementation. There
-are two rows of insets. The top row shows pixel variance due to a discontinuous
-visibility term. And the bottom row shows the variance of sampling a light at a
-grazing angle. The render for all insets had 2 samples per pixel. Numbers
-indicate RMSE.
+These are basic path traced renders of the Cornell box comparing the effect
+of each implementation. There are two rows of insets. The top row shows pixel
+variance due to a discontinuous visibility term. And the bottom row shows the
+variance of sampling a light at a grazing angle without considering projection.
+Each inset had 2 samples per pixel. Numbers indicate RMSE.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/cornell-box-0-2-light.png">
@@ -647,7 +645,281 @@ higher rate of convergence takes effect.
   <img alt="Cornell box many samples comparison." src="./images/plots/cornell-box-1-32-light.png">
 </picture>
 
-### Pmj sequences
+## Concepts and examples
+
+OpenQMC aims to provide an API that makes using high quality samples easy and
+safe when writing software with numerical integration. You have already seen a
+very basic example of this in the [Usage](#usage) section. This section will go
+into more detail on the concepts, and provide some more complex examples.
+
+The section will build upon a simple example, introduce the concepts of domain
+trees and sample splitting, and show some of the potential pit-falls OpenQMC
+prevents by following some basic rules. After this, you should be able to
+confidently make use of QMC samples in your own software.
+
+### Sampling domains
+
+When you estimate an integral using the Monte Carlo method, the high dimensional
+space can often be partitioned into logical domains. In OpenQMC domains are an
+important concept. Domains act as promises that can be converted into dimensions
+upon request by the caller. They can also be chained to create new domains.
+
+This example function tries to compute a pixel estimate. This estimate is made
+up of two parts, each needing a domain. The first is a `camera` that takes a
+single sample, and the second is a `material`, that takes two samples.
+
+```cpp
+Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const MaterialInterface& material)
+{
+	enum DomainKey
+	{
+		Next,
+	};
+
+	// Derive 'cameraDomain' from 'pixelDomain' parameter.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Next);
+
+	// Derive 'materialDomain' from 'cameraDomain' variable.
+	const auto materialDomain = cameraDomain.newDomain(DomainKey::Next);
+
+	// Take a single sample for time to pass to 'camera'.
+	float timeSamples[1];
+	cameraDomain.drawSample<1>(timeSamples);
+
+	// Take two samples for direction to pass to 'material'.
+	float directionSamples[2];
+	materialDomain.drawSample<2>(directionSamples);
+
+	// Pass drawn samples to the interface an importance sampling.
+	const auto cameraSample = camera.sample(timeSamples);
+	const auto materialSample = material.sample(directionSamples);
+
+	// Using resulting samples, compute pixel estimate.
+	return sampleLightTransport(cameraSample, materialSample);
+}
+```
+
+The function started with an initial `pixelDomain`, from that it derived a
+`cameraDomain`, and from that it derived a `materialDomain`. This is a linear
+sequence of dependent domains. Domains provide up to 4 dimensions each. If more
+dimensions are required, the caller can always derive a new domain.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-1.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-1.png">
+</picture>
+
+This example works, but isn't very flexible. This can be improved. Types that
+implement the camera or material interfaces may require less or more samples
+than is provided by the calling code.
+
+### Passing domains
+
+Computing domains is cheap, but drawing samples is expensive. In the
+last example, samples were drawn and passed to a type that implements the
+`MaterialInterface`. If the samples are not required, the type doesn't have the
+option to prevent the samples from being drawn.
+
+You can resolve this by changing the interface to pass a domain, defering the
+decision to draw samples to the type. Here are two types that implement such an
+interface, `DiffuseMaterial` and `SpecularMaterial`.
+
+```cpp
+MaterialSample DiffuseMaterial::sample(const oqmc::PmjSampler materialDomain)
+{
+	// Draw two samples for direction.
+	float directionSamples[2];
+	materialDomain.drawSample<2>(directionSamples);
+
+	// Compute MaterialSample object using the drawn samples...
+}
+
+MaterialSample SpecularMaterial::sample(const oqmc::PmjSampler materialDomain)
+{
+	// Don't draw two samples for direction.
+	// float directionSamples[2];
+	// materialDomain.drawSample<2>(directionSamples);
+
+	// Compute MaterialSample object without using samples...
+}
+```
+
+The `DiffuseMaterial` draws samples from the domain. But `SpecularMaterial` opts
+to save on compute and does not draw samples as they are not required.
+
+Looking at the revised calling code, the domains are now passed through the
+interfaces, allowing the types to decide whether to draw the samples or not.
+
+```cpp
+Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const MaterialInterface& material)
+{
+	enum DomainKey
+	{
+		Next,
+	};
+
+	// Derive 'cameraDomain' from 'pixelDomain' parameter.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Next);
+
+	// Derive 'materialDomain' from 'cameraDomain' variable.
+	const auto materialDomain = cameraDomain.newDomain(DomainKey::Next);
+
+	// Pass domains directly to the interface to compute samples.
+	const auto cameraSample = camera.sample(cameraDomain);
+	const auto materialSample = material.sample(materialDomain);
+
+	// Using samples, compute pixel estimate.
+	return sampleLightTransport(cameraSample, materialSample);
+}
+```
+
+Sometimes a type needs an unknown number of samples. The next section will show
+how that can be achieved. This will introduce a potential danger, as well as a
+new concept called 'domain trees' that can be used to do the operation safely.
+
+### Domain branching
+
+Building on the previous example, the calling code is free of knowing how many
+samples a type might need. If a type requires N samples, it can opt to derive
+new domains from the domain that was passed to it. Then drawing more samples
+from those domains.
+
+This is a `ThinLensCamera` type that implements the `CameraInterface` interface.
+It requires multiple domains, and so sequentially derives them one after the
+other starting with the original `cameraDomain`.
+
+```cpp
+CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
+{
+	enum DomainKey
+	{
+		Next,
+	};
+
+	// Derive 'lensDomain' from 'cameraDomain' parameter.
+	const auto lensDomain = cameraDomain.newDomain(DomainKey::Next);
+
+	// Derive 'timeDomain' from 'lensDomain' variable.
+	const auto timeDomain = lensDomain.newDomain(DomainKey::Next);
+
+	// Take two samples for lens to compute a CameraSample object.
+	float lensSamples[2];
+	lensDomain.drawSample<2>(lensSamples);
+
+	// Take a single sample for time to compute a CameraSample object.
+	float timeSamples[1];
+	timeDomain.drawSample<1>(timeSamples);
+
+	// Compute CameraSample object using the drawn samples...
+}
+```
+
+This is the dangerious part! It is to do with the calling code from the previous
+example. Notice that `cameraDomain` is used to derive both `materialDomain` and
+`lensDomain`. These objects are now equal, and only differ in name.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-2.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2.png">
+</picture>
+
+`materialDomain` and `lensDomain` objects being equal results in the drawn
+samples being correlated in a way that leaves gaps in the primary sample space.
+That results in an biased estimate which is bad. But this can be fixed. Here is
+a revised version of the calling code.
+
+```cpp
+Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const MaterialInterface& material)
+{
+	enum DomainKey
+	{
+		Camera,
+		Material,
+	};
+
+	// Derive 'cameraDomain' from 'pixelDomain' parameter.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+
+	// Derive 'materialDomain' from 'pixelDomain' parameter.
+	const auto materialDomain = pixelDomain.newDomain(DomainKey::Material);
+
+	// Pass domains directly to the interface to compute samples.
+	const auto cameraSample = camera.sample(cameraDomain);
+	const auto materialSample = material.sample(materialDomain);
+
+	// Using samples, compute pixel estimate.
+	return sampleLightTransport(cameraSample, materialSample);
+}
+```
+
+You may notice that the `DomainKey` enum has now changed. And instead of
+chaining the domains sequentially, the code now derives both `cameraDomain` and
+`materialDomain` directly from `pixelDomain` with a different key.
+
+This operation is called branching. The resulting domains are now independent.
+You can branch a domain on a given key either with an enum as seen here, or by
+passing an integer value directly.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-3.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3.png">
+</picture>
+
+Now that `cameraDomain` and `materialDomain` are independent of each other,
+the `ThinLensCamera` is free to use the domain passed to it in whichever way
+it likes. The code is now guaranteed to not produce gaps in the primary sample
+space, and so will be unbiased.
+
+By combining and applying these methods of deriving domains both sequentially
+within loops, and with branching across interfaces, you build 'domain trees'
+that map domains to the call graph of the code. These trees can become large,
+but are implicitly handled when using the OpenQMC API as demonstrated here.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-4.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-4.png">
+</picture>
+
+Here is what this example has identified. Gaps in the primary sample space
+produce bias. Branching can be used to make domains independent of one another.
+This independence prevents such bias. Finally 'domain trees' should match the
+call graph of the code to guarantee safety.
+
+You now can build and use 'domain trees' in your own software to safely write
+unbiased code, while also getting best in class rates of convergence. For a more
+complete example, see the [path tracer](src/tools/lib/trace.cpp) tool.
+
+### Fixed sample splitting
+
+TODO: example of fixed sample splitting, diagrams, etc.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5.png">
+</picture>
+
+### Dynamic sample splitting
+
+TODO: example of dynamic sample splitting, diagrams, etc.
+
+## Implementation details
+
+This section will go into detail about each back-end implementation, as well as
+the blue noise variants. Here you can find out about practical trade offs for
+each option so you can decide which is best for your use case.
+
+### PMJ sequences
 
 The implementation uses the stochastic method described by Helmer et la. [^2]
 to efficiently construct a progressive multi-jittered (0,2) sequence. The first
@@ -659,7 +931,7 @@ domain.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/pmj-design-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/pmj-design-dark.png">
-  <img alt="Pmj pair plot." src="./images/diagrams/pmj-design-light.png">
+  <img alt="PMJ pair plot." src="./images/diagrams/pmj-design-light.png">
 </picture>
 
 This sampler pre-computes a base 4D pattern for all sample indices during the
@@ -672,7 +944,7 @@ space or access is a concern.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/pair-plot-pmj-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/plots/pair-plot-pmj-dark.png">
-  <img alt="Pmj pair plot." src="./images/plots/pair-plot-pmj-light.png">
+  <img alt="PMJ pair plot." src="./images/plots/pair-plot-pmj-light.png">
 </picture>
 
 ### Sobol sequences
@@ -761,8 +1033,6 @@ For more details, see the [Optimise CLI](#optimise-cli) section.
 
 ### Object state
 
-TODO: Move this section elsewhere.
-
 The intention of the API is to allow for object instances to be efficiently
 copied on the stack. In doing so the objects can be easily packed and queued
 during wavefront rendering. Allowing for this means that along with the
@@ -779,299 +1049,13 @@ then increases the quality of the lower order bits with a permutation prior to
 drawing samples. This allows the implementation to efficiently create and skip
 domains, while producing high quality random results upon drawing samples.
 
-## Concepts and examples
-
-OpenQMC aims to provide an API that makes using high quality samples easy and
-safe when writing software with numerical integration. You have already seen a
-very basic example of this in the [Usage](#usage) section. This section will go
-into more detail on the concepts, and provide some more complex examples.
-
-The section will build upon a simple example, introduce the concepts of domain
-trees and sample splitting, and show some of the potential pit-falls OpenQMC
-prevents by following some basic rules. After this, you should be able to
-fearlessly make use of QMC samples in your own software.
-
-### Basic sampling
-
-When you estimate an integral using the Monte Carlo method, the high dimensional
-space can often be partitioned into logical domains. In OpenQMC domains are an
-important concept. Domains act as promises that can be converted into dimensions
-upon request by the caller. They can also be chained to create new domains.
-
-This example function tries to compute a pixel estimate. This estimate is made
-up of two parts, each needing a domain. The first is a `camera` that takes a
-single sample, and the second is a `material`, that takes two samples.
-
-```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
-                     const CameraInterface& camera,
-                     const MaterialInterface& material)
-{
-	enum Domains
-	{
-		Next,
-	};
-
-	// Derive 'cameraDomain' from 'pixelDomain' parameter.
-	const auto cameraDomain = pixelDomain.newDomain(Domains::Next);
-
-	// Derive 'materialDomain' from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(Domains::Next);
-
-	// Take a single sample for time to pass to 'camera'.
-	float timeSamples[1];
-	cameraDomain.drawSample<1>(timeSamples);
-
-	// Take two samples for direction to pass to 'material'.
-	float directionSamples[2];
-	materialDomain.drawSample<2>(directionSamples);
-
-	// Pass drawn samples to the interface an importance sampling.
-	const auto cameraSample = camera.sample(timeSamples);
-	const auto materialSample = material.sample(directionSamples);
-
-	// Using resulting samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
-}
-```
-
-The function started with an initial `pixelDomain`, and then from that derived
-a `cameraDomain`, and then finally from that derived a `materialDomain`. Domains
-can provide up to 4 dimensions each. If more dimensions are required, the caller
-can always derive a new domain.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-1.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-1.png">
-</picture>
-
-This example works, but isn't very flexible. What if a type that implements the
-camera or material interfaces requires less or more samples than is provided by
-the calling code. This can be improved.
-
-### Passing domains
-
-Computing domains is cheap, but drawing samples is expensive. For example, if
-there was a new type that implemented the material interface but did not require
-any samples, it could opt to not draw the samples and save on the compute cost.
-
-```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
-                     const CameraInterface& camera,
-                     const MaterialInterface& material)
-{
-	enum Domains
-	{
-		Next,
-	};
-
-	// Derive 'cameraDomain' from 'pixelDomain' parameter.
-	const auto cameraDomain = pixelDomain.newDomain(Domains::Next);
-
-	// Derive 'materialDomain' from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(Domains::Next);
-
-	// Pass domains directly to the interface to compute samples.
-	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
-
-	// Using samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
-}
-```
-
-Looking at this revised implementation, the domains are now passed through the
-interfaces, allowing the types to decide whether to draw the samples or not.
-Here are two example types that implement the `MaterialInterface`:
-
-```cpp
-MaterialSample DiffuseMaterial::sample(const oqmc::PmjSampler materialDomain)
-{
-	// Draw two samples for direction.
-	float directionSamples[2];
-	materialDomain.drawSample<2>(directionSamples);
-
-	// Compute MaterialSample object using the drawn samples...
-}
-
-MaterialSample SpecularMaterial::sample(const oqmc::PmjSampler materialDomain)
-{
-	// Don't draw two samples for direction.
-	// float directionSamples[2];
-	// materialDomain.drawSample<2>(directionSamples);
-
-	// Compute MaterialSample object without using samples...
-}
-```
-
-In the case of the `DiffuseMaterial` the type continues to draw samples from the
-domain. But in the case of the `SpecularMaterial` the type has opted to save on
-the cost of drawing samples, as they are not needed.
-
-The next section will go into achieving the opposite, and draw more samples
-instead of less. This will introduce a potential danger, as well as a new
-concept called 'domain trees' that can be used to do this operation safely.
-
-### Domain branching
-
-What if a type requires more samples than the calling code expects. This again
-would require the caller to pass a domain across the type's interface. In the
-code below, the calling code remains the same.
-
-```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
-                     const CameraInterface& camera,
-                     const MaterialInterface& material)
-{
-	enum Domains
-	{
-		Next,
-	};
-
-	const auto cameraDomain = pixelDomain.newDomain(Domains::Next);
-
-	// WARNING: First call to newDomain from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(Domains::Next);
-
-	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
-
-	return sampleLightTransport(cameraSample, materialSample);
-}
-```
-
-Note the new WARNING in the comment, the importance of this line will become
-clear soon. Next, just like with the material types, here is an example type
-that now implements the `CameraInterface`.
-
-```cpp
-CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
-{
-	enum Domains
-	{
-		Next,
-	};
-
-	// WARNING: Second call to newDomain from 'cameraDomain' parameter.
-	const auto lensDomain = cameraDomain.newDomain(Domains::Next);
-
-	// Derive 'timeDomain' from 'lensDomain' variable.
-	const auto timeDomain = lensDomain.newDomain(Domains::Next);
-
-	// Take two samples for lens to compute a CameraSample object.
-	float lensSamples[2];
-	lensDomain.drawSample<2>(lensSamples);
-
-	// Take a single sample for time to compute a CameraSample object.
-	float timeSamples[1];
-	timeDomain.drawSample<1>(timeSamples);
-
-	// Compute CameraSample object using the drawn samples...
-}
-```
-
-This `ThinLensCamera` type requires more than just one domain. But that isn't
-an issue, as the `cameraDomain` passed in can be used to derived new domains,
-rather than draw samples. These new domains then draw their own samples.
-
-But this code is incorrect. It has introduced bias. Note the second WARNING
-comment, where `lensDomain` is derived from `cameraDomain`. This line is the
-same as the line from the first WARNING comment in the previous code block. The
-only difference is the name of the resulting variable.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-2.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2.png">
-</picture>
-
-So `materialDomain` and `lensDomain` are the same. This results in the drawn
-samples being correlated in a way that leaves gaps in the primary sample space.
-If you care about an unbiased estimate, then this is a problem. But it can be
-fixed. Here is a revised version of the calling code.
-
-```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
-                     const CameraInterface& camera,
-                     const MaterialInterface& material)
-{
-	enum Domains
-	{
-		Camera,
-		Material,
-	};
-
-	// Derive 'cameraDomain' from 'pixelDomain' parameter.
-	const auto cameraDomain = pixelDomain.newDomain(Domains::Camera);
-
-	// Derive 'materialDomain' from 'pixelDomain' parameter.
-	const auto materialDomain = pixelDomain.newDomain(Domains::Material);
-
-	// Pass domains directly to the interface to compute samples.
-	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
-
-	// Using samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
-}
-```
-
-You may notice that the `Domains` enum has now changed. And instead of
-chaining the domains sequentially, the code now derives both `cameraDomain` and
-`materialDomain` directly from `pixelDomain` with a different enum.
-
-This operation is called branching. The resulting domains are now independent.
-You can derive a domain on a given branch either with an enum as seen here, or
-by passing an integer value directly.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-3.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3.png">
-</picture>
-
-Now that `cameraDomain` and `materialDomain` are independent of each other,
-the `ThinLensCamera` is free to use the domain passed to it in whichever way it
-likes. The code is now guaranteed to be safe, and you as a developer no longer
-need to be concerned about introducing bias.
-
-By combining and applying these methods of deriving domains both sequentially
-within loops, and with branching across interfaces, you build 'domain trees'
-that map domains to the call graph of the code. These trees can become large,
-but are implicitly handled when using the OpenQMC API as demonstrated here.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-4.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-4.png">
-</picture>
-
-You now can build and use 'domain trees' in your own software to safely write
-unbiased code, while also getting best in class rates of convergence. Hurrah!
-For a more complete example, see the [path tracer](src/tools/lib/trace.cpp)
-implementation.
-
-### Fixed sample splitting
-
-Example of fixed sample splitting, diagrams, etc.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5.png">
-</picture>
-
-### Dynamic sample splitting
-
-Example of dynamic sample splitting, diagrams, etc.
-
 ## Development roadmap
 
 Roadmap for version 1.0.0 of the library:
 
 - Add complete documentation.
 - Add support for Windows OS.
+- Add more package managers.
 
 ## Developer workflow
 
@@ -1245,6 +1229,12 @@ The `optimise` tool targets a single base sampler implementation and produces
 the data needed to construct a spatial temporal blue noise variant. The output
 is two tables, files named `keys.txt` and `ranks.txt`.
 
+```bash
+./build/src/tools/cli/optimise <sampler>
+```
+
+- `<sampler>`: options are `pmj`, `sobol`, `lattice`.
+
 The table data can be mapped to a 3D array, with the axes representing 2D pixel
 coordinates and 1D time. The optimisation process works toroidally, so you can
 tile each table to cover a large spatial and temporal area.
@@ -1256,12 +1246,6 @@ blue noise with progressive and adaptive rendering.
 When optimising final quality results it's advisable to use a GPU build of the
 optimiser due to the computational cost. Testing with an NVIDIA RTX A6000 found
 that this provided a speedup of ~400x that of the CPU.
-
-```bash
-./build/src/tools/cli/optimise <sampler>
-```
-
-- `<sampler>`: options are `pmj`, `sobol`, `lattice`.
 
 ### Testing
 
