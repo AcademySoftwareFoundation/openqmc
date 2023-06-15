@@ -234,14 +234,14 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 		return glm::vec3{r * std::cos(phi), r * std::sin(phi), 0};
 	};
 
-	enum Domains
+	enum DomainKey
 	{
 		Raster,
 		LensTime,
 	};
 
-	const auto rasterDomain = cameraDomain.newDomain(Domains::Raster);
-	const auto lensTimeDomain = cameraDomain.newDomain(Domains::LensTime);
+	const auto rasterDomain = cameraDomain.newDomain(DomainKey::Raster);
+	const auto lensTimeDomain = cameraDomain.newDomain(DomainKey::LensTime);
 
 	y = ySize - y - 1;
 	x = xSize - x - 1;
@@ -777,7 +777,7 @@ intersectOpacityCheck(const Session& session, int maxOpacity, Ray ray,
 {
 	for(int i = 0; i < maxOpacity; ++i)
 	{
-		enum Domains
+		enum DomainKey
 		{
 			Next,
 		};
@@ -798,7 +798,7 @@ intersectOpacityCheck(const Session& session, int maxOpacity, Ray ray,
 		}
 
 		ray = Ray(event.pos, ray.dir, ray.time, event.normal);
-		opacityDomain = opacityDomain.newDomain(Domains::Next);
+		opacityDomain = opacityDomain.newDomain(DomainKey::Next);
 	}
 
 	return false;
@@ -819,14 +819,15 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 
 		for(int j = 0; j < numLightSamples; ++j)
 		{
-			enum Domains
+			enum DomainKey
 			{
 				Light,
 				Opacity,
 			};
 
-			const auto lightDomain = splitDomain.newDomain(Domains::Light);
-			const auto opacityDomain = splitDomain.newDomain(Domains::Opacity);
+			const auto lightDomain = splitDomain.newDomain(DomainKey::Light);
+			const auto opacityDomain =
+			    splitDomain.newDomain(DomainKey::Opacity);
 
 			float lightSamples[2];
 			lightDomain.template drawSample<2>(lightSamples);
@@ -870,7 +871,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 	glm::vec3 radiance = glm::vec3();
 	for(int depth = 0; depth <= maxDepth; ++depth)
 	{
-		enum Domains
+		enum DomainKey
 		{
 			Opacity,
 			Direct,
@@ -879,9 +880,9 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 			Next,
 		};
 
-		const auto opacityDomain = traceDomain.newDomain(Domains::Opacity);
-		const auto materialDomain = traceDomain.newDomain(Domains::Material);
-		const auto rouletteDomain = traceDomain.newDomain(Domains::Roulette);
+		const auto opacityDomain = traceDomain.newDomain(DomainKey::Opacity);
+		const auto materialDomain = traceDomain.newDomain(DomainKey::Material);
+		const auto rouletteDomain = traceDomain.newDomain(DomainKey::Roulette);
 
 		Interaction event;
 		if(!intersectOpacityCheck(session, maxOpacity, ray, opacityDomain,
@@ -908,7 +909,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		if(material.doDirectLighting())
 		{
 			// Moved to within if block, no need to compute if not needed.
-			const auto directDomain = traceDomain.newDomain(Domains::Direct);
+			const auto directDomain = traceDomain.newDomain(DomainKey::Direct);
 
 			const auto bsdf = glm::vec3(M_1_PI) * material.colour;
 			const auto light = directLighting(
@@ -948,7 +949,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 		throughput *= rr;
 
 		ray = Ray(event.pos, sample.dir, ray.time, event.normal);
-		traceDomain = traceDomain.newDomain(Domains::Next);
+		traceDomain = traceDomain.newDomain(DomainKey::Next);
 	}
 
 	return radiance;
@@ -1418,14 +1419,14 @@ bool run(const char* name, int width, int height, int frame,
 
 			const auto pixelDomain = Sampler(x, y, frame, i, buffer.cache);
 
-			enum Domains
+			enum DomainKey
 			{
 				Camera,
 				Trace,
 			};
 
-			const auto cameraDomain = pixelDomain.newDomain(Domains::Camera);
-			const auto traceDomain = pixelDomain.newDomain(Domains::Trace);
+			const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+			const auto traceDomain = pixelDomain.newDomain(DomainKey::Trace);
 
 			const auto ray =
 			    session.camera->generateRay(x, y, width, height, cameraDomain);
