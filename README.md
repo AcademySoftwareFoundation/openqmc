@@ -1,4 +1,10 @@
-# OpenQMC
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="./images/openqmc-logo-light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./images/openqmc-logo-dark.png">
+    <img alt="OpenQMC" src="./images/openqmc-logo-light.png" height="200">
+  </picture>
+</p>
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-informational)](https://github.com/framestore/openqmc/blob/main/LICENSE)
 [![Version](https://img.shields.io/github/v/release/framestore/openqmc)](https://github.com/framestore/openqmc/releases/latest)
