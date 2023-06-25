@@ -1035,7 +1035,7 @@ spatially or temporally filtered (as with denoising or temporal anti-aliasing),
 the resulting error can be much lower when using a blue noise variant as shown
 in [Rate of convergence](#rate-of-convergence).
 
-For more details, see the [Optimise CLI](#optimise-cli) section.
+For more details, see the Optimise CLI in the [Tools](#tools) section.
 
 ### Object state
 
@@ -1190,68 +1190,84 @@ This library is also linked against multiple CLI commands found in the
 [src/tools/cli](src/tools/cli) folder. Once you have compiled the tools, you
 can run the CLI binaries from the command line.
 
-#### Benchmark CLI
+<details>
+<summary>Benchmark CLI usage</summary>
 
-The `benchmark` tool measures the time for cache initialisation, as well as the
+```
+The 'benchmark' tool measures the time for cache initialisation, as well as the
 draw sample time, independently for each implementation. The results depend on
 the hardware, as well as the build configuration.
 
-```bash
-./build/src/tools/cli/benchmark <sampler> <measurement>
+USAGE: ./build/src/tools/cli/benchmark <sampler> <measurement>
+
+ARGS:
+  <sampler> Options are 'pmj', 'pmjbn', 'sobol', 'sobolbn', 'lattice', 'latticebn'.
+  <measurement> Options are 'init', 'samples'.
 ```
 
-- `<sampler>`: options are `pmj`, `pmjbn`, `sobol`, `sobolbn`, `lattice`, `latticebn`.
-- `<measurement>`: options are `init`, `samples`.
+</details>
 
-#### Generate CLI
+<details>
+<summary>Generate CLI usage</summary>
 
-The `generate` tool evaluates a specific implementation and outputs a table of
+```
+The 'generate' tool evaluates a specific implementation and outputs a table of
 points from the sequence. Currently the CLI sets the table output options to 2
 sequences, 256 samples, and 8 dimensions.
 
-```bash
-./build/src/tools/cli/generate <sampler>
+USAGE: ./build/src/tools/cli/generate <sampler>
+
+ARGS:
+  <sampler> Options are 'pmj', 'sobol', 'lattice'.
 ```
 
-- `<sampler>`: options are `pmj`, `sobol`, `lattice`.
+</details>
 
-#### Trace CLI
+<details>
+<summary>Trace CLI usage</summary>
 
-The `trace` tool is a CPU / GPU uni-directional path tracer that provides an
+```
+The 'trace' tool is a CPU / GPU uni-directional path tracer that provides an
 example of how you might use the API in a renderer. There are multiple scenes
 embedded in the source code, including the Cornell box used on this page. This
 also demonstrates how each sampler implementation practically performs.
 
-```bash
-./build/src/tools/cli/trace <sampler> <scene>
+USAGE: ./build/src/tools/cli/trace <sampler> <scene>
+
+ARGS:
+  <sampler> Options are 'pmj', 'pmjbn', 'sobol', 'sobolbn', 'lattice', 'latticebn'.
+  <scene> Options are 'box', 'presence', 'blur'.
 ```
 
-- `<sampler>`: options are `pmj`, `pmjbn`, `sobol`, `sobolbn`, `lattice`, `latticebn`.
-- `<scene>`: options are `box`, `presence`, `blur`.
+</details>
 
-#### Optimise CLI
+<details>
+<summary>Optimise CLI usage</summary>
 
-The `optimise` tool targets a single base sampler implementation and produces
+```
+The 'optimise' tool targets a single base sampler implementation and produces
 the data needed to construct a spatial temporal blue noise variant. The output
-is two tables, files named `keys.txt` and `ranks.txt`.
-
-```bash
-./build/src/tools/cli/optimise <sampler>
-```
-
-- `<sampler>`: options are `pmj`, `sobol`, `lattice`.
+is two tables, files named 'keys.txt' and 'ranks.txt'.
 
 The table data can be mapped to a 3D array, with the axes representing 2D pixel
 coordinates and 1D time. The optimisation process works toroidally, so you can
 tile each table to cover a large spatial and temporal area.
 
-Keys are 32 bit integers, and seed unique sampler domains. Ranks are also 32
-bit integers, and when XORed with the sample index allow for spatial temporal
-blue noise with progressive and adaptive rendering.
+Keys are 32 bit integers, and seed unique sampler domains. Ranks are also 32 bit
+integers, and when XORed with the sample index allow for spatial temporal blue
+noise with progressive and adaptive rendering.
 
 When optimising final quality results it's advisable to use a GPU build of the
 optimiser due to the computational cost. Testing with an NVIDIA RTX A6000 found
 that this provided a speedup of ~400x that of the CPU.
+
+USAGE: ./build/src/tools/cli/optimise <sampler>
+
+ARGS:
+  <sampler> Options are 'pmj', 'sobol', 'lattice'.
+```
+
+</details>
 
 ### Testing
 
