@@ -905,20 +905,6 @@ You now can build and use 'domain trees' in your own software to safely write
 unbiased code, while also getting best in class rates of convergence. For a more
 complete example, see the [path tracer](src/tools/lib/trace.cpp) tool.
 
-### Fixed sample splitting
-
-TODO: example of fixed sample splitting, diagrams, etc.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5.png">
-</picture>
-
-### Dynamic sample splitting
-
-TODO: example of dynamic sample splitting, diagrams, etc.
-
 ## Implementation details
 
 This section will go into detail about each back-end implementation, as well as
