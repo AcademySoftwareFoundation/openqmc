@@ -8,6 +8,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     hypothesis.url = "github:joshbainbridge/hypothesis";
+    hypothesis.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, flake-utils, hypothesis }:
