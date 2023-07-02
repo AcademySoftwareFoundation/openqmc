@@ -713,9 +713,9 @@ sequence of dependent domains. Domains provide up to 4 dimensions each. If more
 dimensions are required, the caller can always derive a new domain.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-1.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-1.png">
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-1-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-1-light.png">
 </picture>
 
 This example works, but isn't very flexible. This can be improved. Types that
@@ -827,15 +827,15 @@ CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
 
 This is the dangerious part! It is to do with the calling code from the previous
 example. Notice that `cameraDomain` is used to derive both `materialDomain` and
-`lensDomain`. These objects are now equal, and only differ in name.
+`lensDomain`. These objects are now equivalent, and only differ in name.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-2.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2.png">
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-2-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2-light.png">
 </picture>
 
-`materialDomain` and `lensDomain` objects being equal results in the drawn
+`materialDomain` and `lensDomain` objects being equivalent results in the drawn
 samples being correlated in a way that leaves gaps in the primary sample space.
 That results in an biased estimate which is bad. But this can be fixed. Here is
 a revised version of the calling code.
@@ -875,9 +875,9 @@ You can branch a domain on a given key either with an enum as seen here, or by
 passing an integer value directly.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-3.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3.png">
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-3-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3-light.png">
 </picture>
 
 Now that `cameraDomain` and `materialDomain` are independent of each other,
@@ -891,9 +891,9 @@ that map domains to the call graph of the code. These trees can become large,
 but are implicitly handled when using the OpenQMC API as demonstrated here.
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-4.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-4.png">
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-4-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-4-light.png">
 </picture>
 
 Here is what this example has identified. Gaps in the primary sample space
@@ -904,20 +904,6 @@ call graph of the code to guarantee safety.
 You now can build and use 'domain trees' in your own software to safely write
 unbiased code, while also getting best in class rates of convergence. For a more
 complete example, see the [path tracer](src/tools/lib/trace.cpp) tool.
-
-### Fixed sample splitting
-
-TODO: example of fixed sample splitting, diagrams, etc.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5.png">
-</picture>
-
-### Dynamic sample splitting
-
-TODO: example of dynamic sample splitting, diagrams, etc.
 
 ## Implementation details
 
@@ -955,7 +941,7 @@ space or access is a concern.
 
 ### Sobol sequences
 
-The implementation use an elegant construction by Burley [^1] for an Owen
+The implementation uses an elegant construction by Burley [^1] for an Owen
 scrambled Sobol sequence. This also includes performance improvements such as
 limiting the index to 16 bits, pre-inverting the input and output matrices, and
 making use of CPU vector intrinsics. You need to select an `OPENQMC_ARCH_TYPE`
@@ -981,7 +967,7 @@ incredibly high rate of integration for smooth functions.
 
 ### Lattice sequences
 
-The implementation use the generator vector from Hickernell et al. [^3] to
+The implementation uses the generator vector from Hickernell et al. [^3] to
 construct a 4D lattice. This is then made into a progressive sequence using
 a scalar based on a radical inversion of the sample index. Randomisation uses
 toroidal shifts.
