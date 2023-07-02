@@ -150,16 +150,18 @@ later will give you some build options to play with.
 ### NixOS package
 
 OpenQMC is available as a Nix flake package on NixOS and other supported
-platforms. You can also use the Nix flake as a hermetic dev environment:
+platforms. The flake can also be used to load a reproducable [developer
+environment](#nix-development-environment). Install the package with:
 
 ```bash
-nix develop github:framestore/openqmc
+nix profile install github:framestore/openqmc
 ```
 
 ### Cloning the source
 
-If you just need the library source and don't need any of the development tools
-or tests, then you can ignore the submodules. You can clone the project with:
+Alternatively for source installs, and if you just want the library and don't
+need any of the development tools or tests, then you can ignore the submodules.
+Clone the project with:
 
 ```bash
 git clone git@github.com:framestore/openqmc.git
@@ -201,13 +203,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenQMC::OpenQMC)
 
 ### Add library as a config-module
 
-Another option is to install the library and use the same configuration across
-multiple downstream projects. You may want to do this if the library is shared
-between projects.
+Another good option is to install the library and use the same configuration
+across multiple downstream projects. You may want to do this if the library is
+shared between projects.
 
-Installation from source is orthodox CMake. CMake defaults the target install
-directory to `/usr/local` which can be overridden with `CMAKE_INSTALL_PREFIX`,
-along with the other optional defines on the command line. An example would be:
+If you haven't used a package manager, or don't want the default configuraiton,
+then you will need to install from source. The installation process is orthodox
+CMake and allows you to set the library build options. An example:
 
 ```bash
 cmake -B build -D CMAKE_INSTALL_PREFIX=/install/path -D OPENQMC_ENABLE_BINARY=ON
@@ -216,7 +218,7 @@ cmake --build build --target install
 
 Adding the library then requires a `find_package` call in your downstream CMake
 project. This uses a CMake config file, which the preceding command would have
-installed, so the configuration is automatically loaded.
+installed, loading the configuration automatically.
 
 ```cmake
 # Find external dependencies
@@ -1174,7 +1176,7 @@ library binary and importing the [python/wrapper.py](python/wrapper.py) module.
 
 This library is also linked against multiple CLI commands found in the
 [src/tools/cli](src/tools/cli) folder. Once you have compiled the tools, you
-can run the CLI binaries from the command line.
+can run the CLI binaries from the command line as shown:
 
 <details>
 <summary>Benchmark CLI usage</summary>
@@ -1329,6 +1331,22 @@ just test
 All Jupyter notebooks used to author the images on this page are under the
 [python/notebooks](python/notebooks) directory and are available to see
 directly online. These use the tools Python CTypes wrapper.
+
+### Nix development environment
+
+On NixOS or systems with Nix available, the provided flake can be used to load a
+working and reproducable developer environment. Load this with:
+
+```bash
+nix develop
+```
+
+For the extra dependencies and environment variables required to run the Jupyter
+notebooks, there is a dedicated development environment:
+
+```bash
+nix develop .#notebook
+```
 
 ## Related projects
 
