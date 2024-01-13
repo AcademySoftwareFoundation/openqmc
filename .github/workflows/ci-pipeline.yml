@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   push:
@@ -20,9 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with: {submodules: true}
-      - run: cmake --preset unix
       - run: sudo apt-get update && sudo apt-get install clang-tidy-11
       - run: sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 50
+      - run: cmake --preset unix
       - run: scripts/check-lint.sh
 
   install:
@@ -34,8 +34,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
-      - run: cmake --build --preset base
-      - uses: actions/upload-artifact@v2
+      - run: cmake --build --preset base --target install
+
+      # Upload installation for example-config
+      - uses: actions/upload-artifact@v3
         with: {name: install, path: "install"}
 
   example-config:
@@ -44,8 +46,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+
+      # Download installation
+      - uses: actions/download-artifact@v3
         with: {name: install, path: "install"}
+
       - run: cmake -S cmake/examples/config -B build -D CMAKE_INSTALL_PREFIX=install
       - run: cmake --build build
       - run: ./build/example-config
@@ -113,11 +118,13 @@ jobs:
         with: {submodules: true}
       - run: cmake --preset unix -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset unix
-      - if: ${{ matrix.save }}
-        run: tar -czvf build.tar build
-      - if: ${{ matrix.save }}
-        uses: actions/upload-artifact@v2
-        with: {name: "${{ matrix.build }}-${{ matrix.arch }}", path: build.tar}
+      - run: tar -czvf build.tar.gz build
+        if: ${{ matrix.save }}
+
+      # Upload tools build for test-generate
+      - uses: actions/upload-artifact@v3
+        with: {name: "${{ matrix.build }}-${{ matrix.arch }}", path: build.tar.gz}
+        if: ${{ matrix.save }}
 
   pre-test-generate:
     name: Pre generate reference data
@@ -127,11 +134,15 @@ jobs:
         sampler: [pmj, sobol, lattice]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v2
+      # Download tools build
+      - uses: actions/download-artifact@v3
         with: {name: Release-Scalar}
-      - run: tar -xzvf build.tar
+
+      - run: tar -xzvf build.tar.gz
       - run: ./build/src/tools/cli/generate ${{ matrix.sampler }} > data
-      - uses: actions/upload-artifact@v2
+
+      # Upload sample data for test-generate
+      - uses: actions/upload-artifact@v3
         with: {name: "${{ matrix.sampler }}", path: data}
 
   test-generate:
@@ -151,10 +162,14 @@ jobs:
           - {os: self-hosted, arch: AVX}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/download-artifact@v2
+      # Download tools build
+      - uses: actions/download-artifact@v3
         with: {name: "${{ matrix.build }}-${{ matrix.arch }}"}
-      - run: tar -xzvf build.tar
-      - uses: actions/download-artifact@v2
+
+      # Download sample data
+      - uses: actions/download-artifact@v3
         with: {name: "${{ matrix.sampler }}"}
+
+      - run: tar -xzvf build.tar.gz
       - run: ./build/src/tools/cli/generate ${{ matrix.sampler }} > output
       - run: diff output data

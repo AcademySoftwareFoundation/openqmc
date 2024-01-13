@@ -25,8 +25,7 @@
 	"buildPresets": [
 		{
 			"name": "base",
-			"configurePreset": "base",
-			"targets": "install"
+			"configurePreset": "base"
 		},
 		{
 			"name": "unix",
