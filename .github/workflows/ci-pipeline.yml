@@ -12,18 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: scripts/check-format.sh
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic scripts/check-format.sh
 
   check-static-analyzer:
     name: Check static analysis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with: {submodules: true}
-      - run: sudo apt-get update && sudo apt-get install clang-tidy-11
-      - run: sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 50
-      - run: cmake --preset unix
-      - run: scripts/check-lint.sh
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake --preset unix
+      - run: nix develop -ic scripts/check-lint.sh
 
   install:
     name: Install library
@@ -33,8 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
-      - run: cmake --build --preset base --target install
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake --preset base -D CMAKE_INSTALL_PREFIX=install
+      - run: nix develop -ic cmake --build --preset base --target install
 
       # Upload installation for example-config
       - uses: actions/upload-artifact@v3
@@ -51,9 +54,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with: {name: install, path: "install"}
 
-      - run: cmake -S cmake/examples/config -B build -D CMAKE_INSTALL_PREFIX=install
-      - run: cmake --build build
-      - run: ./build/example-config
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake -S cmake/examples/config -B build -D CMAKE_INSTALL_PREFIX=install
+      - run: nix develop -ic cmake --build build
+      - run: nix develop -ic ./build/example-config
 
   example-submodule:
     name: Check submodule
@@ -61,9 +66,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cmake -S cmake/examples/submodule -B build
-      - run: cmake --build build
-      - run: ./build/example-submodule
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake -S cmake/examples/submodule -B build
+      - run: nix develop -ic cmake --build build
+      - run: nix develop -ic ./build/example-submodule
 
   example-include:
     name: Check include
@@ -71,9 +78,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cmake -S cmake/examples/include -B build
-      - run: cmake --build build
-      - run: ./build/example-include
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake -S cmake/examples/include -B build
+      - run: nix develop -ic cmake --build build
+      - run: nix develop -ic ./build/example-include
 
   test-unit:
     name: Run unit tests
@@ -87,17 +96,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with: {submodules: true}
-      - run: cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
-      - run: cmake --build --preset unix --target tests
-      - run: ctest --preset unix
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
+      - run: nix develop -ic cmake --build --preset unix --target tests
+      - run: nix develop -ic ctest --preset unix
 
   build-tools:
     name: Build tools library
     needs: test-unit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, self-hosted]
+        # os: [ubuntu-latest, macos-latest, self-hosted]
+        os: [ubuntu-latest, macos-latest]
         arch: [Scalar, SSE, AVX, ARM, GPU]
         build: [Release, Debug]
         exclude:
@@ -106,19 +117,20 @@ jobs:
           - {os: macos-latest, arch: AVX}
           - {os: macos-latest, arch: ARM}
           - {os: macos-latest, arch: GPU}
-          - {os: self-hosted, arch: Scalar}
-          - {os: self-hosted, arch: SSE}
-          - {os: self-hosted, arch: AVX}
+          # - {os: self-hosted, arch: Scalar}
+          # - {os: self-hosted, arch: SSE}
+          # - {os: self-hosted, arch: AVX}
         include:
           - {os: ubuntu-latest, save: true}
-          - {os: self-hosted, save: true}
+          # - {os: self-hosted, save: true}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-        with: {submodules: true}
-      - run: cmake --preset unix -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
-      - run: cmake --build --preset unix
-      - run: tar -czvf build.tar.gz build
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - run: nix develop -ic cmake --preset unix -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
+      - run: nix develop -ic cmake --build --preset unix
+      - run: nix develop -ic tar -czvf build.tar.gz build
         if: ${{ matrix.save }}
 
       # Upload tools build for test-generate
@@ -150,16 +162,17 @@ jobs:
     needs: pre-test-generate
     strategy:
       matrix:
-        os: [ubuntu-latest, self-hosted]
+        # os: [ubuntu-latest, self-hosted]
+        os: [ubuntu-latest]
         arch: [Scalar, SSE, AVX, ARM, GPU]
         build: [Release, Debug]
         sampler: [pmj, sobol, lattice]
         exclude:
           - {os: ubuntu-latest, arch: ARM}
           - {os: ubuntu-latest, arch: GPU}
-          - {os: self-hosted, arch: Scalar}
-          - {os: self-hosted, arch: SSE}
-          - {os: self-hosted, arch: AVX}
+          # - {os: self-hosted, arch: Scalar}
+          # - {os: self-hosted, arch: SSE}
+          # - {os: self-hosted, arch: AVX}
     runs-on: ${{ matrix.os }}
     steps:
       # Download tools build
