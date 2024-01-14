@@ -5,7 +5,7 @@
   description = "Quasi-Monte Carlo sampling library for rendering and graphics applications";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/23.05";
     flake-utils.url = "github:numtide/flake-utils";
     hypothesis.url = "github:joshbainbridge/hypothesis";
     hypothesis.inputs.nixpkgs.follows = "nixpkgs";
@@ -46,6 +46,8 @@
         } {
           name = "notebook";
           packages = [
+            pkgs.python310Packages.python-lsp-server
+            pkgs.python310Packages.python-lsp-ruff
             pkgs.python310Packages.jupyter
             pkgs.python310Packages.matplotlib
             pkgs.python310Packages.numpy
