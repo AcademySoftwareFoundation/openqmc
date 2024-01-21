@@ -17,6 +17,12 @@ class MockImpl
 
 using MockSampler = oqmc::SamplerInterface<MockImpl>;
 
+TEST(SamplerTest, CacheSize)
+{
+	const auto cacheSize = MockSampler::cacheSize;
+	ASSERT_EQ(cacheSize, 0);
+}
+
 TEST(SamplerTest, DefaultConstructor)
 {
 	const MockSampler sampler;

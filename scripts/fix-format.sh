@@ -3,7 +3,5 @@
 
 #!/bin/bash
 
-grepCmd="grep -E '\.(cpp|h)$'"
-xargsCmd="xargs clang-format -i"
-
-git ls-files | eval "$grepCmd" | eval "$xargsCmd"
+git ls-files | grep -E '\.(cpp|h)$' | xargs clang-format -i
+git ls-files | grep -E '\.(py)$' | xargs ruff format --quiet

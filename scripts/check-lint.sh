@@ -3,7 +3,5 @@
 
 #!/bin/bash
 
-grepCmd="grep -E '\.cpp$' | grep -v -E '^cmake/examples/'"
-xargsCmd="xargs clang-tidy -p build/compile_commands.json --quiet --warnings-as-errors='*'"
-
-git ls-files | eval "$grepCmd" | eval "$xargsCmd"
+git ls-files | grep -E '\.(cpp)$' | xargs clang-tidy -p build/compile_commands.json --warnings-as-errors='*' --quiet
+git ls-files | grep -E '\.(py)$' | xargs ruff check --quiet --show-source
