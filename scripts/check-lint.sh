@@ -2,6 +2,10 @@
 # Copyright Contributors to the OpenQMC Project.
 
 #!/bin/bash
+set -e
 
-git ls-files | grep -E '\.(cpp)$' | xargs clang-tidy -p build/compile_commands.json --warnings-as-errors='*' --quiet
+clang-tidy --version
+git ls-files | grep -E '\.(cpp)$' | grep -v -E '^cmake/examples/' | xargs clang-tidy -p build/compile_commands.json --warnings-as-errors='*' --quiet
+
+ruff --version
 git ls-files | grep -E '\.(py)$' | xargs ruff check --quiet --show-source

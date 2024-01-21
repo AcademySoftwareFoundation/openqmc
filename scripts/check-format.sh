@@ -2,6 +2,10 @@
 # Copyright Contributors to the OpenQMC Project.
 
 #!/bin/bash
+set -e
 
+clang-tidy --version
 git ls-files | grep -E '\.(cpp|h)$' | xargs clang-format --dry-run -Werror
+
+ruff --version
 git ls-files | grep -E '\.(py)$' | xargs ruff format --diff --quiet
