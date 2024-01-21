@@ -1332,6 +1332,14 @@ All Jupyter notebooks used to author the images on this page are under the
 [python/notebooks](python/notebooks) directory and are available to see
 directly online. These use the tools Python CTypes wrapper.
 
+Images on this page are generated with a build of the tools library, and then
+executing the notebooks from the command line. This is done twice, once for each
+colour theme. The process is automated in the following script:
+
+```bash
+./scripts/save-notebook-images.sh
+```
+
 ### Nix development environment
 
 On NixOS or systems with Nix available, the provided flake can be used to load a

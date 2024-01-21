@@ -65,23 +65,31 @@ Any new public functions or types should also come with appropriate unit and sta
 
 ## Coding style
 
-Coding style follows the definitions found in [.clang-format](.clang-format) and [.clang-tidy](.clang-tidy). The project enforces compliance through the CI process. Prior to committing code, you can validate the changes pass any tests using these scripts:
+Coding style follows a predefined definition for both C++ and Python. And the project enforces compliance through the CI process. Prior to committing code, you can validate the changes pass formatting tests using this script:
 
 ```bash
 ./scripts/check-format.sh
-./scripts/check-lint.sh
 ```
 
-You can also correct most violations automatically, although some linting errors do require manual changes. These scripts apply any automatic fixes:
+If there are any formatting errors, these should ideally be resolved prior to commiting and pushing the code, as the CI process will not allow it to be merged otherwise. Any issues can be automatically fixed using the following script:
 
 ```bash
 ./scripts/fix-format.sh
-./scripts/fix-lint.sh
 ```
 
-For warnings in your editor as you work you can use Language Server Protocol extensions with a [clangd](https://clangd.llvm.org) server. This provides diagnostic information and code changes to resolve warnings while you work.
+For automated formating upon save in your editor, make sure your development enviroment is setup to use both ClangFormat and Black. This can be done using the [Language Server Protocol](https://microsoft.github.io/language-server-protocol).
 
-For more information on both of these tools and their formats, please see [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) and [ClangTidy](https://clang.llvm.org/extra/clang-tidy/).
+## Linting
+
+Code linting is evaluated against a set of rules for both C++ and Python. These rules are checked during the CI process, similarly to [formatting](#coding-style). Prior to commiting code changes, you can validate those changes do not cause any linting errors using this script:
+
+```bash
+./scripts/check-lint.sh
+```
+
+If there are errors, these should ideally be addressed prior to commiting the changes. If this is not done then the CI process will fail and prevent those changes from merging.
+
+For automated diagnostic checks in your editor, make sure your development enviroment is setup to integrate both ClangTidy and Flake8. This can be done using [Language Server Protocol](https://microsoft.github.io/language-server-protocol).
 
 ## Documentation style
 

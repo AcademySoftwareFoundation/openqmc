@@ -9,19 +9,19 @@ on:
 jobs:
   check-formatting:
     name: Check formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - run: pip install ruff
       - run: scripts/check-format.sh
 
   check-static-analyzer:
     name: Check static analysis
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with: {submodules: true}
-      - run: sudo apt-get update && sudo apt-get install clang-tidy-11
-      - run: sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 50
+      - run: pip install ruff
       - run: cmake --preset unix
       - run: scripts/check-lint.sh
 
@@ -30,7 +30,7 @@ jobs:
     needs:
       - check-formatting
       - check-static-analyzer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
@@ -43,7 +43,7 @@ jobs:
   example-config:
     name: Check config
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
@@ -58,7 +58,7 @@ jobs:
   example-submodule:
     name: Check submodule
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - run: cmake -S cmake/examples/submodule -B build
@@ -68,7 +68,7 @@ jobs:
   example-include:
     name: Check include
     needs: install
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - run: cmake -S cmake/examples/include -B build
@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         build: [Release, Debug]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with: {submodules: true}
@@ -97,20 +97,20 @@ jobs:
     needs: test-unit
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, self-hosted]
+        os: [ubuntu-22.04, macos-12, self-hosted]
         arch: [Scalar, SSE, AVX, ARM, GPU]
         build: [Release, Debug]
         exclude:
-          - {os: ubuntu-latest, arch: ARM}
-          - {os: ubuntu-latest, arch: GPU}
-          - {os: macos-latest, arch: AVX}
-          - {os: macos-latest, arch: ARM}
-          - {os: macos-latest, arch: GPU}
+          - {os: ubuntu-22.04, arch: ARM}
+          - {os: ubuntu-22.04, arch: GPU}
+          - {os: macos-12, arch: AVX}
+          - {os: macos-12, arch: ARM}
+          - {os: macos-12, arch: GPU}
           - {os: self-hosted, arch: Scalar}
           - {os: self-hosted, arch: SSE}
           - {os: self-hosted, arch: AVX}
         include:
-          - {os: ubuntu-latest, save: true}
+          - {os: ubuntu-22.04, save: true}
           - {os: self-hosted, save: true}
     runs-on: ${{ matrix.os }}
     steps:
@@ -132,7 +132,7 @@ jobs:
     strategy:
       matrix:
         sampler: [pmj, sobol, lattice]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       # Download tools build
       - uses: actions/download-artifact@v3
@@ -150,13 +150,13 @@ jobs:
     needs: pre-test-generate
     strategy:
       matrix:
-        os: [ubuntu-latest, self-hosted]
+        os: [ubuntu-22.04, self-hosted]
         arch: [Scalar, SSE, AVX, ARM, GPU]
         build: [Release, Debug]
         sampler: [pmj, sobol, lattice]
         exclude:
-          - {os: ubuntu-latest, arch: ARM}
-          - {os: ubuntu-latest, arch: GPU}
+          - {os: ubuntu-22.04, arch: ARM}
+          - {os: ubuntu-22.04, arch: GPU}
           - {os: self-hosted, arch: Scalar}
           - {os: self-hosted, arch: SSE}
           - {os: self-hosted, arch: AVX}

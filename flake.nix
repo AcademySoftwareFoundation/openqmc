@@ -5,7 +5,7 @@
   description = "Quasi-Monte Carlo sampling library for rendering and graphics applications";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/23.11";
     flake-utils.url = "github:numtide/flake-utils";
     hypothesis.url = "github:joshbainbridge/hypothesis";
     hypothesis.inputs.nixpkgs.follows = "nixpkgs";
@@ -26,12 +26,13 @@
         } {
           name = "devshell";
           packages = [
+            pkgs.cmakeCurses
             pkgs.clang-tools
             pkgs.clang
-            pkgs.git
-            pkgs.cmakeCurses
             pkgs.ninja
             pkgs.just
+            pkgs.ruff
+            pkgs.git
             pkgs.glm
             pkgs.gtest
             pkgs.tbb_2021_8
@@ -46,8 +47,10 @@
         } {
           name = "notebook";
           packages = [
+            pkgs.python310Packages.python
             pkgs.python310Packages.python-lsp-server
             pkgs.python310Packages.python-lsp-ruff
+            pkgs.python310Packages.python-lsp-black
             pkgs.python310Packages.jupyter
             pkgs.python310Packages.matplotlib
             pkgs.python310Packages.numpy
