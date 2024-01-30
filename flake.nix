@@ -27,6 +27,7 @@
           name = "devshell";
           packages = [
             pkgs.cmakeCurses
+            pkgs.llvm
             pkgs.clang-tools
             pkgs.clang
             pkgs.ninja

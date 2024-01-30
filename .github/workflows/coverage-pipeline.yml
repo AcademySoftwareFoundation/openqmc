@@ -1,0 +1,47 @@
+name: Coverage Pipeline
+
+on:
+  push:
+    branches: main
+
+jobs:
+  test-coverage:
+    name: Test coverage
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with: {submodules: true}
+
+      # Install and set LLVM and Clang respectively
+      - run: sudo apt-get update && sudo apt-get install llvm
+      - run: sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 50
+
+      # Configure and build test binary
+      - run: cmake --preset unix -D CMAKE_CXX_FLAGS='-fprofile-instr-generate -fcoverage-mapping'
+      - run: cmake --build --preset unix --target tests
+
+      # Run instrumented test binary and gather coverage data
+      - run: LLVM_PROFILE_FILE='build/coverage.profraw' build/src/tests/tests
+      - run: llvm-profdata merge --sparse --output build/coverage.profdata build/coverage.profraw
+      - run: llvm-cov export --instr-profile build/coverage.profdata build/src/tests/tests include > coverage.json
+      - run: llvm-cov show --instr-profile build/coverage.profdata --format html --output-dir coverage-report build/src/tests/tests include
+
+      # Extract the total function coverage percentage
+      - run: sudo apt-get update && sudo apt-get install jq
+      - run: echo "COVERAGE=$(jq '.data[0].totals.functions.percent' coverage.json)" >> $GITHUB_ENV
+
+      # Upload json data for coverage badge
+      - uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: c64d4efeaa4f0760255cc54cdadce85c
+          filename: test.json
+          label: coverage
+          message: ${{ env.COVERAGE }}%
+          valColorRange: ${{ env.COVERAGE }}
+          minColorRange: 0
+          maxColorRange: 100
+
+      # Upload coverage report artifact
+      - uses: actions/upload-artifact@v3
+        with: {name: coverage-report, path: "coverage-report"}
