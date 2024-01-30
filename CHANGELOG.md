@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2024-01-30
+### Changed
+- Improvements to the trace tool, aimed at making the API calls clearer when used as an example.
+
 ## [0.3.0] - 2022-11-30
 ### Added
 - Support default construction in the sampler interface to allow for placeholder objects.
