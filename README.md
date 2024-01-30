@@ -6,10 +6,10 @@
   </picture>
 </p>
 
-[![License](https://img.shields.io/badge/license-Apache--2.0-informational)](https://github.com/framestore/openqmc/blob/main/LICENSE)
-[![Version](https://img.shields.io/github/v/release/framestore/openqmc)](https://github.com/framestore/openqmc/releases/latest)
+[![License](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/framestore/openqmc/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/framestore/openqmc?label=Release)](https://github.com/framestore/openqmc/releases/latest)
 ![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)
-[![CI](https://github.com/framestore/openqmc/workflows/ci/badge.svg)](https://github.com/framestore/openqmc/actions?query=branch%3Amain)
+[![CI Pipeline](https://github.com/framestore/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/framestore/openqmc/actions/workflows/ci-pipeline.yml)
 
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
 and generating pseudo random numbers. Designed for graphics applications,
