@@ -91,6 +91,20 @@ If there are errors, these should ideally be addressed prior to commiting the ch
 
 For automated diagnostic checks in your editor, make sure your development enviroment is setup to integrate both ClangTidy and Flake8. This can be done using [Language Server Protocol](https://microsoft.github.io/language-server-protocol).
 
+## Coverage
+
+Test coverage is evaluated using [llvm](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html) and is run on the CI pipeline. However you can also run the check locally. First step is to add the appropiate build flags for enabling compiler instrumentation:
+
+```bash
+cmake --preset unix -D CMAKE_CXX_FLAGS='-fprofile-instr-generate -fcoverage-mapping'
+```
+
+Then follow the steps in [Testing](README.md#testing) to build the unit test binary. Once the tests are built, the instrumentation will need to run all tests to gather the coverage data, before reporting the results. You can do this last step using the following script:
+
+```bash
+./scripts/check-coverage.sh
+```
+
 ## Documentation style
 
 More general documentation outside of code itself follows the [Google developer documentation style guide](https://developers.google.com/style). Contributors should see this as a guide and not a list of rules. Strict compliance to the guide isn't required and isn't validated during the CI process. It's instead up to the PR process to make sure documentation is up to date and of high quality.
