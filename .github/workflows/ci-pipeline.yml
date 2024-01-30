@@ -11,7 +11,7 @@ jobs:
     name: Check formatting
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: pip install ruff
       - run: scripts/check-format.sh
 
@@ -19,7 +19,7 @@ jobs:
     name: Check static analysis
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with: {submodules: true}
       - run: pip install ruff
       - run: cmake --preset unix
@@ -32,7 +32,7 @@ jobs:
       - check-static-analyzer
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
       - run: cmake --build --preset base --target install
 
@@ -45,7 +45,7 @@ jobs:
     needs: install
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Download installation
       - uses: actions/download-artifact@v3
@@ -60,7 +60,7 @@ jobs:
     needs: install
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake -S cmake/examples/submodule -B build
       - run: cmake --build build
       - run: ./build/example-submodule
@@ -70,7 +70,7 @@ jobs:
     needs: install
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake -S cmake/examples/include -B build
       - run: cmake --build build
       - run: ./build/example-include
@@ -86,7 +86,7 @@ jobs:
         build: [Release, Debug]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with: {submodules: true}
       - run: cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset unix --target tests
@@ -114,7 +114,7 @@ jobs:
           - {os: self-hosted, save: true}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with: {submodules: true}
       - run: cmake --preset unix -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset unix
