@@ -6,14 +6,14 @@
   </picture>
 </p>
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/framestore/openqmc/blob/main/LICENSE)
+[![Licence](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/framestore/openqmc/blob/main/LICENSE)
 [![Release](https://img.shields.io/github/v/release/framestore/openqmc?label=Release)](https://github.com/framestore/openqmc/releases/latest)
 ![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)
 [![CI Pipeline](https://github.com/framestore/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/framestore/openqmc/actions/workflows/ci-pipeline.yml)
 
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
 and generating pseudo random numbers. Designed for graphics applications,
-the library is part of Framestore's proprietry renderer [Freak](https://www.framestore.com/work/rendering)
+the library is part of Framestore's proprietary renderer [Freak](https://www.framestore.com/work/rendering)
 and is actively used in VFX production.
 
 <picture>
@@ -27,8 +27,7 @@ and is actively used in VFX production.
 This C++14 (CPU, GPU) header only library provides an API to deliver high
 quality QMC sample points. The API aims to be compatible with a variety of
 common use cases found in production codebases. The library also provides
-multiple state of the art back-end implementations to maximise rate of
-convergence.
+multiple state of the art back-end implementations to minimise noise.
 
 There are three primary aims for the project:
 
@@ -55,21 +54,21 @@ Project features are:
 - No library or STL dependencies.
 - Includes tools, docs and examples.
 
-The API allows you to focus on writing graphics technology, while safely getting
-the best in class rates of convergence possible. The project maintainers would
-like developers to confidently leverage QMC sampling everywhere. This is what
-the OpenQMC API and [domain branching](#domain-branching) makes possible.
+The API lets you focus on writing graphics algorithms while getting bias-free
+results and best-in-class convergence rates. The project maintainers would
+like developers to leverage QMC sampling everywhere confidently — this is what
+the OpenQMC API and the concept of [domain branching](#domain-branching) aim
+to achieve.
 
-A variant of the library is actively used by Framestore to produce rich, feature
-film VFX content. As a result the project has been battle tested in production
-on a large scale. Framestore are committed to continue contributing any further
-improvements from production to this open initiative.
+The project is battle-tested. Framestore actively uses a variant of this library
+to produce visually rich feature film VFX content and is committed to continue
+contributing any further improvements to this open initiative.
 
 ## Usage
 
-Here is a quick example of what OpenQMC looks like. Feel free to copy paste this
-code to get yourself started, or continue reading to learn more about techniques
-that might help you write unbiased software.
+Here is a quick example of what OpenQMC looks like. Feel free to copy and paste
+this code to get yourself started, or continue reading to learn about the API
+and techniques for writing more advanced algorithms.
 
 ```cpp
 // 1. Initialise the sampler cache.
@@ -112,10 +111,10 @@ This algorithm loops over all pixels and for each sample adds a small value if a
 random pixel offset falls within a quarter disk. The end result is an image of a
 disk with anti-aliased pixels across the edge of the shape.
 
-If you would like to see a more interesting example, have a look at the source
-code for the [path tracer](src/tools/lib/trace.cpp) tool. Or alternatively go to
-the [concepts and examples](#concepts-and-examples) section to learn about using
-OpenQMC to write unbiased code.
+If you would like to see a real example of a path tracer, have a look at the
+source code for the [trace](src/tools/lib/trace.cpp) tool. Or alternatively go
+to the [concepts and examples](#concepts-and-examples) section to read about
+more advanced solutions.
 
 ## Requirements
 
@@ -151,7 +150,7 @@ later will give you some build options to play with.
 ### NixOS package
 
 OpenQMC is available as a Nix flake package on NixOS and other supported
-platforms. The flake can also be used to load a reproducable [developer
+platforms. The flake can also be used to load a reproducible [developer
 environment](#nix-development-environment). Install the package with:
 
 ```bash
@@ -208,9 +207,10 @@ Another good option is to install the library and use the same configuration
 across multiple downstream projects. You may want to do this if the library is
 shared between projects.
 
-If you haven't used a package manager, or don't want the default configuraiton,
-then you will need to install from source. The installation process is orthodox
-CMake and allows you to set the library build options. An example:
+If you haven't used a package manager before or want to avoid the default
+configuration, then you will need to install it from the source. The CMake
+installation process will follow an idiomatic approach that provides you the
+opportunity to set library build options. An example:
 
 ```bash
 cmake -B build -D CMAKE_INSTALL_PREFIX=/install/path -D OPENQMC_ENABLE_BINARY=ON
@@ -218,8 +218,8 @@ cmake --build build --target install
 ```
 
 Adding the library then requires a `find_package` call in your downstream CMake
-project. This uses a CMake config file, which the preceding command would have
-installed, loading the configuration automatically.
+project. `find_package` will access a CMake config file which was created upon
+installation, allowing the installed requirements to be loaded automatically.
 
 ```cmake
 # Find external dependencies
@@ -234,8 +234,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenQMC::OpenQMC)
 
 ### Add library manually
 
-Alternatively you can add the library manually as header only. Although doing
-so prevents use of options and isn't recommended.
+Alternatively you can add the library manually as header-only. However, this
+method isn't recommended, as it can be error-prone and prevents using build
+options otherwise available via CMake.
 
 ```cmake
 # Enable C++14 support
@@ -266,7 +267,7 @@ which apply to downstream projects. The options are:
 ## Versioning
 
 Version numbers follow [Semantic Versioning](http://semver.org/) to indicate
-how changes effect the API between releases of the library. Given a version
+how changes affect the API between releases of the library. Given a version
 number MAJOR.MINOR.PATCH, incrementing a version means:
 
 1. MAJOR indicates an incompatible API change.
@@ -287,7 +288,7 @@ samplers, and are free to use these directly. But it's recommended that users
 take advantage of the sampler interface which defines a generic API for all
 implementations, and provides a contract to the calling code.
 
-The API is a static (compile-time polymophic) interface. This is an important
+The API is a static (compile-time polymorphic) interface. This is an important
 detail, as it allows for implementations to be passed-by-value without dynamic
 memory allocation, while also allowing inlining for zero-cost abstraction.
 
@@ -550,7 +551,7 @@ implementations and their required header files:
 - [`oqmc/oqmc.h`](include/oqmc/oqmc.h): Convenience header includes all implementations.
 
 This diagram gives a high level view of the available implementations and how
-they relate to one another. Each implementation inlcudes a blue noise variant
+they relate to one another. Each implementation includes a blue noise variant
 which you can read more about [here](#spatial-temporal-blue-noise).
 
 <picture>
@@ -559,15 +560,15 @@ which you can read more about [here](#spatial-temporal-blue-noise).
   <img alt="High level implementation diagram." src="./images/diagrams/high-level-overview-light.png">
 </picture>
 
-The following sub-sections will provide some analysis on each of the
-implmentations and outline their tradoffs, so that you can make an informed
+The following subsections will provide some analysis on each of the
+implementations and outline their tradeoffs, so that you can make an informed
 decision on what implementation would be best for your use case.
 
 ### Rate of convergence
 
 These plots show the rate of convergence for different implementations across
-different two dimensional integrals. Each plot takes the average of 128 runs,
-plotting a data point for every sample count.
+different two-dimensional integrals. Each plot takes the average of 128 runs,
+plotting a data point for each sample count value.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-plot-light.png">
@@ -579,7 +580,7 @@ The following plots show, for a fixed sample count, how the error decreases
 with a Gaussian filter as the standard deviation increases. It shows,
 especially for low samples counts, the faster convergence of the blue noise
 variants. This is an indicator that these may be a better option if your images
-are then filtered with a denoise pass.
+are then filtered with a de-noise pass.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-filter-space-plot-light.png">
@@ -590,7 +591,7 @@ are then filtered with a denoise pass.
 The preceding plots filtered the error spatially. The following plots filter
 the error temporally. They show that averaging the frames over time also
 favours the blue noise variants. Useful if you feed the frames into a temporal
-anti-aliasing algorithm.
+antialiasing algorithm.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-filter-time-plot-light.png">
@@ -602,7 +603,7 @@ anti-aliasing algorithm.
 
 These plots show zoneplate tests for each sampler implementation, and give an
 indication of any potential for structural aliasing across varying frequencies
-and directions. Often this manifest as a moire pattern.
+and directions. Often this manifests as a moiré pattern.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/zoneplate-plot-light.png">
@@ -614,7 +615,7 @@ and directions. Often this manifest as a moire pattern.
 
 In these charts you can see the time it takes to compute N samples for each
 implementation. Each sample takes 256 dimensions. It also shows the cost of
-cache initialisation, this is often a trade off for runtime performance. The
+cache initialisation, this is often a trade-off for runtime performance. The
 plot measured the results on an Apple Silicon M1 Max with `OPENQMC_ARCH_TYPE`
 set to `ARM` for Neon intrinsics.
 
@@ -626,10 +627,9 @@ set to `ARM` for Neon intrinsics.
 
 ### Pixel sampling
 
-These are basic path traced renders of the Cornell box comparing the effect
-of each implementation. There are two rows of insets. The top row shows pixel
-variance due to a discontinuous visibility term. And the bottom row shows the
-variance of sampling a light at a grazing angle without considering projection.
+These are path-traced images of the Cornell box comparing the results from each
+implementation. The top row of insets shows pixel variance due to the visibility
+term; the bottom row shows the variance of sampling a light at a grazing angle.
 Each inset had 2 samples per pixel. Numbers indicate RMSE.
 
 <picture>
@@ -657,14 +657,14 @@ higher rate of convergence takes effect.
 ## Concepts and examples
 
 OpenQMC aims to provide an API that makes using high quality samples easy and
-safe when writing software with numerical integration. You have already seen a
-very basic example of this in the [Usage](#usage) section. This section will go
-into more detail on the concepts, and provide some more complex examples.
+bias-free when writing software with numerical integration. You have already
+seen a very basic example of this in the [Usage](#usage) section. This section
+will go into more detail on the concepts and provide some more complex examples.
 
 The section will build upon a simple example, introduce the concepts of domain
-trees and sample splitting, and show some of the potential pit-falls OpenQMC
+trees and sample splitting, and show some of the potential pitfalls OpenQMC
 prevents by following some basic rules. After this, you should be able to
-confidently make use of QMC samples in your own software.
+confidently make use of QMC sampling in your own software.
 
 ### Sampling domains
 
@@ -732,7 +732,7 @@ last example, samples were drawn and passed to a type that implements the
 `MaterialInterface`. If the samples are not required, the type doesn't have the
 option to prevent the samples from being drawn.
 
-You can resolve this by changing the interface to pass a domain, defering the
+You can resolve this by changing the interface to pass a domain, deferring the
 decision to draw samples to the type. Here are two types that implement such an
 interface, `DiffuseMaterial` and `SpecularMaterial`.
 
@@ -789,7 +789,7 @@ Result estimatePixel(const oqmc::PmjSampler pixelDomain,
 
 Sometimes a type needs an unknown number of samples. The next section will show
 how that can be achieved. This will introduce a potential danger, as well as a
-new concept called 'domain trees' that can be used to do the operation safely.
+new concept called domain trees that can be used to do the operation safely.
 
 ### Domain branching
 
@@ -828,7 +828,7 @@ CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
 }
 ```
 
-This is the dangerious part! It is to do with the calling code from the previous
+This is the dangerous part! It is to do with the calling code from the previous
 example. Notice that `cameraDomain` is used to derive both `materialDomain` and
 `lensDomain`. These objects are now equivalent, and only differ in name.
 
@@ -840,7 +840,7 @@ example. Notice that `cameraDomain` is used to derive both `materialDomain` and
 
 `materialDomain` and `lensDomain` objects being equivalent results in the drawn
 samples being correlated in a way that leaves gaps in the primary sample space.
-That results in an biased estimate which is bad. But this can be fixed. Here is
+That results in a biased estimate, which is bad. But this can be fixed. Here is
 a revised version of the calling code.
 
 ```cpp
@@ -883,15 +883,13 @@ passing an integer value directly.
   <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3-light.png">
 </picture>
 
-Now that `cameraDomain` and `materialDomain` are independent of each other,
-the `ThinLensCamera` is free to use the domain passed to it in whichever way
-it likes. The code is now guaranteed to not produce gaps in the primary sample
-space, and so will be unbiased.
+Now that `cameraDomain` and `materialDomain` are independent, the
+`ThinLensCamera` can use the domain passed to it in whichever way it needs.
 
-By combining and applying these methods of deriving domains both sequentially
-within loops, and with branching across interfaces, you build 'domain trees'
-that map domains to the call graph of the code. These trees can become large,
-but are implicitly handled when using the OpenQMC API as demonstrated here.
+Mapping domains to the code's call graph creates domain trees. If you are
+careful to derive domains sequentially in loops and to apply branching across
+interfaces, there is a guarantee your algorithm will not create gaps in the
+primary sample space and produces bias-free results.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4-light.png">
@@ -899,27 +897,27 @@ but are implicitly handled when using the OpenQMC API as demonstrated here.
   <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-4-light.png">
 </picture>
 
+OpenQMC's design makes domain trees a first-class concept and lets you focus on
+writing complex and correct sampling code by applying the techniques described.
+
 Here is what this example has identified. Gaps in the primary sample space
 produce bias. Branching can be used to make domains independent of one another.
-This independence prevents such bias. Finally 'domain trees' should match the
-call graph of the code to guarantee safety.
-
-You now can build and use 'domain trees' in your own software to safely write
-unbiased code, while also getting best in class rates of convergence. For a more
-complete example, see the [path tracer](src/tools/lib/trace.cpp) tool.
+This independence prevents such bias. Finally, domain trees should match the
+call graph of the code to guarantee bias-free results. For a more complete
+example, see the [trace](src/tools/lib/trace.cpp) tool.
 
 ## Implementation details
 
 This section will go into detail about each back-end implementation, as well as
-the blue noise variants. Here you can find out about practical trade offs for
-each option so you can decide which is best for your use case.
+the blue noise variants. Here you can find out about practical trade-offs for
+each option, so you can decide which is best for your use case.
 
 ### PMJ sequences
 
 The implementation uses the stochastic method described by Helmer et la. [^2]
 to efficiently construct a progressive multi-jittered (0,2) sequence. The first
 pair of dimensions in a domain have the same integration properties as the
-Sobol implementation. However as the sequence doesn't extend to more than two
+Sobol implementation. However, as the sequence doesn't extend to more than two
 dimensions, the second pair is randomised relative to the first in a single
 domain.
 
@@ -947,8 +945,8 @@ space or access is a concern.
 The implementation uses an elegant construction by Burley [^1] for an Owen
 scrambled Sobol sequence. This also includes performance improvements such as
 limiting the index to 16 bits, pre-inverting the input and output matrices, and
-making use of CPU vector intrinsics. You need to select an `OPENQMC_ARCH_TYPE`
-to make use of the performance from vector intrinsics for a given architecture.
+making use of CPU vector intrinsics. You need to select a `OPENQMC_ARCH_TYPE` to
+make use of the performance from vector intrinsics for a given architecture.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/sobol-design-light.png">
@@ -956,8 +954,8 @@ to make use of the performance from vector intrinsics for a given architecture.
   <img alt="sobol pair plot." src="./images/diagrams/sobol-design-light.png">
 </picture>
 
-This sampler has no cache initialisation cost, it generates all samples on the
-fly without touching memory. However the cost per draw sample call is
+This sampler has no cache initialisation cost, it generates all samples on
+the fly without touching memory. However, the cost per draw sample call is
 computationally higher than other samplers. The quality of Owen scramble
 sequences often outweigh this cost due to their random error cancellation and
 incredibly high rate of integration for smooth functions.
@@ -983,7 +981,7 @@ toroidal shifts.
 
 This sampler has no cache initialisation cost, it generates all samples on the
 fly without touching memory. Runtime performance is also high with a relatively
-low computation cost for a single draw sample call. However the rate of
+low computation cost for a single draw sample call. However, the rate of
 integration per pixel can be lower when compared to other samplers.
 
 <picture>
@@ -1019,8 +1017,8 @@ single pair of tables to provide keys and ranks for many domains.
 
 Although the spatial temporal blue noise doesn't reduce the error for an
 individual pixel, it does give a better perceptual result due to less low
-frequency structure in the error between pixels. Also if an image is either
-spatially or temporally filtered (as with denoising or temporal anti-aliasing),
+frequency structure in the error between pixels. Also, if an image is either
+spatially or temporally filtered (as with denoising or temporal antialiasing),
 the resulting error can be much lower when using a blue noise variant as shown
 in [Rate of convergence](#rate-of-convergence).
 
@@ -1048,6 +1046,7 @@ domains, while producing high quality random results upon drawing samples.
 
 Roadmap for version 1.0.0 of the library:
 
+- Gather feedback and iterate.
 - Add complete documentation.
 - Add support for Windows OS.
 - Add more package managers.
@@ -1123,7 +1122,7 @@ the tools and tests. The options are:
 You can use configurations for [Extra build options](#extra-build-options)
 based on your operating system by referencing pre-defined CMake presets. The
 preset for Linux and macOS has the name `unix`. Presets initialise the build
-config so that it's ready for development. You just need to run:
+config so that it's ready for development. Do this by running:
 
 ```bash
 cmake --preset unix
@@ -1274,7 +1273,7 @@ cmake --build --preset unix --target tests
 ```
 
 Tests are then managed and run using CTest. You can run the tests using the
-CTest CLI from the project root directory. Just run the command:
+CTest CLI from the project root directory. Run the command:
 
 ```bash
 ctest --preset unix
@@ -1300,7 +1299,7 @@ a description:
 just
 ```
 
-As a developer, you can setup the project using the `setup` recipe. This will
+As a developer, you can set up the project using the `setup` recipe. This will
 run the commands described in [Build configuration](#build-configuration) using
 the `unix` preset:
 
@@ -1308,9 +1307,9 @@ the `unix` preset:
 just setup
 ```
 
-By default just asks CMake to use [Ninja](https://ninja-build.org) as the build
-generator. Instructions on getting Ninja are on their site. If you would like
-to use a different generator, you can pass a parameter to `setup`:
+By default, just asks CMake to use [Ninja](https://ninja-build.org) as the build
+generator. Instructions on getting Ninja are on their site. If you would like to
+use a different generator, you can pass a parameter to `setup`:
 
 ```bash
 just setup `Unix Makefiles`
@@ -1344,7 +1343,7 @@ colour theme. The process is automated in the following script:
 ### Nix development environment
 
 On NixOS or systems with Nix available, the provided flake can be used to load a
-working and reproducable developer environment. Load this with:
+working and reproducible developer environment. Load this with:
 
 ```bash
 nix develop
@@ -1365,7 +1364,7 @@ OpenQMC doesn't solve your problem, one of these might be a better option:
 - [Uni{corn|form} toolkit](https://github.com/utk-team/utk) is a great resource,
   but is more intended for research rather than production use.
 - [Andrew Helmer](https://github.com/Andrew-Helmer/stochastic-generation) gives
-  a great example implementation of a their sampler, but no general interface.
+  a great example implementation of their sampler, but no general interface.
 - [Pbrt](https://github.com/mmp/pbrt-v4) is a seminal resource on all things
   rendering, but is written for educational purposes.
 
@@ -1375,7 +1374,7 @@ All contributions to the project are welcome. For guidance on how to contribute
 please see the following pages:
 
 - [CONTRIBUTING.md](CONTRIBUTING.md), process and procedures for contributing
-  work towards the project. This includes signoff instructions, coding style,
+  work towards the project. This includes sign-off instructions, coding style,
   as well as other requirements for a pull request.
 - [GOVERNANCE.md](GOVERNANCE.md), overview of the governing procedure, and
   the difference between project maintainer roles. The process of becoming a
