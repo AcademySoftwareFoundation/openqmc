@@ -33,9 +33,12 @@ OQMC_HOST_DEVICE constexpr std::uint32_t reverseBits32(std::uint32_t value)
 	value = (((value & 0xcccccccc) >> 2) | ((value & 0x33333333) << 2));
 	value = (((value & 0xf0f0f0f0) >> 4) | ((value & 0x0f0f0f0f) << 4));
 
+#if defined(_MSC_VER)
+	value = (((value & 0xff00ff00) >> 8) | ((value & 0x00ff00ff) << 8));
+	value = ((value >> 16) | (value << 16));
+#else
 	value = __builtin_bswap32(value);
-	// value = (((value & 0xff00ff00) >> 8) | ((value & 0x00ff00ff) << 8));
-	// value = ((value >> 16) | (value << 16));
+#endif
 #endif
 
 	return value;
@@ -58,8 +61,11 @@ OQMC_HOST_DEVICE constexpr std::uint16_t reverseBits16(std::uint16_t value)
 	value = (((value & 0xcccccccc) >> 2) | ((value & 0x33333333) << 2));
 	value = (((value & 0xf0f0f0f0) >> 4) | ((value & 0x0f0f0f0f) << 4));
 
+#if defined(_MSC_VER)
+	value = ((value >> 8) | (value << 8));
+#else
 	value = __builtin_bswap16(value);
-	// value = ((value >> 8) | (value << 8));
+#endif
 #endif
 
 	return value;

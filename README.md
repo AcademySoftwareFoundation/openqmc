@@ -126,7 +126,7 @@ Supported operating systems:
 
 - Linux
 - macOS
-- Windows (in development)
+- Windows
 
 Supported architectures:
 
@@ -1048,7 +1048,6 @@ Roadmap for version 1.0.0 of the library:
 
 - Gather feedback and iterate.
 - Add complete documentation.
-- Add support for Windows OS.
 - Add more package managers.
 
 ## Developer workflow

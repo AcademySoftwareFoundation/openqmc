@@ -1,2 +1,6 @@
 .git/
 extern/
+*.png
+*.gif
+*.svg
+*.ipynb

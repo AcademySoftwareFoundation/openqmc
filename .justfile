@@ -3,29 +3,24 @@
   just --list --unsorted
 
 # setup build config, defaults to Ninja
-[unix]
 @setup generator='Ninja':
-  cmake --preset unix -G '{{generator}}'
+  cmake --preset {{os_family()}} -G '{{generator}}'
 
 # set build option to value
-[unix]
 @set option value:
-  cmake --preset unix -D {{option}}={{value}}
+  cmake --preset {{os_family()}} -D {{option}}={{value}}
 
 # configure all build options via TUI
-[unix]
 @config:
-  ccmake --preset unix
+  ccmake --preset {{os_family()}}
 
 # build target, defaults to all tools
-[unix]
 @build target='all':
-  cmake --build --preset unix --target {{target}}
+  cmake --build --preset {{os_family()}} --target {{target}}
 
 # build and run all tests
-[unix]
 @test: (build 'tests')
-  ctest --preset unix
+  ctest --preset {{os_family()}}
 
 # remove build and reset
 @clean:
