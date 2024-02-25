@@ -119,5 +119,3 @@ Some simple guidelines to follow are:
 - Put conditional clauses before instructions. This lets the reader skip the instruction.
 - Use abbreviations as they're harder to miss. Use 'wouldn't' over 'would not'.
 - Be inclusive. Make use of gender-neutral pronouns.
-
-For assistance, you may want to use [Vale](https://vale.sh), a prose linter for natural language. This can inform you of any style guide violations prior to committing changes. There is a [.vale.ini](.vale.ini) config in the root directory. Instructions on using Vale are on their website.
