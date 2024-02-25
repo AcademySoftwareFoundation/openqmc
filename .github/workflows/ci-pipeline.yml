@@ -97,7 +97,7 @@ jobs:
     needs: test-unit
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12, self-hosted]
+        os: [ubuntu-22.04, macos-12, windows-2022, self-hosted]
         arch: [Scalar, SSE, AVX, ARM, GPU]
         build: [Release, Debug]
         exclude:
@@ -106,18 +106,22 @@ jobs:
           - {os: macos-12, arch: AVX}
           - {os: macos-12, arch: ARM}
           - {os: macos-12, arch: GPU}
+          - {os: windows-2022, arch: ARM}
+          - {os: windows-2022, arch: GPU}
           - {os: self-hosted, arch: Scalar}
           - {os: self-hosted, arch: SSE}
           - {os: self-hosted, arch: AVX}
         include:
-          - {os: ubuntu-22.04, save: true}
-          - {os: self-hosted, save: true}
+          - {os: ubuntu-22.04, preset: unix, save: true}
+          - {os: macos-12, preset: unix}
+          - {os: windows-2022, preset: windows}
+          - {os: self-hosted, preset: unix, save: true}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with: {submodules: true}
-      - run: cmake --preset unix -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
-      - run: cmake --build --preset unix
+      - run: cmake --preset ${{ matrix.preset }} -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
+      - run: cmake --build --preset ${{ matrix.preset }}
       - run: tar -czvf build.tar.gz build
         if: ${{ matrix.save }}
 

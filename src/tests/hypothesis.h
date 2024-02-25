@@ -153,7 +153,7 @@ void nullHypothesisChiSquareImpl(int numTests, int numSamples,
 
 template <int NumHeavisides, typename Sampler>
 void nullHypothesisTTest(int numSeeds, int numSamples, float significanceLevel,
-                         Sampler sampler)
+                         Sampler& sampler)
 {
 	const auto numTests = numSeeds * (7 + NumHeavisides);
 	const auto heavisides = new OrientedHeaviside[NumHeavisides];
@@ -203,7 +203,7 @@ void nullHypothesisTTest(int numSeeds, int numSamples, float significanceLevel,
 
 template <int Resolution, typename Sampler>
 void nullHypothesisChiSquare(int numSeeds, int numSamples,
-                             float significanceLevel, Sampler sampler)
+                             float significanceLevel, Sampler& sampler)
 {
 	for(int seed = 0; seed < numSeeds; ++seed)
 	{
@@ -216,17 +216,19 @@ void nullHypothesisChiSquare(int numSeeds, int numSamples,
 #define NULL_HYPOTHESIS_TTEST(name, description, functor)                      \
 	TEST(name, tTest##description##Pattern)                                    \
 	{                                                                          \
+		auto sampler = functor;                                                \
 		nullHypothesisTTest<defaultNumHeavisides>(                             \
 		    defaultNumSeeds, defaultNumSamplesHigh, defaultSignificanceLevel,  \
-		    functor);                                                          \
+		    sampler);                                                          \
 	}
 
 #define NULL_HYPOTHESIS_CHISQUARE(name, description, functor)                  \
 	TEST(name, chiSquareTest##description##Pattern)                            \
 	{                                                                          \
+		auto sampler = functor;                                                \
 		nullHypothesisChiSquare<defaultResolution>(                            \
 		    defaultNumSeeds, defaultNumSamplesLow, defaultSignificanceLevel,   \
-		    functor);                                                          \
+		    sampler);                                                          \
 	}
 
 #define ALL_HYPOTHESIS_TESTS(name, description, functor)                       \

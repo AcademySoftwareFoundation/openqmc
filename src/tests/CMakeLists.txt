@@ -62,6 +62,7 @@ target_link_libraries(tests PRIVATE
 	hypothesis::hypothesis)
 
 target_compile_features(tests PRIVATE cxx_std_14)
+target_compile_definitions(tests PRIVATE _USE_MATH_DEFINES)
 target_compile_definitions(tests PRIVATE OQMC_FORCE_SCALAR)
 
 # Register tests with CTest

@@ -262,7 +262,8 @@ void initialiseEstimates(int nsamples, const void* cache, Array3d pixelFrame,
 		};
 
 		const auto begin = index;
-		const auto end = std::min(index + transactionSize, pixelFrame.size());
+		const auto end =
+		    std::min<int>(index + transactionSize, pixelFrame.size());
 
 		OQMC_FORLOOP(func, begin, end);
 
@@ -294,7 +295,8 @@ void initialiseErrors(int nsamples, const void* cache, Array3d errorFrame,
 		};
 
 		const auto begin = index;
-		const auto end = std::min(index + transactionSize, errorFrame.size());
+		const auto end =
+		    std::min<int>(index + transactionSize, errorFrame.size());
 
 		OQMC_FORLOOP(func, begin, end);
 
@@ -337,7 +339,8 @@ void initialiseErrors(int nsamples, const void* cache, Array3d errorFrame,
 		};
 
 		const auto begin = index;
-		const auto end = std::min(index + transactionSize, errorFrame.size());
+		const auto end =
+		    std::min<int>(index + transactionSize, errorFrame.size());
 
 		OQMC_FORLOOP(func, begin, end);
 
@@ -394,7 +397,8 @@ void initialiseDistances(Array3d pixelFrame, Array3d errorFrame,
 		};
 
 		const auto begin = index;
-		const auto end = std::min(index + transactionSize, graphFrame.size());
+		const auto end =
+		    std::min<long int>(index + transactionSize, graphFrame.size());
 
 		OQMC_FORLOOP(func, begin, end);
 
@@ -449,7 +453,8 @@ void initialiseDistances(Array3d pixelFrame, Array3d errorFrame,
 		};
 
 		const auto begin = index;
-		const auto end = std::min(index + transactionSize, graphFrame.size());
+		const auto end =
+		    std::min<long int>(index + transactionSize, graphFrame.size());
 
 		OQMC_FORLOOP(func, begin, end);
 

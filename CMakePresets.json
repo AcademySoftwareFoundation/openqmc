@@ -20,6 +20,17 @@
 				"OPENQMC_BUILD_TOOLS": "ON",
 				"OPENQMC_BUILD_TESTING": "ON"
 			}
+		},
+		{
+			"name": "windows",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS": "ON",
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"OPENQMC_BUILD_TOOLS": "ON",
+				"OPENQMC_BUILD_TESTING": "ON"
+			}
 		}
 	],
 	"buildPresets": [
@@ -30,12 +41,22 @@
 		{
 			"name": "unix",
 			"configurePreset": "unix"
+		},
+		{
+			"name": "windows",
+			"configurePreset": "windows"
 		}
 	],
 	"testPresets": [
 		{
 			"name": "unix",
-			"configurePreset": "base",
+			"configurePreset": "unix",
+			"output": {"outputOnFailure": true},
+			"execution": {"noTestsAction": "error", "stopOnFailure": true}
+		},
+		{
+			"name": "windows",
+			"configurePreset": "windows",
 			"output": {"outputOnFailure": true},
 			"execution": {"noTestsAction": "error", "stopOnFailure": true}
 		}
