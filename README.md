@@ -159,9 +159,8 @@ nix profile install github:framestore/openqmc
 
 ### Cloning the source
 
-Alternatively for source installs, and if you just want the library and don't
-need any of the development tools or tests, then you can ignore the submodules.
-Clone the project with:
+Alternatively for installing from source, you can download a release from the
+site, or clone the project with:
 
 ```bash
 git clone git@github.com:framestore/openqmc.git
@@ -192,7 +191,7 @@ add_subdirectory(path/to/submodule EXCLUDE_FROM_ALL)
 mark_as_advanced(FORCE OPENQMC_ARCH_TYPE)
 mark_as_advanced(FORCE OPENQMC_BUILD_TOOLS)
 mark_as_advanced(FORCE OPENQMC_BUILD_TESTING)
-mark_as_advanced(FORCE OPENQMC_USE_SUBMODULES)
+mark_as_advanced(FORCE OPENQMC_FORCE_DOWNLOAD)
 mark_as_advanced(FORCE OPENQMC_ENABLE_BINARY)
 mark_as_advanced(FORCE OPENQMC_SHARED_LIB)
 mark_as_advanced(FORCE OPENQMC_FORCE_PIC)
@@ -1053,9 +1052,9 @@ Roadmap for version 1.0.0 of the library:
 ## Developer workflow
 
 Beyond the library itself there are a range of tools and tests that make up the
-project as a whole. These are there to aid development and to give an element
-of analysis. These extra components also have more requirements and
-dependencies than the library alone.
+project as a whole. These are there to aid development and to provide an element
+of analysis. These extra components also have more requirements and dependencies
+than the library alone.
 
 ### Installing LFS
 
@@ -1065,9 +1064,9 @@ instructions on the [LFS](https://git-lfs.github.com) website.
 
 ### Dependencies
 
-The tools and tests have dependencies on external projects. These can be either
-installed on the system and automatically found, or alternatively cloned and
-built within the project using submodules.
+The tools and tests have dependencies on external projects. If these are already
+installed on the system they can be found automatically. If a dependency isn't
+installed, then it will be downloaded and compiled along with the project.
 
 The dependencies are:
 
@@ -1075,30 +1074,6 @@ The dependencies are:
 - [GoogleTest](https://github.com/google/googletest)
 - [Hypothesis](https://github.com/joshbainbridge/hypothesis)
 - [oneTBB](https://github.com/oneapi-src/oneTBB)
-
-### Cloning submodules
-
-If a version of each of these dependencies is already installed on the system,
-CMake can automatically find them. This means a basic clone of this repository
-is sufficient as shown in [Cloning the source](#cloning-the-source).
-
-You can alternatively clone and build the dependencies locally within the
-project using submodules. If there is an installed version present on the
-system this takes precedence.
-
-If you haven't yet cloned the project and would like to do so with the
-submodules use:
-
-```bash
-git clone --recursive git@github.com:framestore/openqmc.git
-```
-
-If you have already cloned the project and would like to add the submodules
-retroactively then just run:
-
-```bash
-git submodule --init --recursive
-```
 
 ### Extra build options
 
@@ -1112,9 +1087,9 @@ the tools and tests. The options are:
 - `OPENQMC_BUILD_TESTING`: Enable targets for building the project tests. You
   may want to enable during development. Option values can be `ON` or `OFF`.
   Default value is `OFF`.
-- `OPENQMC_USE_SUBMODULES`: Force use of submodules even if dependencies are
-  installed. Useful for guaranteeing compatibility. Option values can be `ON`
-  or `OFF`. Default value is `OFF`.
+- `OPENQMC_FORCE_DOWNLOAD`: Force dependencies to download and build, even if
+  they are installed. Useful for guaranteeing compatibility. Option values can
+  be `ON` or `OFF`. Default value is `OFF`.
 
 ### Build configuration
 
@@ -1131,7 +1106,7 @@ You can also override the options using the CMake CLI while initialising the
 build config. If the build already exists, then CMake updates the option:
 
 ```bash
-cmake --preset unix -D OPENQMC_USE_SUBMODULES=ON
+cmake --preset unix -D OPENQMC_FORCE_DOWNLOAD=ON
 ```
 
 If you prefer to update the options using an interactive TUI rather than the

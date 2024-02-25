@@ -15,8 +15,8 @@
 			"inherits": "base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug",
-				"CMAKE_CXX_FLAGS": "-Werror -Wall -Wextra -Wpedantic -Wno-unknown-pragmas",
 				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"OPENQMC_CXX_FLAGS": "-Werror;-Wall;-Wextra;-Wpedantic;-Wno-unknown-pragmas",
 				"OPENQMC_BUILD_TOOLS": "ON",
 				"OPENQMC_BUILD_TESTING": "ON"
 			}
@@ -26,8 +26,8 @@
 			"inherits": "base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug",
-				"CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS": "ON",
 				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS": "ON",
 				"OPENQMC_BUILD_TOOLS": "ON",
 				"OPENQMC_BUILD_TESTING": "ON"
 			}

@@ -15,8 +15,8 @@ if(OPENQMC_ENABLE_BINARY)
 	endif()
 
 	target_sources(${PROJECT_NAME} PRIVATE bntables.cpp)
-	target_include_directories(${PROJECT_NAME} PRIVATE
-		${PROJECT_SOURCE_DIR}/include)
+	target_compile_options(${PROJECT_NAME} PRIVATE ${OPENQMC_CXX_FLAGS})
+	target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 else()
 	add_library(${PROJECT_NAME} INTERFACE)
 endif()
@@ -49,9 +49,20 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets)
 
-# Set common variables
+# Setup fetch content for dependencies
 
-set(EXTERN "${PROJECT_SOURCE_DIR}/extern")
+if(OPENQMC_BUILD_TOOLS OR OPENQMC_BUILD_TESTING)
+	if(OPENQMC_FORCE_DOWNLOAD)
+		set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
+	endif()
+
+	include(FetchContent)
+
+	mark_as_advanced(FETCHCONTENT_BASE_DIR)
+	mark_as_advanced(FETCHCONTENT_FULLY_DISCONNECTED)
+	mark_as_advanced(FETCHCONTENT_QUIET)
+	mark_as_advanced(FETCHCONTENT_UPDATES_DISCONNECTED)
+endif()
 
 # Add subdirectories
 
