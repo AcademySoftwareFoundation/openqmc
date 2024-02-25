@@ -38,7 +38,7 @@ endif()
 
 option(OPENQMC_BUILD_TOOLS "Build the command line tools.")
 option(OPENQMC_BUILD_TESTING "Build the unit tests.")
-option(OPENQMC_USE_SUBMODULES "Ignore installed dependencies.")
+option(OPENQMC_FORCE_DOWNLOAD "Ignore installed dependencies.")
 option(OPENQMC_ENABLE_BINARY "Build binary to reduce memory cost.")
 option(OPENQMC_SHARED_LIB "Make a shared library, in place of static.")
 option(OPENQMC_FORCE_PIC "Force PIC for static libraries.")

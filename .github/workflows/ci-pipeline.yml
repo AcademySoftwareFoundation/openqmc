@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-        with: {submodules: true}
       - run: pip install ruff
       - run: cmake --preset unix
       - run: scripts/check-lint.sh
@@ -87,7 +86,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-        with: {submodules: true}
       - run: cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset unix --target tests
       - run: ctest --preset unix
@@ -119,7 +117,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-        with: {submodules: true}
       - run: cmake --preset ${{ matrix.preset }} -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset ${{ matrix.preset }}
       - run: tar -czvf build.tar.gz build

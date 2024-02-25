@@ -1,5 +1,4 @@
 .git/
-extern/
 *.png
 *.gif
 *.svg
