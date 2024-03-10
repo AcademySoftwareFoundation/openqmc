@@ -13,7 +13,7 @@
 
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
 and generating pseudo random numbers. Designed for graphics applications,
-the library is part of Framestore's proprietary renderer [Freak](https://www.framestore.com/work/rendering)
+the library is part of Framestore's proprietary renderer [Freak](https://www.framestore.com/technology/freak)
 and is actively used in VFX production.
 
 <picture>
