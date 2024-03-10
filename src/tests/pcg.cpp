@@ -5,8 +5,9 @@
 #include <oqmc/pcg.h>
 #include <oqmc/unused.h>
 
+#include <gtest/gtest.h>
+
 #include <array>
-#include <climits>
 #include <cstdint>
 
 namespace
@@ -57,18 +58,16 @@ struct SamplerV3
 	{
 		OQMC_MAYBE_UNUSED(index);
 
-		constexpr auto min = 0u;
-		constexpr auto max = (1u << 30) + (1u << 31);
+		// Does not divide into UINT32_MAX to test debiasing.
+		constexpr auto range = UINT32_MAX / 4 * 3;
+		constexpr auto scalar = UINT64_MAX / range;
 
-		float rnd[2];
-		rnd[0] = static_cast<float>(oqmc::pcg::rngBounded(min, max, state));
-		rnd[1] = static_cast<float>(oqmc::pcg::rngBounded(min, max, state));
-		rnd[0] = rnd[0] / static_cast<float>(max);
-		rnd[1] = rnd[1] / static_cast<float>(max);
+		std::uint32_t rnd[2];
+		rnd[0] = oqmc::pcg::rngBounded(range, state);
+		rnd[1] = oqmc::pcg::rngBounded(range, state);
 
-		const auto scalar = static_cast<float>(UINT_MAX);
-		out[0] = static_cast<std::uint32_t>(rnd[0] * scalar);
-		out[1] = static_cast<std::uint32_t>(rnd[1] * scalar);
+		out[0] = std::uint32_t(std::uint64_t(rnd[0]) * scalar >> 32);
+		out[1] = std::uint32_t(std::uint64_t(rnd[1]) * scalar >> 32);
 	}
 
 	std::uint32_t state;
@@ -82,124 +81,180 @@ constexpr std::array<std::uint32_t, 20> primes{
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
 };
 
+constexpr std::array<std::uint32_t, 10> powers{
+    1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+};
+
 TEST(PcgTest, StateTransitionChange)
 {
-	for(const auto prime : primes)
-	{
-		const auto value = oqmc::pcg::stateTransition(prime);
+	EXPECT_NE(oqmc::pcg::stateTransition(0), 0);
 
-		EXPECT_NE(value, prime);
+	for(const auto input : primes)
+	{
+		EXPECT_NE(oqmc::pcg::stateTransition(input), input);
 	}
 }
 
-TEST(PcgTest, OutputChange)
+TEST(PcgTest, OutputPermutation)
 {
-	for(const auto prime : primes)
-	{
-		const auto value = oqmc::pcg::output(prime);
+	EXPECT_EQ(oqmc::pcg::output(0), 0);
 
-		EXPECT_NE(value, prime);
+	for(const auto input : primes)
+	{
+		EXPECT_NE(oqmc::pcg::output(input), input);
 	}
 }
 
 TEST(PcgTest, StateTransitionOutputNotEqual)
 {
-	for(auto prime : primes)
-	{
-		const auto state = oqmc::pcg::stateTransition(prime);
-		const auto output = oqmc::pcg::output(prime);
+	EXPECT_NE(oqmc::pcg::stateTransition(0), oqmc::pcg::output(0));
 
-		EXPECT_NE(state, output);
+	for(auto input : primes)
+	{
+		EXPECT_NE(oqmc::pcg::stateTransition(input), oqmc::pcg::output(input));
+	}
+}
+
+TEST(PcgTest, InitStateDefault)
+{
+	EXPECT_EQ(oqmc::pcg::init(), oqmc::pcg::init(0));
+}
+
+TEST(PcgTest, InitStateNonEqual)
+{
+	const auto zeroState = oqmc::pcg::init();
+
+	auto lastState = zeroState;
+	for(auto seed : primes)
+	{
+		const auto primeState = oqmc::pcg::init(seed);
+
+		EXPECT_NE(zeroState, primeState);
+		EXPECT_NE(lastState, primeState);
+
+		lastState = primeState;
+	}
+
+	lastState = zeroState;
+	for(auto seed : powers)
+	{
+		const auto powerState = oqmc::pcg::init(seed);
+
+		EXPECT_NE(zeroState, powerState);
+		EXPECT_NE(lastState, powerState);
+
+		lastState = powerState;
+	}
+}
+
+TEST(PcgTest, HashNonMutatingState)
+{
+	for(auto before : primes)
+	{
+		auto key = before;
+		oqmc::pcg::hash(key);
+
+		EXPECT_EQ(before, key);
 	}
 }
 
 TEST(PcgTest, RngMutatingState)
 {
-	for(auto prime : primes)
+	for(auto before : primes)
 	{
-		const auto old = prime;
-		oqmc::pcg::rng(prime);
+		auto state = before;
+		oqmc::pcg::rng(state);
 
-		EXPECT_NE(prime, old);
-		EXPECT_EQ(prime, oqmc::pcg::stateTransition(old));
-	}
-}
-
-TEST(PcgTest, RngStateTransitionOutput)
-{
-	for(auto prime : primes)
-	{
-		auto old = prime;
-		const auto rng = oqmc::pcg::rng(prime);
-
-		EXPECT_EQ(rng, oqmc::pcg::output(oqmc::pcg::stateTransition(old)));
+		EXPECT_NE(before, state);
 	}
 }
 
 TEST(PcgTest, HashRngEqual)
 {
-	for(auto prime : primes)
+	for(auto seed : primes)
 	{
-		const auto hash = oqmc::pcg::hash(prime);
-		const auto rng = oqmc::pcg::rng(prime);
+		auto state = oqmc::pcg::init(seed);
 
-		EXPECT_EQ(hash, rng);
+		const auto hash = oqmc::pcg::hash(state);
+		const auto rnd = oqmc::pcg::rng(state);
+
+		EXPECT_EQ(hash, rnd);
 	}
 }
 
-TEST(PcgTest, BoundedSignedUnsigned)
+TEST(PcgTest, BoundedRange)
 {
-	for(auto prime : primes)
+	for(auto range : primes)
 	{
-		for(int i = 1; i < 32; ++i)
+		auto state = oqmc::pcg::init();
+
+		for(int i = 0; i < 128; ++i)
 		{
-			auto resultA = int();
+			const auto rnd = oqmc::pcg::rngBounded(range, state);
 
-			{
-				const auto begin = static_cast<std::int32_t>(-i);
-				const auto end = static_cast<std::int32_t>(+i);
+			EXPECT_LT(rnd, range);
+		}
+	}
 
-				auto state = prime;
+	for(auto range : powers)
+	{
+		auto state = oqmc::pcg::init();
 
-				resultA = oqmc::pcg::rngBounded(begin, end, state) - begin;
-			}
+		for(int i = 0; i < 128; ++i)
+		{
+			const auto rnd = oqmc::pcg::rngBounded(range, state);
 
-			auto resultB = int();
-
-			{
-				const auto begin = static_cast<std::uint32_t>(0);
-				const auto end = static_cast<std::uint32_t>(i * 2);
-
-				auto state = prime;
-
-				resultB = oqmc::pcg::rngBounded(begin, end, state) - begin;
-			}
-
-			EXPECT_EQ(resultA, resultB);
+			EXPECT_LT(rnd, range);
 		}
 	}
 }
 
-TEST(PcgTest, Initialisation)
+TEST(PcgTest, BoundedBeginEnd)
 {
-	const auto stateA = oqmc::pcg::init();
-	const auto stateB = oqmc::pcg::stateTransition(0);
-
-	EXPECT_EQ(stateA, stateB);
-
-	for(auto prime : primes)
+	for(auto range : primes)
 	{
-		auto stateA = oqmc::pcg::init(prime);
-		auto stateB = oqmc::pcg::init() + prime;
+		auto state = oqmc::pcg::init();
 
-		EXPECT_EQ(stateA, stateB);
+		for(int i = 0; i < 128; ++i)
+		{
+			auto stateA = state;
+			auto stateB = state;
 
-		stateB = oqmc::pcg::stateTransition(0) + prime;
+			const auto begin = range;
+			const auto end = range * 2;
 
-		oqmc::pcg::rng(stateA);
-		oqmc::pcg::rng(stateB);
+			const auto rndA = oqmc::pcg::rngBounded(begin, end, stateA);
+			const auto rndB = oqmc::pcg::rngBounded(range, stateB);
 
-		EXPECT_EQ(stateA, stateB);
+			EXPECT_GE(rndA, begin);
+			EXPECT_LT(rndA, end);
+			EXPECT_EQ(rndA - begin, rndB);
+
+			state = stateA;
+		}
+	}
+
+	for(auto range : powers)
+	{
+		auto state = oqmc::pcg::init();
+
+		for(int i = 0; i < 128; ++i)
+		{
+			auto stateA = state;
+			auto stateB = state;
+
+			const auto begin = range;
+			const auto end = range * 2;
+
+			const auto rndA = oqmc::pcg::rngBounded(begin, end, stateA);
+			const auto rndB = oqmc::pcg::rngBounded(range, stateB);
+
+			EXPECT_GE(rndA, begin);
+			EXPECT_LT(rndA, end);
+			EXPECT_EQ(rndA - begin, rndB);
+
+			state = stateA;
+		}
 	}
 }
 
