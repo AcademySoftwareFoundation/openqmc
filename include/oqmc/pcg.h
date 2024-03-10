@@ -20,7 +20,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstring>
 
 namespace oqmc
 {
@@ -133,14 +132,51 @@ OQMC_HOST_DEVICE constexpr std::uint32_t rng(std::uint32_t& state)
 }
 
 /**
- * @brief Compute an unsigned random integer within a positive range.
+ * @brief Compute an unsigned random integer within 0-bounded half-open range.
+ * @details Given a range defined using a single unsigned integer, use a PRNG
+ * to compute a random integer value within that range. This function will not
+ * introduce any statistical bias that is typically present when using more
+ * naive methods, such as a modulo operator.
+ *
+ * From the following paper: https://doi.org/10.48550/arXiv.1805.10941. Note
+ * that this algorithm (see Java) reduces the number of expected divisions to
+ * almost one. However, low-order bits which can be weak in some PRNGs pass
+ * through to the output. PCG has strong low-order bits. For low-discrepency
+ * sequences it is recomended to use a multiplcation method instead. This will
+ * preserve good properties in the correlation between outputs of the sequence.
+ *
+ * @param [in] range Exclusive end of integer range. Greater than zero.
+ * @param [in, out] state State value of the PRNG. Will be mutated.
+ * @return Output PRNG value within integer range.
+ *
+ * @pre State must have been initialised using an init function.
+ */
+OQMC_HOST_DEVICE constexpr std::uint32_t rngBounded(std::uint32_t range,
+                                                    std::uint32_t& state)
+{
+	assert(range > 0);
+
+	auto x = rng(state);
+	auto r = x % range;
+
+	while(x - r > (-range))
+	{
+		x = rng(state);
+		r = x % range;
+	}
+
+	return r;
+}
+
+/**
+ * @brief Compute an unsigned random integer within half-open range.
  * @details Given a range defined using two unsigned integers, use a PRNG to
  * compute a random integer value within that range. This function will not
  * introduce any statistical bias that is typically present when using more
  * naive methods, such as a modulo operator.
  *
- * @param [in] begin Inclusive beginning of integer range.
- * @param [in] end Inclusive end of integer range.
+ * @param [in] begin Inclusive beginning of integer range. Less than end.
+ * @param [in] end Exclusive end of integer range. Greater than begin.
  * @param [in, out] state State value of the PRNG. Will be mutated.
  * @return Output PRNG value within integer range.
  *
@@ -149,49 +185,10 @@ OQMC_HOST_DEVICE constexpr std::uint32_t rng(std::uint32_t& state)
 OQMC_HOST_DEVICE constexpr std::uint32_t
 rngBounded(std::uint32_t begin, std::uint32_t end, std::uint32_t& state)
 {
-	const auto range = end - begin;
-	const auto threshold = -range % range;
-
-	for(;;)
-	{
-		const auto rnd = rng(state);
-
-		if(rnd >= threshold)
-		{
-			return begin + rnd % range;
-		}
-	}
-}
-
-/**
- * @brief Compute an signed random integer within a range.
- * @details Given a range defined using two signed integers, use a PRNG to
- * compute a random integer value within that range. This function will not
- * introduce any statistical bias that is typically present when using more
- * naive methods, such as a modulo operator.
- *
- * @param [in] begin Inclusive beginning of integer range.
- * @param [in] end Inclusive end of integer range.
- * @param [in, out] state State value of the PRNG. Will be mutated.
- * @return Output PRNG value within integer range.
- *
- * @pre State must have been initialised using an init function.
- */
-OQMC_HOST_DEVICE inline std::int32_t
-rngBounded(std::int32_t begin, std::int32_t end, std::uint32_t& state)
-{
 	assert(begin < end);
 
-	const auto min = static_cast<std::uint32_t>(begin);
-	const auto max = static_cast<std::uint32_t>(end);
-	const auto rnd = rngBounded(min, max, state);
-
-	std::int32_t rndSigned = 0;
-	std::memcpy(&rndSigned, &rnd, sizeof(std::int32_t));
-
-	// relies on twos compliment for ranges over 2^31
-
-	return rndSigned;
+	const auto range = end - begin;
+	return rngBounded(range, state) + begin;
 }
 
 } // namespace pcg
