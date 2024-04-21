@@ -2,3 +2,4 @@
 *.gif filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
 *.svg filter=lfs diff=lfs merge=lfs -text
+*.diagrams filter=lfs diff=lfs merge=lfs -text

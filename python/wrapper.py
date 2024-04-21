@@ -237,6 +237,7 @@ module.oqmc_trace.restype = ctypes.c_bool
 module.oqmc_trace.argtypes = [
     ctypes.c_char_p,
     ctypes.c_char_p,
+    ctypes.c_char_p,
     ctypes.c_int,
     ctypes.c_int,
     ctypes.c_int,
@@ -251,6 +252,7 @@ module.oqmc_trace.argtypes = [
 def trace(
     name,
     scene,
+    mode,
     width,
     height,
     frame,
@@ -265,6 +267,7 @@ def trace(
     valid = module.oqmc_trace(
         name,
         scene,
+        mode,
         width,
         height,
         frame,

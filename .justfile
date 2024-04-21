@@ -22,6 +22,10 @@
 @test: (build 'tests')
   ctest --preset {{os_family()}}
 
+# open up a jupyter notebook
+@notebook: build
+  jupyter notebook python/notebooks
+
 # remove build and reset
 @clean:
   rm -rf build
