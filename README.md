@@ -883,6 +883,210 @@ This independence prevents such bias. Finally, domain trees should match the
 call graph of the code to guarantee bias-free results. For a more complete
 example, see the [trace](src/tools/lib/trace.cpp) tool.
 
+### Domain splitting
+
+Whereas domain branching lets you sample different dimensions within each sample
+index, domain **splitting** is an operation to sample given dimensions with a
+higher sampling rate. Splitting allows you to tackle high variance in specific
+dimensions without the cost for the increased sampling rate on all dimensions.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-8-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-8-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-8-light.png">
+</picture>
+
+The diagram above shows the same domain tree extended with a stack for each
+domain. Each stack element represents an index in the domain's pattern. This
+example begins with two indices for each domain.
+
+If you were to consider direct light sampling, which is often a source of high
+variance. One possible approach is to sample lights at a higher rate than pixels
+by defining a multiplier on that rate, such as `N_LIGHT_SAMPLES`.
+
+```cpp
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const LightInterface& light)
+{
+	enum DomainKey
+	{
+		Camera,
+		Light,
+	};
+
+	// Compute 'cameraSample' as in previous examples.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+	const auto cameraSample = camera.sample(cameraDomain);
+
+	auto result = Result{};
+
+	// Loop a fixed N times.
+	for(int i = 0; i < N_LIGHT_SAMPLES; ++i)
+	{
+		// Compute 'lightSample' using the newDomainSplit API.
+		const auto lightDomain = pixelDomain.newDomainSplit(DomainKey::Light, N_LIGHT_SAMPLES, i);
+		const auto lightSample = light.sample(lightDomain);
+
+		// Average the pixel estimates from each light sample.
+		result += estimateLightTransport(cameraSample, lightSample) / N_LIGHT_SAMPLES;
+	}
+
+	return result;
+}
+```
+
+Here the calling code derives a `lightDomain` in a loop, using a different
+function than the other examples. Along with a key, this new function takes a
+fixed sample rate multiplier and an index within the multiplier range. You must
+pass all indices to the API and average the results.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5-light.png">
+</picture>
+
+In this domain tree, `N_LIGHT_SAMPLES` maintains a fixed value of 2, and thus,
+the light domain's sampling rate is twice that of the source pixel domain.
+
+A fixed sample rate multiplier like the one in this example correlates points
+globally *and* locally. This correlation makes the pattern optimal while saving
+compute costs in other domains. The following section will give options for when
+the sample rate multiplier is non-constant.
+
+### Adaptive rate multipliers
+
+Sometimes, the constraint of a fixed sample rate multiplier is not an option or
+is undesirable. In these cases, a couple of alternative strategies trade quality
+for the added flexibility of non-constant multipliers.
+
+```cpp
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const LightInterface& light)
+{
+	enum DomainKey
+	{
+		Camera,
+		Light,
+	};
+
+	// Compute 'cameraSample' as in previous examples.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+	const auto cameraSample = camera.sample(cameraDomain);
+
+	// Compute a non-fixed number of light samples.
+	const auto nLightSamples = light.adaptiveSampleRate();
+
+	auto result = Result{};
+
+	// Loop a non-fixed N times.
+	for(int i = 0; i < nLightSamples; ++i)
+	{
+		// Compute 'lightSample' using the newDomainDistrib API.
+		const auto lightDomain = pixelDomain.newDomainDistrib(DomainKey::Light, i);
+		const auto lightSample = light.sample(lightDomain);
+
+		// Average the pixel estimates from each light sample.
+		result += estimateLightTransport(cameraSample, lightSample) / nLightSamples;
+	}
+
+	return result;
+}
+```
+
+This example has a non-constant sample rate multiplier `nLightSample` for the
+light domain. Here, the caller uses the alternative `newDomainDistrib` function
+that allows for varying sample rate multipliers. Using this technique is called
+the **distribution strategy**.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-6-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-6-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-6-light.png">
+</picture>
+
+Here is the domain tree when using the distribution strategy. The split domain
+is not correlated globally, but it is locally. The domain is in fact branched
+into two locally correlated domains, one for each index from the source pixel
+domain. The first has a sample rate of 2, and the second a sample rate of 3,
+based on `nLightSamples`.
+
+```cpp
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const LightInterface& light)
+{
+	enum DomainKey
+	{
+		Camera,
+		Light,
+	};
+
+	// Compute 'cameraSample' as in previous examples.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+	const auto cameraSample = camera.sample(cameraDomain);
+
+	// Compute a non-fixed number of light samples.
+	const auto nLightSamples = light.adaptiveSampleRate();
+
+	auto result = Result{};
+
+	// Loop a non-fixed N times.
+	for(int i = 0; i < nLightSamples; ++i)
+	{
+		// Compute 'lightSample' by chaining the newDomain API.
+		const auto lightDomain = pixelDomain.newDomain(DomainKey::Light).newDomain(i);
+		const auto lightSample = light.sample(lightDomain);
+
+		// Average the pixel estimates from each light sample.
+		result += estimateLightTransport(cameraSample, lightSample) / nLightSamples;
+	}
+
+	return result;
+}
+```
+
+This last example is similar to the distribution strategy. But here the caller
+uses the `newDomain` function, chaining and branching the domains on the index,
+instead of splitting. This technique is called the **chaining strategy**.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-7-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-7-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-7-light.png">
+</picture>
+
+Here is the domain tree when using the chaining strategy. This new domain is
+correlated globally, but it is not locally. Each of the sample indices from the
+source pixel domain is free to branch at non-constant rate. The first branches
+into 2 domains, and the second into 3 domains, based on `nLightSamples`.
+
+*So which strategy to choose?* Following are the results from each strategy.
+Numbers after each strategy indicate RMSE. As expected, the initial option of
+splitting using a fixed sample rate multiplier produces the best results.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/plots/cornell-box-sample-splitting-2-8-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/cornell-box-sample-splitting-2-8-dark.png">
+  <img alt="sample plitting 2 and 8." src="./images/plots/cornell-box-sample-splitting-2-8-light.png">
+</picture>
+
+But when that isn't possible and using a non-constant sample rate multiplier,
+and that multiplier is expected to be higher than the source pixel sample rate,
+the distribution strategy is optimal as it is locally correlated.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/plots/cornell-box-sample-splitting-8-2-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/cornell-box-sample-splitting-8-2-dark.png">
+  <img alt="sample plitting 8 and 2." src="./images/plots/cornell-box-sample-splitting-8-2-light.png">
+</picture>
+
+However, when an adaptive sample rate multiplier is expected to be lower than
+the original pixel sample rate, as demonstrated here, the chaining strategy is
+optimal as it is globally correlated.
+
 ## Implementation details
 
 This section will go into detail about each back-end implementation, as well as
@@ -1023,9 +1227,8 @@ domains, while producing high quality random results upon drawing samples.
 
 Roadmap for version 1.0.0 of the library:
 
-- Gather feedback and iterate.
-- Add complete documentation.
-- Add more package managers.
+- Gather feedback and iterate on API.
+- Add support for package managers.
 
 ## Developer workflow
 
