@@ -67,43 +67,46 @@ contributing any further improvements to this open initiative.
 ## Usage
 
 Here is a quick example of what OpenQMC looks like. Feel free to copy and paste
-this code to get yourself started, or continue reading to learn about the API
-and techniques for writing more advanced algorithms.
+this code to get yourself started, or continue reading to learn about other
+samplers, the API, and techniques for writing more advanced algorithms.
 
 ```cpp
-// 1. Initialise the sampler cache.
-auto cache = new char[oqmc::PmjSampler::cacheSize];
-oqmc::PmjSampler::initialiseCache(cache);
+// 1. Include the sampler implementation.
+#include <oqmc/pmjbn.h>
 
-// 2. Loop over all pixels in the image.
+// 2. Initialise the sampler cache.
+auto cache = new char[oqmc::PmjBnSampler::cacheSize];
+oqmc::PmjBnSampler::initialiseCache(cache);
+
+// 3. Loop over all pixels in the image.
 for(int x = 0; x < resolution; ++x)
 {
 	for(int y = 0; y < resolution; ++y)
 	{
-		// 3. Loop over all the sample indices.
-		for(int index = 1; index < sampleSize; ++index)
+		// 4. Loop over all the sample indices.
+		for(int index = 0; index < nSamples; ++index)
 		{
-			// 4. Create a sampler object for the pixel domain.
-			const auto domain = oqmc::PmjSampler(x, y, 0, index, cache);
+			// 5. Create a sampler object for the pixel domain.
+			const auto domain = oqmc::PmjBnSampler(x, y, 0, index, cache);
 
-			// 5. Draw a sample point from the domain.
-			float samples[2];
-			domain.drawSample<2>(samples);
+			// 6. Draw a sample point from the domain.
+			float sample[2];
+			domain.drawSample<2>(sample);
 
-			// 6. Offset the point into the pixel.
-			const auto xOffset = samples[0] + x;
-			const auto yOffset = samples[1] + y;
+			// 7. Offset the point into the pixel.
+			const auto xOffset = sample[0] + x;
+			const auto yOffset = sample[1] + y;
 
-			// 7. Add value to the pixel if within disk.
+			// 8. Add value to the pixel if within disk.
 			if(xOffset * xOffset + yOffset * yOffset < resolution * resolution)
 			{
-				image[x * resolution + y] += 1.0f / sampleSize;
+				image[x * resolution + y] += 1.0f / nSamples;
 			}
 		}
 	}
 }
 
-// 8. Deallocate the sampler cache.
+// 9. Deallocate the sampler cache.
 delete[] cache;
 ```
 
@@ -551,11 +554,11 @@ plotting a data point for each sample count value.
   <img alt="Error plot comparison." src="./images/plots/error-plot-light.png">
 </picture>
 
-The following plots show, for a fixed sample count, how the error decreases
-with a Gaussian filter as the standard deviation increases. It shows,
-especially for low samples counts, the faster convergence of the blue noise
-variants. This is an indicator that these may be a better option if your images
-are then filtered with a de-noise pass.
+The following plots show, for a fixed sample count, how the error decreases with
+a Gaussian filter as the standard deviation increases. It shows, especially for
+low sample counts, the faster convergence of the blue noise variants. This is
+an indicator that these may be a better option if your images are then filtered
+with a de-noise pass.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-filter-space-plot-light.png">
@@ -646,16 +649,16 @@ confidently make use of QMC sampling in your own software.
 When you estimate an integral using the Monte Carlo method, the high dimensional
 space can often be partitioned into logical domains. In OpenQMC domains are an
 important concept. Domains act as promises that can be converted into dimensions
-upon request by the caller. They can also be chained to create new domains.
+upon request by the caller. They can also be used to derive other domains.
 
 This example function tries to compute a pixel estimate. This estimate is made
-up of two parts, each needing a domain. The first is a `camera` that takes a
-single sample, and the second is a `material`, that takes two samples.
+up of two parts, each needing a domain. First is a `camera` that takes a single
+dimension, and the second is a `light`, that takes two dimensions.
 
 ```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
                      const CameraInterface& camera,
-                     const MaterialInterface& material)
+                     const LightInterface& light)
 {
 	enum DomainKey
 	{
@@ -665,30 +668,32 @@ Result estimatePixel(const oqmc::PmjSampler pixelDomain,
 	// Derive 'cameraDomain' from 'pixelDomain' parameter.
 	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Next);
 
-	// Derive 'materialDomain' from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(DomainKey::Next);
+	// Derive 'lightDomain' from 'cameraDomain' variable.
+	const auto lightDomain = cameraDomain.newDomain(DomainKey::Next);
 
-	// Take a single sample for time to pass to 'camera'.
-	float timeSamples[1];
-	cameraDomain.drawSample<1>(timeSamples);
+	// Take a single dimension for time to pass to 'camera'.
+	float timeSample[1];
+	cameraDomain.drawSample<1>(timeSample);
 
-	// Take two samples for direction to pass to 'material'.
-	float directionSamples[2];
-	materialDomain.drawSample<2>(directionSamples);
+	// Take two dimensions for direction to pass to 'light'.
+	float directionSample[2];
+	lightDomain.drawSample<2>(directionSample);
 
-	// Pass drawn samples to the interface an importance sampling.
-	const auto cameraSample = camera.sample(timeSamples);
-	const auto materialSample = material.sample(directionSamples);
+	// Pass drawn dimensions to the interface for importance sampling.
+	const auto cameraSample = camera.sample(timeSample);
+	const auto lightSample = light.sample(directionSample);
 
-	// Using resulting samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
+	return estimateLightTransport(cameraSample, lightSample);
 }
 ```
 
 The function started with an initial `pixelDomain`, from that it derived a
-`cameraDomain`, and from that it derived a `materialDomain`. This is a linear
-sequence of dependent domains. Domains provide up to 4 dimensions each. If more
-dimensions are required, the caller can always derive a new domain.
+`cameraDomain`, and from that it derived a `lightDomain`. This is a linear
+sequence of dependent domains. Such an operation is called **chaining**.
+
+Domains provide up to 4 dimensions each, often referred to here as a sample
+(technically part of a sample). If more than 4 dimensions are required, the
+caller can always derive a new domain.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1-light.png">
@@ -697,50 +702,50 @@ dimensions are required, the caller can always derive a new domain.
 </picture>
 
 This example works, but isn't very flexible. This can be improved. Types that
-implement the camera or material interfaces may require less or more samples
+implement the camera or light interfaces may require less or more dimensions
 than is provided by the calling code.
 
 ### Passing domains
 
 Computing domains is cheap, but drawing samples is expensive. In the
-last example, samples were drawn and passed to a type that implements the
-`MaterialInterface`. If the samples are not required, the type doesn't have the
-option to prevent the samples from being drawn.
+last example, a sample was drawn and passed to a type that implements the
+`LightInterface`. If the sample is not required, the type doesn't have the
+option to prevent the sample from being drawn.
 
 You can resolve this by changing the interface to pass a domain, deferring the
-decision to draw samples to the type. Here are two types that implement such an
-interface, `DiffuseMaterial` and `SpecularMaterial`.
+decision to draw a sample to the type. Here are two types that implement such an
+interface, `DiskLight` and `PointLight`.
 
 ```cpp
-MaterialSample DiffuseMaterial::sample(const oqmc::PmjSampler materialDomain)
+LightSample DiskLight::sample(const oqmc::PmjBnSampler lightDomain)
 {
-	// Draw two samples for direction.
-	float directionSamples[2];
-	materialDomain.drawSample<2>(directionSamples);
+	// Draw two dimensions for direction.
+	float directionSample[2];
+	lightDomain.drawSample<2>(directionSample);
 
-	// Compute MaterialSample object using the drawn samples...
+	// Compute LightSample object using the drawn sample...
 }
 
-MaterialSample SpecularMaterial::sample(const oqmc::PmjSampler materialDomain)
+LightSample PointLight::sample(const oqmc::PmjBnSampler lightDomain)
 {
-	// Don't draw two samples for direction.
-	// float directionSamples[2];
-	// materialDomain.drawSample<2>(directionSamples);
+	// Don't draw two dimensions for direction.
+	// float directionSample[2];
+	// lightDomain.drawSample<2>(directionSample);
 
-	// Compute MaterialSample object without using samples...
+	// Compute LightSample object without using a drawn sample...
 }
 ```
 
-The `DiffuseMaterial` draws samples from the domain. But `SpecularMaterial` opts
-to save on compute and does not draw samples as they are not required.
+The `DiskLight` draws a sample from the domain. But `PointLight` opts to save on
+compute and does not draw a sample as it is not required.
 
 Looking at the revised calling code, the domains are now passed through the
-interfaces, allowing the types to decide whether to draw the samples or not.
+interfaces, allowing the types to decide whether to draw a sample or not.
 
 ```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
                      const CameraInterface& camera,
-                     const MaterialInterface& material)
+                     const LightInterface& light)
 {
 	enum DomainKey
 	{
@@ -750,35 +755,34 @@ Result estimatePixel(const oqmc::PmjSampler pixelDomain,
 	// Derive 'cameraDomain' from 'pixelDomain' parameter.
 	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Next);
 
-	// Derive 'materialDomain' from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(DomainKey::Next);
+	// Derive 'lightDomain' from 'cameraDomain' variable.
+	const auto lightDomain = cameraDomain.newDomain(DomainKey::Next);
 
-	// Pass domains directly to the interface to compute samples.
+	// Pass domains directly to the interface to compute a sample.
 	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
+	const auto lightSample = light.sample(lightDomain);
 
-	// Using samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
+	return estimateLightTransport(cameraSample, lightSample);
 }
 ```
 
-Sometimes a type needs an unknown number of samples. The next section will show
+Sometimes a type needs an unknown number of domains. The next section will show
 how that can be achieved. This will introduce a potential danger, as well as a
 new concept called domain trees that can be used to do the operation safely.
 
 ### Domain branching
 
 Building on the previous example, the calling code is free of knowing how many
-samples a type might need. If a type requires N samples, it can opt to derive
-new domains from the domain that was passed to it. Then drawing more samples
-from those domains.
+domains a type might need. If a type requires more sample draws, it can always
+derive a new domain from the domain that was passed to it, and then draw more
+samples from those domains.
 
-This is a `ThinLensCamera` type that implements the `CameraInterface` interface.
-It requires multiple domains, and so sequentially derives them one after the
-other starting with the original `cameraDomain`.
+This is an example where `ThinLensCamera` implements the `CameraInterface`. It
+requires multiple domains and uses chaining to sequentially derive domains one
+after the other, starting with the original `cameraDomain`.
 
 ```cpp
-CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
+CameraSample ThinLensCamera::sample(const oqmc::PmjBnSampler cameraDomain)
 {
 	enum DomainKey
 	{
@@ -791,21 +795,21 @@ CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
 	// Derive 'timeDomain' from 'lensDomain' variable.
 	const auto timeDomain = lensDomain.newDomain(DomainKey::Next);
 
-	// Take two samples for lens to compute a CameraSample object.
-	float lensSamples[2];
-	lensDomain.drawSample<2>(lensSamples);
+	// Take two dimensions for lens to compute a CameraSample object.
+	float lensSample[2];
+	lensDomain.drawSample<2>(lensSample);
 
-	// Take a single sample for time to compute a CameraSample object.
-	float timeSamples[1];
-	timeDomain.drawSample<1>(timeSamples);
+	// Take a single dimension for time to compute a CameraSample object.
+	float timeSample[1];
+	timeDomain.drawSample<1>(timeSample);
 
 	// Compute CameraSample object using the drawn samples...
 }
 ```
 
-This is the dangerous part! It is to do with the calling code from the previous
-example. Notice that `cameraDomain` is used to derive both `materialDomain` and
-`lensDomain`. These objects are now equivalent, and only differ in name.
+*Here is the dangerous part!* Notice how the calling `estimatePixel` function
+derives both `lensDomain` and `lightDomain` from `cameraDomain`, meaning they
+become equivalent in value.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2-light.png">
@@ -813,44 +817,42 @@ example. Notice that `cameraDomain` is used to derive both `materialDomain` and
   <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2-light.png">
 </picture>
 
-`materialDomain` and `lensDomain` objects being equivalent results in the drawn
-samples being correlated in a way that leaves gaps in the primary sample space.
-That results in a biased estimate, which is bad. But this can be fixed. Here is
-a revised version of the calling code.
+This will result in lens and light dimensions correlating, leaving gaps in the
+primary sample space. That type of correlation will bias your estimates, and
+should be avoided. A revised version of the `estimatePixel` function:
 
 ```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
                      const CameraInterface& camera,
-                     const MaterialInterface& material)
+                     const LightInterface& light)
 {
 	enum DomainKey
 	{
 		Camera,
-		Material,
+		Light,
 	};
 
 	// Derive 'cameraDomain' from 'pixelDomain' parameter.
 	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
 
-	// Derive 'materialDomain' from 'pixelDomain' parameter.
-	const auto materialDomain = pixelDomain.newDomain(DomainKey::Material);
+	// Derive 'lightDomain' from 'pixelDomain' parameter.
+	const auto lightDomain = pixelDomain.newDomain(DomainKey::Light);
 
 	// Pass domains directly to the interface to compute samples.
 	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
+	const auto lightSample = light.sample(lightDomain);
 
-	// Using samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
+	return estimateLightTransport(cameraSample, lightSample);
 }
 ```
 
-You may notice that the `DomainKey` enum has now changed. And instead of
-chaining the domains sequentially, the code now derives both `cameraDomain` and
-`materialDomain` directly from `pixelDomain` with a different key.
+You may notice that the `DomainKey` enum has now changed. The new code derives
+both `cameraDomain` and `lightDomain` directly from `pixelDomain`, but in each
+instance passes a different enum value.
 
-This operation is called branching. The resulting domains are now independent.
-You can branch a domain on a given key either with an enum as seen here, or by
-passing an integer value directly.
+This operation is called **branching**. The derived domains are now branched and
+independent. You can branch a domain on a given key either with an enum as seen
+here, or by passing an integer value directly.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3-light.png">
@@ -858,13 +860,13 @@ passing an integer value directly.
   <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3-light.png">
 </picture>
 
-Now that `cameraDomain` and `materialDomain` are independent, the
-`ThinLensCamera` can use the domain passed to it in whichever way it needs.
+Now that `cameraDomain` and `lightDomain` are independent, the `ThinLensCamera`
+can use the domain passed to it in whichever way it needs.
 
-Mapping domains to the code's call graph creates domain trees. If you are
-careful to derive domains sequentially in loops and to apply branching across
-interfaces, there is a guarantee your algorithm will not create gaps in the
-primary sample space and produces bias-free results.
+Mapping domains to the code's call graph creates domain trees. If you carefully
+derive domains by using chaining when writing loops, and branching when passing
+to interfaces, you'll avoid gaps in the primary sample space, guaranteeing
+bias-free results.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4-light.png">
