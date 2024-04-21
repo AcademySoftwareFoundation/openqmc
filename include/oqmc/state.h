@@ -29,7 +29,8 @@ namespace oqmc
  */
 struct State64Bit
 {
-	static constexpr auto maxIndexSize = 0x10000; ///< 2^16 index upper limit.
+	static constexpr auto maxIndexBitSize = 16;   ///< 2^16 index upper limit.
+	static constexpr auto maxIndexSize = 1 << 16; ///< 2^16 index upper limit.
 	static constexpr auto spatialEncodeBitSizeX = 6; ///< 64 pixels in x.
 	static constexpr auto spatialEncodeBitSizeY = 6; ///< 64 pixels in y.
 	static constexpr auto temporalEncodeBitSize = 4; ///< 16 pixels in time.
@@ -48,73 +49,81 @@ struct State64Bit
 	/**
 	 * @brief Parametrised pixel constructor.
 	 * @details Create an object based on the pixel, frame and sample indices.
-	 * Once constructed the state object is valid and ready to use.
+	 * Once constructed the state object is valid and ready to use. Pixels are
+	 * correlated by default, use pixelDecorrelate() to decorrelate pixels.
 	 *
-	 * Values for sampleId should be within the [0, 2^16) range; this constraint
-	 * allows for possible optimisations in the implementations.
-	 *
-	 * @param x [in] Pixel coordinate on the x axis.
-	 * @param y [in] Pixel coordinate on the y axis.
-	 * @param frame [in] Time index value.
-	 * @param sampleId [in] Sample index. Must be within [0, 2^16).
+	 * @param [in] x Pixel coordinate on the x axis.
+	 * @param [in] y Pixel coordinate on the y axis.
+	 * @param [in] frame Time index value.
+	 * @param [in] index Sample index. Must be positive.
 	 */
-	OQMC_HOST_DEVICE State64Bit(int x, int y, int frame, int sampleId);
+	OQMC_HOST_DEVICE State64Bit(int x, int y, int frame, int index);
 
 	/*
 	 * @brief Decorrelate state between pixels.
 	 * @details Using the pixelId, randomise the object state so that
 	 * correlation between pixels is removed. You may want to call this after
-	 * initial construction of the object.
+	 * initial construction of which leaves pixels correlated as default.
+	 *
+	 * @return Decorrelated state object.
 	 */
-	OQMC_HOST_DEVICE void pixelDecorrelate();
+	OQMC_HOST_DEVICE State64Bit pixelDecorrelate() const;
 
 	/// @copydoc oqmc::SamplerInterface::newDomain()
 	OQMC_HOST_DEVICE State64Bit newDomain(int key) const;
 
 	/// @copydoc oqmc::SamplerInterface::newDomainDistrib()
-	OQMC_HOST_DEVICE State64Bit newDomainDistrib(int key) const;
+	OQMC_HOST_DEVICE State64Bit newDomainDistrib(int key, int index) const;
 
 	/// @copydoc oqmc::SamplerInterface::newDomainSplit()
-	OQMC_HOST_DEVICE State64Bit newDomainSplit(int key, int size) const;
-
-	/// @copydoc oqmc::SamplerInterface::nextDomainIndex()
-	OQMC_HOST_DEVICE State64Bit nextDomainIndex() const;
+	OQMC_HOST_DEVICE State64Bit newDomainSplit(int key, int size,
+	                                           int index) const;
 
 	/// @copydoc oqmc::SamplerInterface::drawRnd()
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
-
-	/*
-	 * @brief Find the sum of sampleId and an integer value.
-	 * @details Given the current sampleId value of the object, return the sum
-	 * of the sampleId and an integer argument. The result is asserted against
-	 * integer overflow.
-	 *
-	 * @param [in] value Integer to add to sampleId.
-	 * @return Result of summing sampleId and value.
-	 */
-	OQMC_HOST_DEVICE std::uint16_t sampleIdAdd(int value) const;
-
-	/*
-	 * @brief Find the product of sampleId and an integer value.
-	 * @details Given the current sampleId value of the object, return the
-	 * product of the sampleId and an integer argument. The result is asserted
-	 * against integer overflow.
-	 *
-	 * @param [in] value Integer to multiply with sampleId.
-	 * @return Result of multiplying sampleId and value.
-	 */
-	OQMC_HOST_DEVICE std::uint16_t sampleIdMult(int value) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	std::uint32_t patternId; ///< Identifier for domain pattern.
 	std::uint16_t sampleId;  ///< Identifier for sample index.
 	std::uint16_t pixelId;   ///< Identifier for pixel position.
 };
 
-inline State64Bit::State64Bit(int x, int y, int frame, int sampleId)
+/**
+ * @brief Compute 16-bit key from index.
+ * @details Given a sample index, compute a key value based on the top 16-bits
+ * of the integer range. Use computeIndexId() to compute the corrosponding new
+ * index to pair with the key.
+ *
+ * @param [in] index Sample index.
+ * @return 16-bit Key value.
+ */
+OQMC_HOST_DEVICE constexpr int computeIndexKey(int index)
 {
-	assert(sampleId >= 0);
-	assert(sampleId < maxIndexSize);
+	constexpr auto offset = State64Bit::maxIndexBitSize;
+	return index >> offset;
+}
+
+/**
+ * @brief Compute new 16-bit index from index.
+ * @details Given a sample index, compute a new index value based on the bottom
+ * 16-bits of the integer range. Use computeIndexKey() to compute the
+ * corrosponding key value to pair with the new index.
+ *
+ * @param [in] index Sample index.
+ * @return New 16-bit index.
+ */
+OQMC_HOST_DEVICE constexpr int computeIndexId(int index)
+{
+	constexpr auto mask = State64Bit::maxIndexSize - 1;
+	return index & mask;
+}
+
+inline State64Bit::State64Bit(int x, int y, int frame, int index)
+{
+	assert(index >= 0);
+
+	const auto indexKey = computeIndexKey(index);
+	const auto indexId = computeIndexId(index);
 
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
@@ -122,14 +131,14 @@ inline State64Bit::State64Bit(int x, int y, int frame, int sampleId)
 
 	const auto pixelId = encodeBits16<xBits, yBits, zBits>({x, y, frame});
 
-	this->patternId = pcg::init();
-	this->sampleId = sampleId;
+	this->patternId = pcg::init(indexKey);
+	this->sampleId = indexId;
 	this->pixelId = pixelId;
 }
 
-inline void State64Bit::pixelDecorrelate()
+inline State64Bit State64Bit::pixelDecorrelate() const
 {
-	*this = newDomain(pixelId);
+	return newDomain(pixelId);
 }
 
 inline State64Bit State64Bit::newDomain(int key) const
@@ -140,61 +149,42 @@ inline State64Bit State64Bit::newDomain(int key) const
 	return ret;
 }
 
-inline State64Bit State64Bit::newDomainDistrib(int key) const
+inline State64Bit State64Bit::newDomainDistrib(int key, int index) const
 {
-	auto ret = newDomain(key).newDomain(sampleId);
-	ret.sampleId = 0;
+	assert(index >= 0);
+
+	const auto indexKey = computeIndexKey(index);
+	const auto indexId = computeIndexId(index);
+
+	auto ret = newDomain(key).newDomain(indexKey).newDomain(sampleId);
+	ret.sampleId = indexId;
 
 	return ret;
 }
 
-inline State64Bit State64Bit::newDomainSplit(int key, int size) const
+inline State64Bit State64Bit::newDomainSplit(int key, int size, int index) const
 {
 	assert(size > 0);
+	assert(index >= 0);
 
-	auto ret = newDomain(key);
-	ret.sampleId = sampleIdMult(size);
+	const auto indexKey = computeIndexKey(sampleId * size + index);
+	const auto indexId = computeIndexId(sampleId * size + index);
 
-	return ret;
-}
-
-inline State64Bit State64Bit::nextDomainIndex() const
-{
-	auto ret = *this;
-	ret.sampleId = sampleIdAdd(1);
+	auto ret = newDomain(key).newDomain(indexKey);
+	ret.sampleId = indexId;
 
 	return ret;
 }
 
 template <int Size>
-void State64Bit::drawRnd(std::uint32_t rnds[Size]) const
+void State64Bit::drawRnd(std::uint32_t rnd[Size]) const
 {
 	auto rngState = patternId + sampleId;
 
 	for(int i = 0; i < Size; ++i)
 	{
-		rnds[i] = pcg::rng(rngState);
+		rnd[i] = pcg::rng(rngState);
 	}
-}
-
-inline std::uint16_t State64Bit::sampleIdAdd(int value) const
-{
-	const auto sampleId = static_cast<int>(this->sampleId) + value;
-
-	assert(sampleId >= 0);
-	assert(sampleId < maxIndexSize);
-
-	return sampleId;
-}
-
-inline std::uint16_t State64Bit::sampleIdMult(int value) const
-{
-	const auto sampleId = static_cast<int>(this->sampleId) * value;
-
-	assert(sampleId >= 0);
-	assert(sampleId < maxIndexSize);
-
-	return sampleId;
 }
 
 static_assert(sizeof(State64Bit) == 8, "State64Bit must be 8 bytes in size.");

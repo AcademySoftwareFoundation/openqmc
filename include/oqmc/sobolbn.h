@@ -57,6 +57,7 @@ namespace oqmc
  */
 class SobolBnImpl
 {
+	// See SamplerInterface for public API documentation.
 	friend SamplerInterface<SobolBnImpl>;
 
 	struct CacheType
@@ -70,19 +71,19 @@ class SobolBnImpl
 
 	/*AUTO_DEFINED*/ SobolBnImpl() = default;
 	OQMC_HOST_DEVICE SobolBnImpl(State64Bit state, const CacheType* cache);
-	OQMC_HOST_DEVICE SobolBnImpl(int x, int y, int frame, int sampleId,
+	OQMC_HOST_DEVICE SobolBnImpl(int x, int y, int frame, int index,
 	                             const void* cache);
 
 	OQMC_HOST_DEVICE SobolBnImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE SobolBnImpl newDomainDistrib(int key) const;
-	OQMC_HOST_DEVICE SobolBnImpl newDomainSplit(int key, int size) const;
-	OQMC_HOST_DEVICE SobolBnImpl nextDomainIndex() const;
+	OQMC_HOST_DEVICE SobolBnImpl newDomainDistrib(int key, int index) const;
+	OQMC_HOST_DEVICE SobolBnImpl newDomainSplit(int key, int size,
+	                                            int index) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	State64Bit state;
 	const CacheType* cache;
@@ -106,9 +107,9 @@ inline SobolBnImpl::SobolBnImpl(State64Bit state, const CacheType* cache)
 	assert(cache);
 }
 
-inline SobolBnImpl::SobolBnImpl(int x, int y, int frame, int sampleId,
+inline SobolBnImpl::SobolBnImpl(int x, int y, int frame, int index,
                                 const void* cache)
-    : state(x, y, frame, sampleId), cache(static_cast<const CacheType*>(cache))
+    : state(x, y, frame, index), cache(static_cast<const CacheType*>(cache))
 {
 	assert(cache);
 }
@@ -118,23 +119,19 @@ inline SobolBnImpl SobolBnImpl::newDomain(int key) const
 	return {state.newDomain(key), cache};
 }
 
-inline SobolBnImpl SobolBnImpl::newDomainDistrib(int key) const
+inline SobolBnImpl SobolBnImpl::newDomainDistrib(int key, int index) const
 {
-	return {state.newDomainDistrib(key), cache};
+	return {state.newDomainDistrib(key, index), cache};
 }
 
-inline SobolBnImpl SobolBnImpl::newDomainSplit(int key, int size) const
+inline SobolBnImpl SobolBnImpl::newDomainSplit(int key, int size,
+                                               int index) const
 {
-	return {state.newDomainSplit(key, size), cache};
-}
-
-inline SobolBnImpl SobolBnImpl::nextDomainIndex() const
-{
-	return {state.nextDomainIndex(), cache};
+	return {state.newDomainSplit(key, size, index), cache};
 }
 
 template <int Size>
-void SobolBnImpl::drawSample(std::uint32_t samples[Size]) const
+void SobolBnImpl::drawSample(std::uint32_t sample[Size]) const
 {
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
@@ -152,13 +149,13 @@ void SobolBnImpl::drawSample(std::uint32_t samples[Size]) const
 	    cache->rankTable);
 
 	shuffledScrambledSobol<Size>(state.sampleId ^ table.rank, table.key,
-	                             samples);
+	                             sample);
 }
 
 template <int Size>
-void SobolBnImpl::drawRnd(std::uint32_t rnds[Size]) const
+void SobolBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
-	state.newDomain(state.pixelId).drawRnd<Size>(rnds);
+	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
 
 using SobolBnSampler = SamplerInterface<SobolBnImpl>;

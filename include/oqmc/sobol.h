@@ -41,6 +41,7 @@ namespace oqmc
  */
 class SobolImpl
 {
+	// See SamplerInterface for public API documentation.
 	friend SamplerInterface<SobolImpl>;
 
 	static constexpr std::size_t cacheSize = 0;
@@ -48,19 +49,19 @@ class SobolImpl
 
 	/*AUTO_DEFINED*/ SobolImpl() = default;
 	OQMC_HOST_DEVICE SobolImpl(State64Bit state);
-	OQMC_HOST_DEVICE SobolImpl(int x, int y, int frame, int sampleId,
+	OQMC_HOST_DEVICE SobolImpl(int x, int y, int frame, int index,
 	                           const void* cache);
 
 	OQMC_HOST_DEVICE SobolImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE SobolImpl newDomainDistrib(int key) const;
-	OQMC_HOST_DEVICE SobolImpl newDomainSplit(int key, int size) const;
-	OQMC_HOST_DEVICE SobolImpl nextDomainIndex() const;
+	OQMC_HOST_DEVICE SobolImpl newDomainDistrib(int key, int index) const;
+	OQMC_HOST_DEVICE SobolImpl newDomainSplit(int key, int size,
+	                                          int index) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	State64Bit state;
 };
@@ -74,12 +75,12 @@ inline SobolImpl::SobolImpl(State64Bit state) : state(state)
 {
 }
 
-inline SobolImpl::SobolImpl(int x, int y, int frame, int sampleId,
+inline SobolImpl::SobolImpl(int x, int y, int frame, int index,
                             const void* cache)
-    : state(x, y, frame, sampleId)
+    : state(x, y, frame, index)
 {
 	OQMC_MAYBE_UNUSED(cache);
-	state.pixelDecorrelate();
+	state = state.pixelDecorrelate();
 }
 
 inline SobolImpl SobolImpl::newDomain(int key) const
@@ -87,32 +88,27 @@ inline SobolImpl SobolImpl::newDomain(int key) const
 	return {state.newDomain(key)};
 }
 
-inline SobolImpl SobolImpl::newDomainDistrib(int key) const
+inline SobolImpl SobolImpl::newDomainDistrib(int key, int index) const
 {
-	return {state.newDomainDistrib(key)};
+	return {state.newDomainDistrib(key, index)};
 }
 
-inline SobolImpl SobolImpl::newDomainSplit(int key, int size) const
+inline SobolImpl SobolImpl::newDomainSplit(int key, int size, int index) const
 {
-	return {state.newDomainSplit(key, size)};
-}
-
-inline SobolImpl SobolImpl::nextDomainIndex() const
-{
-	return {state.nextDomainIndex()};
+	return {state.newDomainSplit(key, size, index)};
 }
 
 template <int Size>
-void SobolImpl::drawSample(std::uint32_t samples[Size]) const
+void SobolImpl::drawSample(std::uint32_t sample[Size]) const
 {
 	shuffledScrambledSobol<Size>(state.sampleId, pcg::output(state.patternId),
-	                             samples);
+	                             sample);
 }
 
 template <int Size>
-void SobolImpl::drawRnd(std::uint32_t rnds[Size]) const
+void SobolImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
-	state.drawRnd<Size>(rnds);
+	state.drawRnd<Size>(rnd);
 }
 
 using SobolSampler = SamplerInterface<SobolImpl>;

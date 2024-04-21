@@ -96,6 +96,13 @@ struct Scene
 	std::vector<Light> lights;
 };
 
+enum class Method
+{
+	Split,
+	Distrib,
+	Chain,
+};
+
 struct Ray
 {
 	glm::vec3 origin;
@@ -250,12 +257,12 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 	pixelCentre.x = x + 0.5f - (xSize / 2.0f);
 	pixelCentre.y = y + 0.5f - (ySize / 2.0f);
 
-	float rasterSamples[2];
-	rasterDomain.template drawSample<2>(rasterSamples);
+	float rasterSample[2];
+	rasterDomain.template drawSample<2>(rasterSample);
 
 	glm::vec2 filterSample;
-	filterSample.x = sampleTent(filterWidth, rasterSamples[0]);
-	filterSample.y = sampleTent(filterWidth, rasterSamples[1]);
+	filterSample.x = sampleTent(filterWidth, rasterSample[0]);
+	filterSample.y = sampleTent(filterWidth, rasterSample[1]);
 
 	const auto norm = filmSize / ySize;
 
@@ -269,14 +276,14 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 	focalDir.y = filmPoint.y / filmPoint.z;
 	focalDir.z = 1;
 
-	float lensTimeSamples[3];
-	lensTimeDomain.template drawSample<3>(lensTimeSamples);
+	float lensTimeSample[3];
+	lensTimeDomain.template drawSample<3>(lensTimeSample);
 
 	const auto apertureWidth = focalLength / fStop;
 	const auto apertureRadius = apertureWidth / 2;
 
 	const auto focalPoint = focalDir * focalDistance;
-	const auto lensSample = sampleDisk(apertureRadius, lensTimeSamples);
+	const auto lensSample = sampleDisk(apertureRadius, lensTimeSample);
 	const auto lensDir = glm::normalize(focalPoint - lensSample);
 
 	const auto w = glm::normalize(dir);
@@ -286,7 +293,7 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 	Ray ret;
 	ret.origin = pos + u * lensSample.x + v * lensSample.y;
 	ret.dir = u * lensDir.x + v * lensDir.y + w * lensDir.z;
-	ret.time = lensTimeSamples[2];
+	ret.time = lensTimeSample[2];
 
 	return ret;
 }
@@ -369,11 +376,10 @@ diffuseSample(const Interaction& event, const Ray& ray, Sampler materialDomain)
 		return dir;
 	};
 
-	float materialSamples[2];
-	materialDomain.template drawSample<2>(materialSamples);
+	float materialSample[2];
+	materialDomain.template drawSample<2>(materialSample);
 
-	return {glm::vec3(1), sampleCosineWeightedHemisphere(materialSamples),
-	        true};
+	return {glm::vec3(1), sampleCosineWeightedHemisphere(materialSample), true};
 }
 
 template <typename Sampler>
@@ -429,10 +435,10 @@ OQMC_HOST_DEVICE Material::Sample dielectricSample(const Interaction& event,
 	const float fresnel = schlickFresnel(etaA, etaB, cosine);
 	const float prob = 0.25f + 0.5f * fresnel;
 
-	float materialSamples[1];
-	materialDomain.template drawSample<1>(materialSamples);
+	float materialSample[1];
+	materialDomain.template drawSample<1>(materialSample);
 
-	if(materialSamples[0] < prob)
+	if(materialSample[0] < prob)
 	{
 		return {glm::vec3(fresnel / prob), rdir, true};
 	}
@@ -720,10 +726,10 @@ OQMC_HOST_DEVICE bool russianRoulette(glm::vec3 throughput,
 	const float prob =
 	    std::fmin(std::fmax(maxCoeff / threshold, lowProb), 1.0f);
 
-	float rouletteSamples[1];
-	rouletteDomain.template drawSample<1>(rouletteSamples);
+	float rouletteSample[1];
+	rouletteDomain.template drawSample<1>(rouletteSample);
 
-	if(rouletteSamples[0] > prob)
+	if(rouletteSample[0] > prob)
 	{
 		return false;
 	}
@@ -787,12 +793,12 @@ intersectOpacityCheck(const Session& session, int maxOpacity, Ray ray,
 			break;
 		}
 
-		float opacitySamples[1];
-		opacityDomain.template drawSample<1>(opacitySamples);
+		float opacitySample[1];
+		opacityDomain.template drawSample<1>(opacitySample);
 
 		const auto& material = session.materials[event.prim.materialId];
 
-		if(opacitySamples[0] < material.presence)
+		if(opacitySample[0] < material.presence)
 		{
 			return true;
 		}
@@ -806,8 +812,8 @@ intersectOpacityCheck(const Session& session, int maxOpacity, Ray ray,
 
 template <typename Sampler>
 OQMC_HOST_DEVICE glm::vec3
-directLighting(const Session& session, int numLightSamples, int maxOpacity,
-               const Ray& pathRay, const Interaction& pathEvent,
+directLighting(const Session& session, Method method, int numLightSamples,
+               int maxOpacity, const Ray& pathRay, const Interaction& pathEvent,
                Sampler directDomain)
 {
 	glm::vec3 direct = glm::vec3();
@@ -815,26 +821,38 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 	{
 		const auto& light = session.lights[i];
 
-		auto splitDomain = directDomain.newDomainSplit(i, numLightSamples);
-
 		for(int j = 0; j < numLightSamples; ++j)
 		{
+			auto root = Sampler{};
+
+			switch(method)
+			{
+			case Method::Split:
+				root = directDomain.newDomainSplit(i, numLightSamples, j);
+				break;
+			case Method::Distrib:
+				root = directDomain.newDomainDistrib(i, j);
+				break;
+			case Method::Chain:
+				root = directDomain.newDomain(i).newDomain(j);
+				break;
+			};
+
 			enum DomainKey
 			{
 				Light,
 				Opacity,
 			};
 
-			const auto lightDomain = splitDomain.newDomain(DomainKey::Light);
-			const auto opacityDomain =
-			    splitDomain.newDomain(DomainKey::Opacity);
+			const auto lightDomain = root.newDomain(DomainKey::Light);
+			const auto opacityDomain = root.newDomain(DomainKey::Opacity);
 
-			float lightSamples[2];
-			lightDomain.template drawSample<2>(lightSamples);
+			float lightSample[2];
+			lightDomain.template drawSample<2>(lightSample);
 
 			float rcpDistSqr;
 			const auto dir =
-			    light.sample(pathEvent.pos, lightSamples, rcpDistSqr);
+			    light.sample(pathEvent.pos, lightSample, rcpDistSqr);
 
 			const auto shadowRay =
 			    Ray(pathEvent.pos, dir, pathRay.time, pathEvent.normal);
@@ -852,8 +870,6 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 				direct +=
 				    project * illuminance / static_cast<float>(numLightSamples);
 			}
-
-			splitDomain = splitDomain.nextDomainIndex();
 		}
 	}
 
@@ -861,9 +877,9 @@ directLighting(const Session& session, int numLightSamples, int maxOpacity,
 }
 
 template <typename Sampler>
-OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
-                                 int maxDepth, int maxOpacity, Ray ray,
-                                 Sampler traceDomain)
+OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, Method method,
+                                 int numLightSamples, int maxDepth,
+                                 int maxOpacity, Ray ray, Sampler traceDomain)
 {
 	bool computeEmission = true;
 	glm::vec3 throughput = glm::vec3(1);
@@ -912,8 +928,9 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, int numLightSamples,
 			const auto directDomain = traceDomain.newDomain(DomainKey::Direct);
 
 			const auto bsdf = glm::vec3(M_1_PI) * material.colour;
-			const auto light = directLighting(
-			    session, numLightSamples, maxOpacity, ray, event, directDomain);
+			const auto light =
+			    directLighting(session, method, numLightSamples, maxOpacity,
+			                   ray, event, directDomain);
 
 			directLightingContribution = throughput * bsdf * light;
 			computeEmission = false;
@@ -1367,33 +1384,65 @@ void stop(Buffer out)
 	OQMC_FREE(out.cache);
 }
 
-template <typename Sampler>
-bool run(const char* name, int width, int height, int frame,
-         int numPixelSamples, int numLightSamples, int maxDepth, int maxOpacity,
-         float3* out)
+bool getScene(const char* name, Scene& scene)
 {
-	Scene scene;
-	bool valid = false;
-
 	if(std::string(name) == "box")
 	{
 		scene = scenes::cornellBox;
-		valid = true;
+		return true;
 	}
 
 	if(std::string(name) == "presence")
 	{
 		scene = scenes::presenceExample;
-		valid = true;
+		return true;
 	}
 
 	if(std::string(name) == "blur")
 	{
 		scene = scenes::motionBlurExample;
-		valid = true;
+		return true;
 	}
 
-	if(!valid)
+	return false;
+}
+
+bool getMethod(const char* name, Method& method)
+{
+	if(std::string(name) == "split")
+	{
+		method = Method::Split;
+		return true;
+	}
+
+	if(std::string(name) == "distrib")
+	{
+		method = Method::Distrib;
+		return true;
+	}
+
+	if(std::string(name) == "chain")
+	{
+		method = Method::Chain;
+		return true;
+	}
+
+	return false;
+}
+
+template <typename Sampler>
+bool run(const char* name, const char* mode, int width, int height, int frame,
+         int numPixelSamples, int numLightSamples, int maxDepth, int maxOpacity,
+         float3* out)
+{
+	Scene scene;
+	if(!getScene(name, scene))
+	{
+		return false;
+	}
+
+	Method method;
+	if(!getMethod(mode, method))
 	{
 		return false;
 	}
@@ -1431,8 +1480,8 @@ bool run(const char* name, int width, int height, int frame,
 			const auto ray =
 			    session.camera->generateRay(x, y, width, height, cameraDomain);
 
-			const auto radiance = trace(session, numLightSamples, maxDepth,
-			                            maxOpacity, ray, traceDomain);
+			const auto radiance = trace(session, method, numLightSamples,
+			                            maxDepth, maxOpacity, ray, traceDomain);
 
 			const auto delta =
 			    session.camera->filmExposure(radiance) - buffer.image[idx];
@@ -1472,19 +1521,20 @@ class RngImpl
 	static constexpr std::size_t cacheSize = 0;
 	static void initialiseCache(void* cache);
 
+	OQMC_HOST_DEVICE RngImpl() = default;
 	OQMC_HOST_DEVICE RngImpl(oqmc::State64Bit state);
-	OQMC_HOST_DEVICE RngImpl(int x, int y, int frame, int sampleId,
+	OQMC_HOST_DEVICE RngImpl(int x, int y, int frame, int index,
 	                         const void* cache);
 
 	OQMC_HOST_DEVICE RngImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE RngImpl newDomainSplit(int key, int size) const;
-	OQMC_HOST_DEVICE RngImpl nextDomainIndex() const;
+	OQMC_HOST_DEVICE RngImpl newDomainDistrib(int key, int index) const;
+	OQMC_HOST_DEVICE RngImpl newDomainSplit(int key, int size, int index) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	oqmc::State64Bit state;
 };
@@ -1498,12 +1548,11 @@ inline RngImpl::RngImpl(oqmc::State64Bit state) : state(state)
 {
 }
 
-inline RngImpl::RngImpl(int x, int y, int frame, int sampleId,
-                        const void* cache)
-    : state(x, y, frame, sampleId)
+inline RngImpl::RngImpl(int x, int y, int frame, int index, const void* cache)
+    : state(x, y, frame, index)
 {
 	OQMC_MAYBE_UNUSED(cache);
-	state.pixelDecorrelate();
+	state = state.pixelDecorrelate();
 }
 
 inline RngImpl RngImpl::newDomain(int key) const
@@ -1511,34 +1560,34 @@ inline RngImpl RngImpl::newDomain(int key) const
 	return {state.newDomain(key)};
 }
 
-inline RngImpl RngImpl::newDomainSplit(int key, int size) const
+inline RngImpl RngImpl::newDomainDistrib(int key, int index) const
 {
-	return {state.newDomainSplit(key, size)};
+	return {state.newDomainDistrib(key, index)};
 }
 
-inline RngImpl RngImpl::nextDomainIndex() const
+inline RngImpl RngImpl::newDomainSplit(int key, int size, int index) const
 {
-	return {state.nextDomainIndex()};
-}
-
-template <int Size>
-void RngImpl::drawSample(std::uint32_t samples[Size]) const
-{
-	drawRnd<Size>(samples);
+	return {state.newDomainSplit(key, size, index)};
 }
 
 template <int Size>
-void RngImpl::drawRnd(std::uint32_t rnds[Size]) const
+void RngImpl::drawSample(std::uint32_t sample[Size]) const
 {
-	state.drawRnd<Size>(rnds);
+	drawRnd<Size>(sample);
+}
+
+template <int Size>
+void RngImpl::drawRnd(std::uint32_t rnd[Size]) const
+{
+	state.drawRnd<Size>(rnd);
 }
 
 using RngSampler = oqmc::SamplerInterface<RngImpl>;
 
 } // namespace
 
-OQMC_CABI bool oqmc_trace(const char* name, const char* scene, int width,
-                          int height, int frame, int numPixelSamples,
+OQMC_CABI bool oqmc_trace(const char* name, const char* scene, const char* mode,
+                          int width, int height, int frame, int numPixelSamples,
                           int numLightSamples, int maxDepth, int maxOpacity,
                           float3* image)
 {
@@ -1554,50 +1603,51 @@ OQMC_CABI bool oqmc_trace(const char* name, const char* scene, int width,
 
 	if(std::string(name) == "pmj")
 	{
-		return run<oqmc::PmjSampler>(scene, width, height, frame,
+		return run<oqmc::PmjSampler>(scene, mode, width, height, frame,
 		                             numPixelSamples, numLightSamples, maxDepth,
 		                             maxOpacity, image);
 	}
 
 	if(std::string(name) == "pmjbn")
 	{
-		return run<oqmc::PmjBnSampler>(scene, width, height, frame,
+		return run<oqmc::PmjBnSampler>(scene, mode, width, height, frame,
 		                               numPixelSamples, numLightSamples,
 		                               maxDepth, maxOpacity, image);
 	}
 
 	if(std::string(name) == "sobol")
 	{
-		return run<oqmc::SobolSampler>(scene, width, height, frame,
+		return run<oqmc::SobolSampler>(scene, mode, width, height, frame,
 		                               numPixelSamples, numLightSamples,
 		                               maxDepth, maxOpacity, image);
 	}
 
 	if(std::string(name) == "sobolbn")
 	{
-		return run<oqmc::SobolBnSampler>(scene, width, height, frame,
+		return run<oqmc::SobolBnSampler>(scene, mode, width, height, frame,
 		                                 numPixelSamples, numLightSamples,
 		                                 maxDepth, maxOpacity, image);
 	}
 
 	if(std::string(name) == "lattice")
 	{
-		return run<oqmc::LatticeSampler>(scene, width, height, frame,
+		return run<oqmc::LatticeSampler>(scene, mode, width, height, frame,
 		                                 numPixelSamples, numLightSamples,
 		                                 maxDepth, maxOpacity, image);
 	}
 
 	if(std::string(name) == "latticebn")
 	{
-		return run<oqmc::LatticeBnSampler>(scene, width, height, frame,
+		return run<oqmc::LatticeBnSampler>(scene, mode, width, height, frame,
 		                                   numPixelSamples, numLightSamples,
 		                                   maxDepth, maxOpacity, image);
 	}
 
 	if(std::string(name) == "rng")
 	{
-		return run<RngSampler>(scene, width, height, frame, numPixelSamples,
-		                       numLightSamples, maxDepth, maxOpacity, image);
+		return run<RngSampler>(scene, mode, width, height, frame,
+		                       numPixelSamples, numLightSamples, maxDepth,
+		                       maxOpacity, image);
 	}
 
 	return false;

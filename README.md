@@ -339,19 +339,20 @@ static void oqmc::Sampler::initialiseCache(void* cache);
  * indices. This also requires a pre-allocated and initialised cache. Once
  * constructed the sampler object is valid and ready for use.
  *
- * Values for sampleId should be within the [0, 2^16) range; this constraint
- * allows for possible optimisations in the implementations.
+ * For each pixel this constructor is expected to be called multiple times,
+ * once for each index. Pixels might have a varying number of indicies when
+ * adaptive sampling.
  *
- * @param x [in] Pixel coordinate on the x axis.
- * @param y [in] Pixel coordinate on the y axis.
- * @param frame [in] Time index value.
- * @param sampleId [in] Sample index. Must be within [0, 2^16).
- * @param cache [in] Allocated and initialised cache.
+ * @param [in] x Pixel coordinate on the x axis.
+ * @param [in] y Pixel coordinate on the y axis.
+ * @param [in] frame Time index value.
+ * @param [in] index Sample index. Must be positive.
+ * @param [in] cache Allocated and initialised cache.
  *
  * @pre Cache has been allocated in memory accessible to the device calling
  * this constructor, and has also been initialised.
  */
-oqmc::Sampler::Sampler(int x, int y, int frame, int sampleId, const void* cache);
+oqmc::Sampler::Sampler(int x, int y, int frame, int index, const void* cache);
 ```
 
 ```cpp
@@ -383,84 +384,59 @@ oqmc::Sampler oqmc::Sampler::newDomain(int key) const;
  * @brief Derive an object in a new domain for a local distribution.
  * @details Like newDomain, this function derives a mutated copy of the
  * current sampler object. The difference is it decorrelates the pattern
- * with the sample index, allowing for sample splitting with an unknown
- * multiplier.
+ * with the sample index, allowing for sample splitting with a non-constant
+ * or unknown multiplier.
  *
- * Calling code that needs to take N branching samples can't simply call the
- * nextDomainIndex member function shown below. This would cause duplication
- * with other domain trees, and ultimately bias the estimate. By deriving a
- * decorrelated domain using this member function, the calling code can
- * safely iterate N samples from the resulting child domain.
+ * The result from taking N indexed domains with this function will be a
+ * locally well distributed sub-pattern. This sub-pattern will be of lower
+ * quality when combined with the sub-patterns of other samples. That is
+ * because the correlation between the sub-patterns globally is lost.
  *
- * The resulting pattern from taking multiple samples with nextDomainIndex
- * will be well distributed locally. But care must be taken as this local
- * pattern will be of lower quality when combined with the local patterns of
- * other samples. As the correlation between the patterns globally has been
- * lost. If the multiplier (the amount of times nextDomainIndex is to be
- * called) is known and constant, newDomainSplit can be used instead to
- * produce the best quality results.
+ * If a mutliplier is known and constant then newDomainSplit will produce
+ * better quality sample points and should be used instead. This is because
+ * newDomainSplit will preserved correlation between sub-patterns from other
+ * samples.
+ *
+ * Calling code should use a constant key for any given domain while then
+ * incrementing the index value N times to increase the sampling rate by N
+ * for that given domain. The function will be called N times, once for each
+ * unique index.
  *
  * @param [in] key Index key of next domain.
+ * @param [in] index Sample index of next domain. Must be positive.
  * @return Child domain based on the current object state and key.
  */
-oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key) const;
+oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key, int index) const;
 ```
 
 ```cpp
 /**
- * @brief Derive an object in a new domain for splitting.
+ * @brief Derive an object in a new domain for global splitting.
  * @details Like the other newDomain* functions, this function derives a
  * mutated copy of the current sampler object. The difference is it remaps
  * the sample index, allowing for sample splitting with a known and constant
  * multiplier.
  *
- * Calling code that needs to take N branching samples can't simply call the
- * nextDomainIndex member function shown below. This would cause duplication
- * with other domain trees, and ultimately bias the estimate. By deriving a
- * new domain using this member function, the calling code can safely
- * iterate N samples from the resulting child domain.
+ * The result from taking N indexed domains with this function will be both
+ * a locally and a gloablly well distributed sub-pattern. This sub-pattern
+ * will of the highest quality due to being globally correlated with the
+ * sub-patterns of other samples.
  *
- * As the multiplier is a known and constant size, not only will the
- * resulting pattern from taking multiple samples with nextDomainIndex be
- * well distributed locally, but it will also be well distributed globally.
- * This is because the indices can be mapped more carefully when the size of
- * N is known and does not change. If these guarantees can not be met then
- * the calling code should use newDomainDistrib instead.
+ * If a mutliplier is non-constant or unknown then newDomainDistrib should
+ * be used instead. This is because newDomainDistrib relaxes the constraints
+ * in excahnge for a reduction in the global quality of the pattern.
+ *
+ * Calling code should use a constant key for any given domain while then
+ * incrementing the index value N times to increase the sampling rate by N
+ * for that given domain. The function will be called N times, once for each
+ * unique index. N must be passed as 'size' and remain constant.
  *
  * @param [in] key Index key of next domain.
- * @param [in] size Sample index multiplier. Must be greater than zero.
+ * @param [in] size Sample index multiplier. Must greater than zero.
+ * @param [in] index Sample index of next domain. Must be positive.
  * @return Child domain based on the current object state, key and size.
  */
-oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size) const;
-```
-
-```cpp
-/**
- * @brief Derive an object in the current domain at the next index.
- * @details The function derives a mutated copy of the current sampler
- * object. This new object is in the same domain, but will have iterated
- * onto the next sample index. Calling the draw* member functions below on
- * the new index will produce a different value to that of the previous
- * index.
- *
- * This is used to split a single sample index into multiple indices so that
- * a subset of an integrals dimensions can sampled at higher rate than other
- * dimensions. This technique is called sample or trajectory splitting.
- *
- * The function should only be called on domains that have been configured
- * for splitting, else it would cause duplication with other domain trees,
- * and ultimately bias the estimate. If newDomainDistrib was used, then the
- * only restriction is that the resulting sample index must not exceed the
- * global limit of 2^16. If newDomainSplit was used, then the calling code
- * must iterate with this function as many times as was specified in the
- * 'size' argument.
- *
- * @return Child sampler object based on current state.
- *
- * @pre The current object must be the result of calling either the
- * newDomainDistrib or newDomainSplit member functions.
- */
-oqmc::Sampler oqmc::Sampler::nextDomainIndex() const;
+oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
 ```
 
 ```cpp
@@ -478,10 +454,10 @@ oqmc::Sampler oqmc::Sampler::nextDomainIndex() const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] sample Output array to store sample values.
  */
 template <int Size>
-void oqmc::Sampler::drawSample(std::uint32_t samples[Size]) const;
+void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
 ```
 
 ```cpp
@@ -493,10 +469,10 @@ void oqmc::Sampler::drawSample(std::uint32_t samples[Size]) const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] sample Output array to store sample values.
  */
 template <int Size>
-void oqmc::Sampler::drawSample(float samples[Size]) const;
+void oqmc::Sampler::drawSample(float sample[Size]) const;
 ```
 
 ```cpp
@@ -514,10 +490,10 @@ void oqmc::Sampler::drawSample(float samples[Size]) const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] rnd Output array to store rnd values.
  */
 template <int Size>
-void oqmc::Sampler::drawRnd(std::uint32_t rnds[Size]) const;
+void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
 ```
 
 ```cpp
@@ -529,10 +505,10 @@ void oqmc::Sampler::drawRnd(std::uint32_t rnds[Size]) const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] rnd Output array to store rnd values.
  */
 template <int Size>
-void oqmc::Sampler::drawRnd(float rnds[Size]) const;
+void oqmc::Sampler::drawRnd(float rnd[Size]) const;
 ```
 
 ## Implementation comparison
