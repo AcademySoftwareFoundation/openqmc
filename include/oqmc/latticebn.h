@@ -57,6 +57,7 @@ namespace oqmc
  */
 class LatticeBnImpl
 {
+	// See SamplerInterface for public API documentation.
 	friend SamplerInterface<LatticeBnImpl>;
 
 	struct CacheType
@@ -70,19 +71,19 @@ class LatticeBnImpl
 
 	/*AUTO_DEFINED*/ LatticeBnImpl() = default;
 	OQMC_HOST_DEVICE LatticeBnImpl(State64Bit state, const CacheType* cache);
-	OQMC_HOST_DEVICE LatticeBnImpl(int x, int y, int frame, int sampleId,
+	OQMC_HOST_DEVICE LatticeBnImpl(int x, int y, int frame, int index,
 	                               const void* cache);
 
 	OQMC_HOST_DEVICE LatticeBnImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE LatticeBnImpl newDomainDistrib(int key) const;
-	OQMC_HOST_DEVICE LatticeBnImpl newDomainSplit(int key, int size) const;
-	OQMC_HOST_DEVICE LatticeBnImpl nextDomainIndex() const;
+	OQMC_HOST_DEVICE LatticeBnImpl newDomainDistrib(int key, int index) const;
+	OQMC_HOST_DEVICE LatticeBnImpl newDomainSplit(int key, int size,
+	                                              int index) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	State64Bit state;
 	const CacheType* cache;
@@ -106,9 +107,9 @@ inline LatticeBnImpl::LatticeBnImpl(State64Bit state, const CacheType* cache)
 	assert(cache);
 }
 
-inline LatticeBnImpl::LatticeBnImpl(int x, int y, int frame, int sampleId,
+inline LatticeBnImpl::LatticeBnImpl(int x, int y, int frame, int index,
                                     const void* cache)
-    : state(x, y, frame, sampleId), cache(static_cast<const CacheType*>(cache))
+    : state(x, y, frame, index), cache(static_cast<const CacheType*>(cache))
 {
 	assert(cache);
 }
@@ -118,23 +119,19 @@ inline LatticeBnImpl LatticeBnImpl::newDomain(int key) const
 	return {state.newDomain(key), cache};
 }
 
-inline LatticeBnImpl LatticeBnImpl::newDomainDistrib(int key) const
+inline LatticeBnImpl LatticeBnImpl::newDomainDistrib(int key, int index) const
 {
-	return {state.newDomainDistrib(key), cache};
+	return {state.newDomainDistrib(key, index), cache};
 }
 
-inline LatticeBnImpl LatticeBnImpl::newDomainSplit(int key, int size) const
+inline LatticeBnImpl LatticeBnImpl::newDomainSplit(int key, int size,
+                                                   int index) const
 {
-	return {state.newDomainSplit(key, size), cache};
-}
-
-inline LatticeBnImpl LatticeBnImpl::nextDomainIndex() const
-{
-	return {state.nextDomainIndex(), cache};
+	return {state.newDomainSplit(key, size, index), cache};
 }
 
 template <int Size>
-void LatticeBnImpl::drawSample(std::uint32_t samples[Size]) const
+void LatticeBnImpl::drawSample(std::uint32_t sample[Size]) const
 {
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
@@ -152,13 +149,13 @@ void LatticeBnImpl::drawSample(std::uint32_t samples[Size]) const
 	    cache->rankTable);
 
 	shuffledRotatedLattice<Size>(state.sampleId ^ table.rank, table.key,
-	                             samples);
+	                             sample);
 }
 
 template <int Size>
-void LatticeBnImpl::drawRnd(std::uint32_t rnds[Size]) const
+void LatticeBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
-	state.newDomain(state.pixelId).drawRnd<Size>(rnds);
+	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
 
 using LatticeBnSampler = SamplerInterface<LatticeBnImpl>;

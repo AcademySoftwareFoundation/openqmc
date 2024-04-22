@@ -23,13 +23,13 @@ struct SamplerV1
 
 	void sample(int index, std::uint32_t out[2]) const
 	{
-		std::uint32_t samples[2];
+		std::uint32_t sample[2];
 
-		oqmc::shuffledScrambledSobol<1>(index, hash0, &samples[0]);
-		oqmc::shuffledScrambledSobol<1>(index, hash1, &samples[1]);
+		oqmc::shuffledScrambledSobol<1>(index, hash0, &sample[0]);
+		oqmc::shuffledScrambledSobol<1>(index, hash1, &sample[1]);
 
-		out[0] = samples[0];
-		out[1] = samples[1];
+		out[0] = sample[0];
+		out[1] = sample[1];
 	}
 
 	std::uint32_t hash0;

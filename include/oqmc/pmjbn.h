@@ -58,6 +58,7 @@ namespace oqmc
  */
 class PmjBnImpl
 {
+	// See SamplerInterface for public API documentation.
 	friend SamplerInterface<PmjBnImpl>;
 
 	struct CacheType
@@ -72,19 +73,19 @@ class PmjBnImpl
 
 	/*AUTO_DEFINED*/ PmjBnImpl() = default;
 	OQMC_HOST_DEVICE PmjBnImpl(State64Bit state, const CacheType* cache);
-	OQMC_HOST_DEVICE PmjBnImpl(int x, int y, int frame, int sampleId,
+	OQMC_HOST_DEVICE PmjBnImpl(int x, int y, int frame, int index,
 	                           const void* cache);
 
 	OQMC_HOST_DEVICE PmjBnImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE PmjBnImpl newDomainDistrib(int key) const;
-	OQMC_HOST_DEVICE PmjBnImpl newDomainSplit(int key, int size) const;
-	OQMC_HOST_DEVICE PmjBnImpl nextDomainIndex() const;
+	OQMC_HOST_DEVICE PmjBnImpl newDomainDistrib(int key, int index) const;
+	OQMC_HOST_DEVICE PmjBnImpl newDomainSplit(int key, int size,
+	                                          int index) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	State64Bit state;
 	const CacheType* cache;
@@ -110,9 +111,9 @@ inline PmjBnImpl::PmjBnImpl(State64Bit state, const CacheType* cache)
 	assert(cache);
 }
 
-inline PmjBnImpl::PmjBnImpl(int x, int y, int frame, int sampleId,
+inline PmjBnImpl::PmjBnImpl(int x, int y, int frame, int index,
                             const void* cache)
-    : state(x, y, frame, sampleId), cache(static_cast<const CacheType*>(cache))
+    : state(x, y, frame, index), cache(static_cast<const CacheType*>(cache))
 {
 	assert(cache);
 }
@@ -122,23 +123,18 @@ inline PmjBnImpl PmjBnImpl::newDomain(int key) const
 	return {state.newDomain(key), cache};
 }
 
-inline PmjBnImpl PmjBnImpl::newDomainDistrib(int key) const
+inline PmjBnImpl PmjBnImpl::newDomainDistrib(int key, int index) const
 {
-	return {state.newDomainDistrib(key), cache};
+	return {state.newDomainDistrib(key, index), cache};
 }
 
-inline PmjBnImpl PmjBnImpl::newDomainSplit(int key, int size) const
+inline PmjBnImpl PmjBnImpl::newDomainSplit(int key, int size, int index) const
 {
-	return {state.newDomainSplit(key, size), cache};
-}
-
-inline PmjBnImpl PmjBnImpl::nextDomainIndex() const
-{
-	return {state.nextDomainIndex(), cache};
+	return {state.newDomainSplit(key, size, index), cache};
 }
 
 template <int Size>
-void PmjBnImpl::drawSample(std::uint32_t samples[Size]) const
+void PmjBnImpl::drawSample(std::uint32_t sample[Size]) const
 {
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
@@ -156,13 +152,13 @@ void PmjBnImpl::drawSample(std::uint32_t samples[Size]) const
 	    cache->rankTable);
 
 	shuffledScrambledLookup<4, Size>(state.sampleId ^ table.rank, table.key,
-	                                 cache->samples, samples);
+	                                 cache->samples, sample);
 }
 
 template <int Size>
-void PmjBnImpl::drawRnd(std::uint32_t rnds[Size]) const
+void PmjBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
-	state.newDomain(state.pixelId).drawRnd<Size>(rnds);
+	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
 
 using PmjBnSampler = SamplerInterface<PmjBnImpl>;

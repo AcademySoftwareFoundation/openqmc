@@ -48,14 +48,15 @@
         } {
           name = "notebook";
           packages = [
-            pkgs.python310Packages.python
-            pkgs.python310Packages.python-lsp-server
-            pkgs.python310Packages.python-lsp-ruff
-            pkgs.python310Packages.python-lsp-black
-            pkgs.python310Packages.jupyter
-            pkgs.python310Packages.matplotlib
-            pkgs.python310Packages.numpy
-            pkgs.python310Packages.pillow
+            (pkgs.python311.withPackages(ps: with ps; [
+              python-lsp-server
+              python-lsp-black
+              python-lsp-ruff
+              matplotlib
+              numpy
+              pillow
+              jupyter
+            ]))
           ];
           inputsFrom = [
             self.devShells.${system}.default

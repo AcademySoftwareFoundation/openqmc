@@ -53,7 +53,7 @@ randomDigitScramble(std::uint32_t value, std::uint32_t hash)
  * @param [in] index Input index of sequence value.
  * @param [in] hash Hashed seed to randomise the sequence.
  * @param [in] table Pre-computed input table.
- * @param [out] samples Randomised sequence value.
+ * @param [out] sample Randomised sequence value.
  *
  * @pre Table input must be pre-computed using an initialisation function.
  */
@@ -61,7 +61,7 @@ template <int Table, int Depth>
 OQMC_HOST_DEVICE inline void
 shuffledScrambledLookup(std::uint32_t index, std::uint32_t hash,
                         const std::uint32_t table[][Table],
-                        std::uint32_t samples[Depth])
+                        std::uint32_t sample[Depth])
 {
 	static_assert(Table >= Depth, "Table size is greater or equal to Depth.");
 	static_assert(Depth >= 1, "Pattern depth is greater or equal to one.");
@@ -73,8 +73,8 @@ shuffledScrambledLookup(std::uint32_t index, std::uint32_t hash,
 	{
 		constexpr auto indexMask = 0xffff;
 
-		samples[i] = table[index & indexMask][i];
-		samples[i] = randomDigitScramble(samples[i], rotateBytes(hash, i));
+		sample[i] = table[index & indexMask][i];
+		sample[i] = randomDigitScramble(sample[i], rotateBytes(hash, i));
 	}
 }
 

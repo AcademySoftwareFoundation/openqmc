@@ -20,48 +20,26 @@ namespace oqmc
 
 /**
  * @brief Sampler interface wrapper.
- * @details This is the sampler interface that defines the generic API for
- * sampler types. The implementation is composed internally, allowing only the
- * API to be exposed to the calling code, establishing a strict contract. New
- * implementations should define a type, passing the internal implementation
- * class as a template parameter. An implementation definition looks like:
+ * @details This is a sampler interface that defines a generic API for
+ * sampler types. The interface is composed of an internal implementation,
+ * meaning only this API is exposed to the calling code. New implementations
+ * should define an implementation type, and pass this type as a template
+ * parameter to an instantiation of SamplerInterface.
  *
- * #include "gpu.h"
- * #include "sampler.h"
- *
- * #include <cstddef>
- * #include <cstdint>
- *
- * class SamplerNameImpl
+ * class FooImpl
  * {
- *   friend SamplerInterface<SamplerNameImpl>;
+ * ...
+ * }
  *
- *   static constexpr std::size_t cacheSize = 0;
- *   static void initialiseCache(void* cache);
+ * using FooSampler = SamplerInterface<FooImpl>;
  *
- *   SamplerNameImpl() = default;
- *   OQMC_HOST_DEVICE SamplerNameImpl(int x, int y, int frame, int sampleId,
- *                                    const void* cache);
- *
- *   OQMC_HOST_DEVICE SamplerNameImpl newDomain(int key) const;
- *   OQMC_HOST_DEVICE SamplerNameImpl newDomainDistrib(int key) const;
- *   OQMC_HOST_DEVICE SamplerNameImpl newDomainSplit(int key, int size) const;
- *   OQMC_HOST_DEVICE SamplerNameImpl nextDomainIndex() const;
- *
- *   template <int Size>
- *   OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
- *
- *   template <int Size>
- *   OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
- * };
- *
- * using SamplerNameSampler = SamplerInterface<SamplerNameImpl>;
+ * See 'oqmc/pmj.h' for a real-world example of an implementation.
  *
  * Different samplers defined using the interface should be interchangeable
  * allowing for new implementations to be tested and compared without changing
  * the calling code. The interface is static, so all functions should be inlined
- * with zero cost abstraction. This also means that enabling compile time
- * optimisations is critical for performance.
+ * to allow for zero cost abstraction. This also means that enabling compile
+ * time optimisations is important for performance reasons.
  *
  * Once a sampler is constructed its state cannot change. This means that in
  * most cases the object variable can be marked constant. New samplers are
@@ -77,11 +55,13 @@ namespace oqmc
 template <typename Impl>
 class SamplerInterface
 {
-	static constexpr auto maxDrawValue = 4;       // dimensions per pattern.
-	static constexpr auto maxIndexSize = 0x10000; // 2^16 index upper limit.
+	// Dimensions per pattern.
+	static constexpr auto maxDrawValue = 4;
 
+	// Prevent value-construction.
 	OQMC_HOST_DEVICE SamplerInterface(Impl impl);
 
+	// Implemention type.
 	Impl impl;
 
   public:
@@ -136,19 +116,20 @@ class SamplerInterface
 	 * This also requires a pre-allocated and initialised cache. Once
 	 * constructed the object is valid and ready for use.
 	 *
-	 * Values for sampleId should be within the [0, 2^16) range; this constraint
-	 * allows for possible optimisations in the implementations.
+	 * For each pixel this constructor is expected to be called multiple times,
+	 * once for each index. Pixels might have a varying number of indicies when
+	 * adaptive sampling.
 	 *
-	 * @param x [in] Pixel coordinate on the x axis.
-	 * @param y [in] Pixel coordinate on the y axis.
-	 * @param frame [in] Time index value.
-	 * @param sampleId [in] Sample index. Must be within [0, 2^16).
-	 * @param cache [in] Allocated and initialised cache.
+	 * @param [in] x Pixel coordinate on the x axis.
+	 * @param [in] y Pixel coordinate on the y axis.
+	 * @param [in] frame Time index value.
+	 * @param [in] index Sample index. Must be positive.
+	 * @param [in] cache Allocated and initialised cache.
 	 *
 	 * @pre Cache has been allocated in memory accessible to the device calling
 	 * this constructor, and has also been initialised.
 	 */
-	OQMC_HOST_DEVICE SamplerInterface(int x, int y, int frame, int sampleId,
+	OQMC_HOST_DEVICE SamplerInterface(int x, int y, int frame, int index,
 	                                  const void* cache);
 
 	/**
@@ -177,80 +158,59 @@ class SamplerInterface
 	 * @brief Derive an object in a new domain for a local distribution.
 	 * @details Like newDomain, this function derives a mutated copy of the
 	 * current sampler object. The difference is it decorrelates the pattern
-	 * with the sample index, allowing for sample splitting with an unknown
-	 * multiplier.
+	 * with the sample index, allowing for sample splitting with a non-constant
+	 * or unknown multiplier.
 	 *
-	 * Calling code that needs to take N branching samples can't simply call the
-	 * nextDomainIndex member function shown below. This would cause duplication
-	 * with other domain trees, and ultimately bias the estimate. By deriving a
-	 * decorrelated domain using this member function, the calling code can
-	 * safely iterate N samples from the resulting child domain.
+	 * The result from taking N indexed domains with this function will be a
+	 * locally well distributed sub-pattern. This sub-pattern will be of lower
+	 * quality when combined with the sub-patterns of other samples. That is
+	 * because the correlation between the sub-patterns globally is lost.
 	 *
-	 * The resulting pattern from taking multiple samples with nextDomainIndex
-	 * will be well distributed locally. But care must be taken as this local
-	 * pattern will be of lower quality when combined with the local patterns of
-	 * other samples. As the correlation between the patterns globally has been
-	 * lost. If the multiplier (the amount of times nextDomainIndex is to be
-	 * called) is known and constant, newDomainSplit can be used instead to
-	 * produce the best quality results.
+	 * If a mutliplier is known and constant then newDomainSplit will produce
+	 * better quality sample points and should be used instead. This is because
+	 * newDomainSplit will preserved correlation between sub-patterns from other
+	 * samples.
+	 *
+	 * Calling code should use a constant key for any given domain while then
+	 * incrementing the index value N times to increase the sampling rate by N
+	 * for that given domain. The function will be called N times, once for each
+	 * unique index.
 	 *
 	 * @param [in] key Index key of next domain.
+	 * @param [in] index Sample index of next domain. Must be positive.
 	 * @return Child domain based on the current object state and key.
 	 */
-	OQMC_HOST_DEVICE SamplerInterface newDomainDistrib(int key) const;
+	OQMC_HOST_DEVICE SamplerInterface newDomainDistrib(int key,
+	                                                   int index) const;
 
 	/**
-	 * @brief Derive an object in a new domain for splitting.
+	 * @brief Derive an object in a new domain for global splitting.
 	 * @details Like the other newDomain* functions, this function derives a
 	 * mutated copy of the current sampler object. The difference is it remaps
 	 * the sample index, allowing for sample splitting with a known and constant
 	 * multiplier.
 	 *
-	 * Calling code that needs to take N branching samples can't simply call the
-	 * nextDomainIndex member function shown below. This would cause duplication
-	 * with other domain trees, and ultimately bias the estimate. By deriving a
-	 * new domain using this member function, the calling code can safely
-	 * iterate N samples from the resulting child domain.
+	 * The result from taking N indexed domains with this function will be both
+	 * a locally and a gloablly well distributed sub-pattern. This sub-pattern
+	 * will of the highest quality due to being globally correlated with the
+	 * sub-patterns of other samples.
 	 *
-	 * As the multiplier is a known and constant size, not only will the
-	 * resulting pattern from taking multiple samples with nextDomainIndex be
-	 * well distributed locally, but it will also be well distributed globally.
-	 * This is because the indices can be mapped more carefully when the size of
-	 * N is known and does not change. If these guarantees can not be met then
-	 * the calling code should use newDomainDistrib instead.
+	 * If a mutliplier is non-constant or unknown then newDomainDistrib should
+	 * be used instead. This is because newDomainDistrib relaxes the constraints
+	 * in excahnge for a reduction in the global quality of the pattern.
+	 *
+	 * Calling code should use a constant key for any given domain while then
+	 * incrementing the index value N times to increase the sampling rate by N
+	 * for that given domain. The function will be called N times, once for each
+	 * unique index. N must be passed as 'size' and remain constant.
 	 *
 	 * @param [in] key Index key of next domain.
-	 * @param [in] size Sample index multiplier. Must be greater than zero.
+	 * @param [in] size Sample index multiplier. Must greater than zero.
+	 * @param [in] index Sample index of next domain. Must be positive.
 	 * @return Child domain based on the current object state, key and size.
 	 */
-	OQMC_HOST_DEVICE SamplerInterface newDomainSplit(int key, int size) const;
-
-	/**
-	 * @brief Derive an object in the current domain at the next index.
-	 * @details The function derives a mutated copy of the current sampler
-	 * object. This new object is in the same domain, but will have iterated
-	 * onto the next sample index. Calling the draw* member functions below on
-	 * the new index will produce a different value to that of the previous
-	 * index.
-	 *
-	 * This is used to split a single sample index into multiple indices so that
-	 * a subset of an integrals dimensions can sampled at higher rate than other
-	 * dimensions. This technique is called sample or trajectory splitting.
-	 *
-	 * The function should only be called on domains that have been configured
-	 * for splitting, else it would cause duplication with other domain trees,
-	 * and ultimately bias the estimate. If newDomainDistrib was used, then the
-	 * only restriction is that the resulting sample index must not exceed the
-	 * global limit of 2^16. If newDomainSplit was used, then the calling code
-	 * must iterate with this function as many times as was specified in the
-	 * 'size' argument.
-	 *
-	 * @return Child sampler object based on current state.
-	 *
-	 * @pre The current object must be the result of calling either the
-	 * newDomainDistrib or newDomainSplit member functions.
-	 */
-	OQMC_HOST_DEVICE SamplerInterface nextDomainIndex() const;
+	OQMC_HOST_DEVICE SamplerInterface newDomainSplit(int key, int size,
+	                                                 int index) const;
 
 	/**
 	 * @brief Draw integer sample values from domain
@@ -266,10 +226,10 @@ class SamplerInterface
 	 *
 	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
 	 *
-	 * @param [out] samples Output array to store sample values.
+	 * @param [out] sample Output array to store sample values.
 	 */
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(std::uint32_t samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	/**
 	 * @brief Draw floating point sample values from domain
@@ -279,10 +239,10 @@ class SamplerInterface
 	 *
 	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
 	 *
-	 * @param [out] samples Output array to store sample values.
+	 * @param [out] sample Output array to store sample values.
 	 */
 	template <int Size>
-	OQMC_HOST_DEVICE void drawSample(float samples[Size]) const;
+	OQMC_HOST_DEVICE void drawSample(float sample[Size]) const;
 
 	/**
 	 * @brief Draw integer pseudo random values from domain
@@ -298,10 +258,10 @@ class SamplerInterface
 	 *
 	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
 	 *
-	 * @param [out] samples Output array to store sample values.
+	 * @param [out] rnd Output array to store rnd values.
 	 */
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	/**
 	 * @brief Draw floating point pseudo random values from domain
@@ -311,10 +271,10 @@ class SamplerInterface
 	 *
 	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
 	 *
-	 * @param [out] samples Output array to store sample values.
+	 * @param [out] rnd Output array to store rnd values.
 	 */
 	template <int Size>
-	OQMC_HOST_DEVICE void drawRnd(float rnds[Size]) const;
+	OQMC_HOST_DEVICE void drawRnd(float rnd[Size]) const;
 };
 
 template <typename Impl>
@@ -329,12 +289,11 @@ SamplerInterface<Impl>::SamplerInterface(Impl impl) : impl(impl)
 }
 
 template <typename Impl>
-SamplerInterface<Impl>::SamplerInterface(int x, int y, int frame, int sampleId,
+SamplerInterface<Impl>::SamplerInterface(int x, int y, int frame, int index,
                                          const void* cache)
-    : impl(x, y, frame, sampleId, cache)
+    : impl(x, y, frame, index, cache)
 {
-	assert(sampleId >= 0);
-	assert(sampleId < maxIndexSize);
+	assert(index >= 0);
 }
 
 template <typename Impl>
@@ -344,69 +303,67 @@ SamplerInterface<Impl> SamplerInterface<Impl>::newDomain(int key) const
 }
 
 template <typename Impl>
-SamplerInterface<Impl> SamplerInterface<Impl>::newDomainDistrib(int key) const
+SamplerInterface<Impl> SamplerInterface<Impl>::newDomainDistrib(int key,
+                                                                int index) const
 {
-	return {impl.newDomainDistrib(key)};
+	assert(index >= 0);
+
+	return {impl.newDomainDistrib(key, index)};
 }
 
 template <typename Impl>
-SamplerInterface<Impl> SamplerInterface<Impl>::newDomainSplit(int key,
-                                                              int size) const
+SamplerInterface<Impl> SamplerInterface<Impl>::newDomainSplit(int key, int size,
+                                                              int index) const
 {
 	assert(size > 0);
+	assert(index >= 0);
 
-	return {impl.newDomainSplit(key, size)};
-}
-
-template <typename Impl>
-SamplerInterface<Impl> SamplerInterface<Impl>::nextDomainIndex() const
-{
-	return {impl.nextDomainIndex()};
+	return {impl.newDomainSplit(key, size, index)};
 }
 
 template <typename Impl>
 template <int Size>
-void SamplerInterface<Impl>::drawSample(std::uint32_t samples[Size]) const
+void SamplerInterface<Impl>::drawSample(std::uint32_t sample[Size]) const
 {
 	static_assert(Size >= 0, "Draw size greater or equal to zero.");
 	static_assert(Size <= maxDrawValue, "Draw size less or equal to max.");
 
-	impl.template drawSample<Size>(samples);
+	impl.template drawSample<Size>(sample);
 }
 
 template <typename Impl>
 template <int Size>
-void SamplerInterface<Impl>::drawSample(float samples[Size]) const
+void SamplerInterface<Impl>::drawSample(float sample[Size]) const
 {
-	std::uint32_t integerSamples[Size];
-	drawSample<Size>(integerSamples);
+	std::uint32_t integerSample[Size];
+	drawSample<Size>(integerSample);
 
 	for(int i = 0; i < Size; ++i)
 	{
-		samples[i] = uintToFloat(integerSamples[i]);
+		sample[i] = uintToFloat(integerSample[i]);
 	}
 }
 
 template <typename Impl>
 template <int Size>
-void SamplerInterface<Impl>::drawRnd(std::uint32_t rnds[Size]) const
+void SamplerInterface<Impl>::drawRnd(std::uint32_t rnd[Size]) const
 {
 	static_assert(Size >= 0, "Draw size greater or equal to zero.");
 	static_assert(Size <= maxDrawValue, "Draw size less or equal to max.");
 
-	impl.template drawRnd<Size>(rnds);
+	impl.template drawRnd<Size>(rnd);
 }
 
 template <typename Impl>
 template <int Size>
-void SamplerInterface<Impl>::drawRnd(float rnds[Size]) const
+void SamplerInterface<Impl>::drawRnd(float rnd[Size]) const
 {
-	std::uint32_t integerRnds[Size];
-	drawRnd<Size>(integerRnds);
+	std::uint32_t integerRnd[Size];
+	drawRnd<Size>(integerRnd);
 
 	for(int i = 0; i < Size; ++i)
 	{
-		rnds[i] = uintToFloat(integerRnds[i]);
+		rnd[i] = uintToFloat(integerRnd[i]);
 	}
 }
 

@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	constexpr auto mode = "split";
 	constexpr auto width = 1080;
 	constexpr auto height = 720;
 	constexpr auto frame = 0;
@@ -54,8 +55,8 @@ int main(int argc, char* argv[])
 
 	auto out = start(width, height);
 
-	if(!oqmc_trace(argv[1], argv[2], width, height, frame, numPixelSamples,
-	               numLightSamples, maxDepth, maxOpacity, out))
+	if(!oqmc_trace(argv[1], argv[2], mode, width, height, frame,
+	               numPixelSamples, numLightSamples, maxDepth, maxOpacity, out))
 	{
 		std::fprintf(stderr, "Configuration that was requested was not found; "
 		                     "sampler options are pmj, pmjbn, sobol, sobolbn, "

@@ -67,43 +67,46 @@ contributing any further improvements to this open initiative.
 ## Usage
 
 Here is a quick example of what OpenQMC looks like. Feel free to copy and paste
-this code to get yourself started, or continue reading to learn about the API
-and techniques for writing more advanced algorithms.
+this code to get yourself started, or continue reading to learn about other
+samplers, the API, and techniques for writing more advanced algorithms.
 
 ```cpp
-// 1. Initialise the sampler cache.
-auto cache = new char[oqmc::PmjSampler::cacheSize];
-oqmc::PmjSampler::initialiseCache(cache);
+// 1. Include the sampler implementation.
+#include <oqmc/pmjbn.h>
 
-// 2. Loop over all pixels in the image.
+// 2. Initialise the sampler cache.
+auto cache = new char[oqmc::PmjBnSampler::cacheSize];
+oqmc::PmjBnSampler::initialiseCache(cache);
+
+// 3. Loop over all pixels in the image.
 for(int x = 0; x < resolution; ++x)
 {
 	for(int y = 0; y < resolution; ++y)
 	{
-		// 3. Loop over all the sample indices.
-		for(int index = 1; index < sampleSize; ++index)
+		// 4. Loop over all the sample indices.
+		for(int index = 0; index < nSamples; ++index)
 		{
-			// 4. Create a sampler object for the pixel domain.
-			const auto domain = oqmc::PmjSampler(x, y, 0, index, cache);
+			// 5. Create a sampler object for the pixel domain.
+			const auto domain = oqmc::PmjBnSampler(x, y, 0, index, cache);
 
-			// 5. Draw a sample point from the domain.
-			float samples[2];
-			domain.drawSample<2>(samples);
+			// 6. Draw a sample point from the domain.
+			float sample[2];
+			domain.drawSample<2>(sample);
 
-			// 6. Offset the point into the pixel.
-			const auto xOffset = samples[0] + x;
-			const auto yOffset = samples[1] + y;
+			// 7. Offset the point into the pixel.
+			const auto xOffset = sample[0] + x;
+			const auto yOffset = sample[1] + y;
 
-			// 7. Add value to the pixel if within disk.
+			// 8. Add value to the pixel if within disk.
 			if(xOffset * xOffset + yOffset * yOffset < resolution * resolution)
 			{
-				image[x * resolution + y] += 1.0f / sampleSize;
+				image[x * resolution + y] += 1.0f / nSamples;
 			}
 		}
 	}
 }
 
-// 8. Deallocate the sampler cache.
+// 9. Deallocate the sampler cache.
 delete[] cache;
 ```
 
@@ -339,19 +342,20 @@ static void oqmc::Sampler::initialiseCache(void* cache);
  * indices. This also requires a pre-allocated and initialised cache. Once
  * constructed the sampler object is valid and ready for use.
  *
- * Values for sampleId should be within the [0, 2^16) range; this constraint
- * allows for possible optimisations in the implementations.
+ * For each pixel this constructor is expected to be called multiple times,
+ * once for each index. Pixels might have a varying number of indicies when
+ * adaptive sampling.
  *
- * @param x [in] Pixel coordinate on the x axis.
- * @param y [in] Pixel coordinate on the y axis.
- * @param frame [in] Time index value.
- * @param sampleId [in] Sample index. Must be within [0, 2^16).
- * @param cache [in] Allocated and initialised cache.
+ * @param [in] x Pixel coordinate on the x axis.
+ * @param [in] y Pixel coordinate on the y axis.
+ * @param [in] frame Time index value.
+ * @param [in] index Sample index. Must be positive.
+ * @param [in] cache Allocated and initialised cache.
  *
  * @pre Cache has been allocated in memory accessible to the device calling
  * this constructor, and has also been initialised.
  */
-oqmc::Sampler::Sampler(int x, int y, int frame, int sampleId, const void* cache);
+oqmc::Sampler::Sampler(int x, int y, int frame, int index, const void* cache);
 ```
 
 ```cpp
@@ -383,84 +387,59 @@ oqmc::Sampler oqmc::Sampler::newDomain(int key) const;
  * @brief Derive an object in a new domain for a local distribution.
  * @details Like newDomain, this function derives a mutated copy of the
  * current sampler object. The difference is it decorrelates the pattern
- * with the sample index, allowing for sample splitting with an unknown
- * multiplier.
+ * with the sample index, allowing for sample splitting with a non-constant
+ * or unknown multiplier.
  *
- * Calling code that needs to take N branching samples can't simply call the
- * nextDomainIndex member function shown below. This would cause duplication
- * with other domain trees, and ultimately bias the estimate. By deriving a
- * decorrelated domain using this member function, the calling code can
- * safely iterate N samples from the resulting child domain.
+ * The result from taking N indexed domains with this function will be a
+ * locally well distributed sub-pattern. This sub-pattern will be of lower
+ * quality when combined with the sub-patterns of other samples. That is
+ * because the correlation between the sub-patterns globally is lost.
  *
- * The resulting pattern from taking multiple samples with nextDomainIndex
- * will be well distributed locally. But care must be taken as this local
- * pattern will be of lower quality when combined with the local patterns of
- * other samples. As the correlation between the patterns globally has been
- * lost. If the multiplier (the amount of times nextDomainIndex is to be
- * called) is known and constant, newDomainSplit can be used instead to
- * produce the best quality results.
+ * If a mutliplier is known and constant then newDomainSplit will produce
+ * better quality sample points and should be used instead. This is because
+ * newDomainSplit will preserved correlation between sub-patterns from other
+ * samples.
+ *
+ * Calling code should use a constant key for any given domain while then
+ * incrementing the index value N times to increase the sampling rate by N
+ * for that given domain. The function will be called N times, once for each
+ * unique index.
  *
  * @param [in] key Index key of next domain.
+ * @param [in] index Sample index of next domain. Must be positive.
  * @return Child domain based on the current object state and key.
  */
-oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key) const;
+oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key, int index) const;
 ```
 
 ```cpp
 /**
- * @brief Derive an object in a new domain for splitting.
+ * @brief Derive an object in a new domain for global splitting.
  * @details Like the other newDomain* functions, this function derives a
  * mutated copy of the current sampler object. The difference is it remaps
  * the sample index, allowing for sample splitting with a known and constant
  * multiplier.
  *
- * Calling code that needs to take N branching samples can't simply call the
- * nextDomainIndex member function shown below. This would cause duplication
- * with other domain trees, and ultimately bias the estimate. By deriving a
- * new domain using this member function, the calling code can safely
- * iterate N samples from the resulting child domain.
+ * The result from taking N indexed domains with this function will be both
+ * a locally and a gloablly well distributed sub-pattern. This sub-pattern
+ * will of the highest quality due to being globally correlated with the
+ * sub-patterns of other samples.
  *
- * As the multiplier is a known and constant size, not only will the
- * resulting pattern from taking multiple samples with nextDomainIndex be
- * well distributed locally, but it will also be well distributed globally.
- * This is because the indices can be mapped more carefully when the size of
- * N is known and does not change. If these guarantees can not be met then
- * the calling code should use newDomainDistrib instead.
+ * If a mutliplier is non-constant or unknown then newDomainDistrib should
+ * be used instead. This is because newDomainDistrib relaxes the constraints
+ * in excahnge for a reduction in the global quality of the pattern.
+ *
+ * Calling code should use a constant key for any given domain while then
+ * incrementing the index value N times to increase the sampling rate by N
+ * for that given domain. The function will be called N times, once for each
+ * unique index. N must be passed as 'size' and remain constant.
  *
  * @param [in] key Index key of next domain.
- * @param [in] size Sample index multiplier. Must be greater than zero.
+ * @param [in] size Sample index multiplier. Must greater than zero.
+ * @param [in] index Sample index of next domain. Must be positive.
  * @return Child domain based on the current object state, key and size.
  */
-oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size) const;
-```
-
-```cpp
-/**
- * @brief Derive an object in the current domain at the next index.
- * @details The function derives a mutated copy of the current sampler
- * object. This new object is in the same domain, but will have iterated
- * onto the next sample index. Calling the draw* member functions below on
- * the new index will produce a different value to that of the previous
- * index.
- *
- * This is used to split a single sample index into multiple indices so that
- * a subset of an integrals dimensions can sampled at higher rate than other
- * dimensions. This technique is called sample or trajectory splitting.
- *
- * The function should only be called on domains that have been configured
- * for splitting, else it would cause duplication with other domain trees,
- * and ultimately bias the estimate. If newDomainDistrib was used, then the
- * only restriction is that the resulting sample index must not exceed the
- * global limit of 2^16. If newDomainSplit was used, then the calling code
- * must iterate with this function as many times as was specified in the
- * 'size' argument.
- *
- * @return Child sampler object based on current state.
- *
- * @pre The current object must be the result of calling either the
- * newDomainDistrib or newDomainSplit member functions.
- */
-oqmc::Sampler oqmc::Sampler::nextDomainIndex() const;
+oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
 ```
 
 ```cpp
@@ -478,10 +457,10 @@ oqmc::Sampler oqmc::Sampler::nextDomainIndex() const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] sample Output array to store sample values.
  */
 template <int Size>
-void oqmc::Sampler::drawSample(std::uint32_t samples[Size]) const;
+void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
 ```
 
 ```cpp
@@ -493,10 +472,10 @@ void oqmc::Sampler::drawSample(std::uint32_t samples[Size]) const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] sample Output array to store sample values.
  */
 template <int Size>
-void oqmc::Sampler::drawSample(float samples[Size]) const;
+void oqmc::Sampler::drawSample(float sample[Size]) const;
 ```
 
 ```cpp
@@ -514,10 +493,10 @@ void oqmc::Sampler::drawSample(float samples[Size]) const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] rnd Output array to store rnd values.
  */
 template <int Size>
-void oqmc::Sampler::drawRnd(std::uint32_t rnds[Size]) const;
+void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
 ```
 
 ```cpp
@@ -529,10 +508,10 @@ void oqmc::Sampler::drawRnd(std::uint32_t rnds[Size]) const;
  *
  * @tparam Size Number of dimensions to draw. Must be within [1, 4].
  *
- * @param [out] samples Output array to store sample values.
+ * @param [out] rnd Output array to store rnd values.
  */
 template <int Size>
-void oqmc::Sampler::drawRnd(float rnds[Size]) const;
+void oqmc::Sampler::drawRnd(float rnd[Size]) const;
 ```
 
 ## Implementation comparison
@@ -575,11 +554,11 @@ plotting a data point for each sample count value.
   <img alt="Error plot comparison." src="./images/plots/error-plot-light.png">
 </picture>
 
-The following plots show, for a fixed sample count, how the error decreases
-with a Gaussian filter as the standard deviation increases. It shows,
-especially for low samples counts, the faster convergence of the blue noise
-variants. This is an indicator that these may be a better option if your images
-are then filtered with a de-noise pass.
+The following plots show, for a fixed sample count, how the error decreases with
+a Gaussian filter as the standard deviation increases. It shows, especially for
+low sample counts, the faster convergence of the blue noise variants. This is
+an indicator that these may be a better option if your images are then filtered
+with a de-noise pass.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-filter-space-plot-light.png">
@@ -670,16 +649,16 @@ confidently make use of QMC sampling in your own software.
 When you estimate an integral using the Monte Carlo method, the high dimensional
 space can often be partitioned into logical domains. In OpenQMC domains are an
 important concept. Domains act as promises that can be converted into dimensions
-upon request by the caller. They can also be chained to create new domains.
+upon request by the caller. They can also be used to derive other domains.
 
 This example function tries to compute a pixel estimate. This estimate is made
-up of two parts, each needing a domain. The first is a `camera` that takes a
-single sample, and the second is a `material`, that takes two samples.
+up of two parts, each needing a domain. First is a `camera` that takes a single
+dimension, and the second is a `light`, that takes two dimensions.
 
 ```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
                      const CameraInterface& camera,
-                     const MaterialInterface& material)
+                     const LightInterface& light)
 {
 	enum DomainKey
 	{
@@ -689,30 +668,32 @@ Result estimatePixel(const oqmc::PmjSampler pixelDomain,
 	// Derive 'cameraDomain' from 'pixelDomain' parameter.
 	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Next);
 
-	// Derive 'materialDomain' from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(DomainKey::Next);
+	// Derive 'lightDomain' from 'cameraDomain' variable.
+	const auto lightDomain = cameraDomain.newDomain(DomainKey::Next);
 
-	// Take a single sample for time to pass to 'camera'.
-	float timeSamples[1];
-	cameraDomain.drawSample<1>(timeSamples);
+	// Take a single dimension for time to pass to 'camera'.
+	float timeSample[1];
+	cameraDomain.drawSample<1>(timeSample);
 
-	// Take two samples for direction to pass to 'material'.
-	float directionSamples[2];
-	materialDomain.drawSample<2>(directionSamples);
+	// Take two dimensions for direction to pass to 'light'.
+	float directionSample[2];
+	lightDomain.drawSample<2>(directionSample);
 
-	// Pass drawn samples to the interface an importance sampling.
-	const auto cameraSample = camera.sample(timeSamples);
-	const auto materialSample = material.sample(directionSamples);
+	// Pass drawn dimensions to the interface for importance sampling.
+	const auto cameraSample = camera.sample(timeSample);
+	const auto lightSample = light.sample(directionSample);
 
-	// Using resulting samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
+	return estimateLightTransport(cameraSample, lightSample);
 }
 ```
 
 The function started with an initial `pixelDomain`, from that it derived a
-`cameraDomain`, and from that it derived a `materialDomain`. This is a linear
-sequence of dependent domains. Domains provide up to 4 dimensions each. If more
-dimensions are required, the caller can always derive a new domain.
+`cameraDomain`, and from that it derived a `lightDomain`. This is a linear
+sequence of dependent domains. Such an operation is called **chaining**.
+
+Domains provide up to 4 dimensions each, often referred to here as a sample
+(technically part of a sample). If more than 4 dimensions are required, the
+caller can always derive a new domain.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1-light.png">
@@ -721,50 +702,50 @@ dimensions are required, the caller can always derive a new domain.
 </picture>
 
 This example works, but isn't very flexible. This can be improved. Types that
-implement the camera or material interfaces may require less or more samples
+implement the camera or light interfaces may require less or more dimensions
 than is provided by the calling code.
 
 ### Passing domains
 
 Computing domains is cheap, but drawing samples is expensive. In the
-last example, samples were drawn and passed to a type that implements the
-`MaterialInterface`. If the samples are not required, the type doesn't have the
-option to prevent the samples from being drawn.
+last example, a sample was drawn and passed to a type that implements the
+`LightInterface`. If the sample is not required, the type doesn't have the
+option to prevent the sample from being drawn.
 
 You can resolve this by changing the interface to pass a domain, deferring the
-decision to draw samples to the type. Here are two types that implement such an
-interface, `DiffuseMaterial` and `SpecularMaterial`.
+decision to draw a sample to the type. Here are two types that implement such an
+interface, `DiskLight` and `PointLight`.
 
 ```cpp
-MaterialSample DiffuseMaterial::sample(const oqmc::PmjSampler materialDomain)
+LightSample DiskLight::sample(const oqmc::PmjBnSampler lightDomain)
 {
-	// Draw two samples for direction.
-	float directionSamples[2];
-	materialDomain.drawSample<2>(directionSamples);
+	// Draw two dimensions for direction.
+	float directionSample[2];
+	lightDomain.drawSample<2>(directionSample);
 
-	// Compute MaterialSample object using the drawn samples...
+	// Compute LightSample object using the drawn sample...
 }
 
-MaterialSample SpecularMaterial::sample(const oqmc::PmjSampler materialDomain)
+LightSample PointLight::sample(const oqmc::PmjBnSampler lightDomain)
 {
-	// Don't draw two samples for direction.
-	// float directionSamples[2];
-	// materialDomain.drawSample<2>(directionSamples);
+	// Don't draw two dimensions for direction.
+	// float directionSample[2];
+	// lightDomain.drawSample<2>(directionSample);
 
-	// Compute MaterialSample object without using samples...
+	// Compute LightSample object without using a drawn sample...
 }
 ```
 
-The `DiffuseMaterial` draws samples from the domain. But `SpecularMaterial` opts
-to save on compute and does not draw samples as they are not required.
+The `DiskLight` draws a sample from the domain. But `PointLight` opts to save on
+compute and does not draw a sample as it is not required.
 
 Looking at the revised calling code, the domains are now passed through the
-interfaces, allowing the types to decide whether to draw the samples or not.
+interfaces, allowing the types to decide whether to draw a sample or not.
 
 ```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
                      const CameraInterface& camera,
-                     const MaterialInterface& material)
+                     const LightInterface& light)
 {
 	enum DomainKey
 	{
@@ -774,35 +755,34 @@ Result estimatePixel(const oqmc::PmjSampler pixelDomain,
 	// Derive 'cameraDomain' from 'pixelDomain' parameter.
 	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Next);
 
-	// Derive 'materialDomain' from 'cameraDomain' variable.
-	const auto materialDomain = cameraDomain.newDomain(DomainKey::Next);
+	// Derive 'lightDomain' from 'cameraDomain' variable.
+	const auto lightDomain = cameraDomain.newDomain(DomainKey::Next);
 
-	// Pass domains directly to the interface to compute samples.
+	// Pass domains directly to the interface to compute a sample.
 	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
+	const auto lightSample = light.sample(lightDomain);
 
-	// Using samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
+	return estimateLightTransport(cameraSample, lightSample);
 }
 ```
 
-Sometimes a type needs an unknown number of samples. The next section will show
+Sometimes a type needs an unknown number of domains. The next section will show
 how that can be achieved. This will introduce a potential danger, as well as a
 new concept called domain trees that can be used to do the operation safely.
 
 ### Domain branching
 
 Building on the previous example, the calling code is free of knowing how many
-samples a type might need. If a type requires N samples, it can opt to derive
-new domains from the domain that was passed to it. Then drawing more samples
-from those domains.
+domains a type might need. If a type requires more sample draws, it can always
+derive a new domain from the domain that was passed to it, and then draw more
+samples from those domains.
 
-This is a `ThinLensCamera` type that implements the `CameraInterface` interface.
-It requires multiple domains, and so sequentially derives them one after the
-other starting with the original `cameraDomain`.
+This is an example where `ThinLensCamera` implements the `CameraInterface`. It
+requires multiple domains and uses chaining to sequentially derive domains one
+after the other, starting with the original `cameraDomain`.
 
 ```cpp
-CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
+CameraSample ThinLensCamera::sample(const oqmc::PmjBnSampler cameraDomain)
 {
 	enum DomainKey
 	{
@@ -815,21 +795,21 @@ CameraSample ThinLensCamera::sample(const oqmc::PmjSampler cameraDomain)
 	// Derive 'timeDomain' from 'lensDomain' variable.
 	const auto timeDomain = lensDomain.newDomain(DomainKey::Next);
 
-	// Take two samples for lens to compute a CameraSample object.
-	float lensSamples[2];
-	lensDomain.drawSample<2>(lensSamples);
+	// Take two dimensions for lens to compute a CameraSample object.
+	float lensSample[2];
+	lensDomain.drawSample<2>(lensSample);
 
-	// Take a single sample for time to compute a CameraSample object.
-	float timeSamples[1];
-	timeDomain.drawSample<1>(timeSamples);
+	// Take a single dimension for time to compute a CameraSample object.
+	float timeSample[1];
+	timeDomain.drawSample<1>(timeSample);
 
 	// Compute CameraSample object using the drawn samples...
 }
 ```
 
-This is the dangerous part! It is to do with the calling code from the previous
-example. Notice that `cameraDomain` is used to derive both `materialDomain` and
-`lensDomain`. These objects are now equivalent, and only differ in name.
+*Here is the dangerous part!* Notice how the calling `estimatePixel` function
+derives both `lensDomain` and `lightDomain` from `cameraDomain`, meaning they
+become equivalent in value.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2-light.png">
@@ -837,44 +817,42 @@ example. Notice that `cameraDomain` is used to derive both `materialDomain` and
   <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2-light.png">
 </picture>
 
-`materialDomain` and `lensDomain` objects being equivalent results in the drawn
-samples being correlated in a way that leaves gaps in the primary sample space.
-That results in a biased estimate, which is bad. But this can be fixed. Here is
-a revised version of the calling code.
+This will result in lens and light dimensions correlating, leaving gaps in the
+primary sample space. That type of correlation will bias your estimates, and
+should be avoided. A revised version of the `estimatePixel` function:
 
 ```cpp
-Result estimatePixel(const oqmc::PmjSampler pixelDomain,
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
                      const CameraInterface& camera,
-                     const MaterialInterface& material)
+                     const LightInterface& light)
 {
 	enum DomainKey
 	{
 		Camera,
-		Material,
+		Light,
 	};
 
 	// Derive 'cameraDomain' from 'pixelDomain' parameter.
 	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
 
-	// Derive 'materialDomain' from 'pixelDomain' parameter.
-	const auto materialDomain = pixelDomain.newDomain(DomainKey::Material);
+	// Derive 'lightDomain' from 'pixelDomain' parameter.
+	const auto lightDomain = pixelDomain.newDomain(DomainKey::Light);
 
 	// Pass domains directly to the interface to compute samples.
 	const auto cameraSample = camera.sample(cameraDomain);
-	const auto materialSample = material.sample(materialDomain);
+	const auto lightSample = light.sample(lightDomain);
 
-	// Using samples, compute pixel estimate.
-	return sampleLightTransport(cameraSample, materialSample);
+	return estimateLightTransport(cameraSample, lightSample);
 }
 ```
 
-You may notice that the `DomainKey` enum has now changed. And instead of
-chaining the domains sequentially, the code now derives both `cameraDomain` and
-`materialDomain` directly from `pixelDomain` with a different key.
+You may notice that the `DomainKey` enum has now changed. The new code derives
+both `cameraDomain` and `lightDomain` directly from `pixelDomain`, but in each
+instance passes a different enum value.
 
-This operation is called branching. The resulting domains are now independent.
-You can branch a domain on a given key either with an enum as seen here, or by
-passing an integer value directly.
+This operation is called **branching**. The derived domains are now branched and
+independent. You can branch a domain on a given key either with an enum as seen
+here, or by passing an integer value directly.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3-light.png">
@@ -882,13 +860,13 @@ passing an integer value directly.
   <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3-light.png">
 </picture>
 
-Now that `cameraDomain` and `materialDomain` are independent, the
-`ThinLensCamera` can use the domain passed to it in whichever way it needs.
+Now that `cameraDomain` and `lightDomain` are independent, the `ThinLensCamera`
+can use the domain passed to it in whichever way it needs.
 
-Mapping domains to the code's call graph creates domain trees. If you are
-careful to derive domains sequentially in loops and to apply branching across
-interfaces, there is a guarantee your algorithm will not create gaps in the
-primary sample space and produces bias-free results.
+Mapping domains to the code's call graph creates domain trees. If you carefully
+derive domains by using chaining when writing loops, and branching when passing
+to interfaces, you'll avoid gaps in the primary sample space, guaranteeing
+bias-free results.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4-light.png">
@@ -904,6 +882,210 @@ produce bias. Branching can be used to make domains independent of one another.
 This independence prevents such bias. Finally, domain trees should match the
 call graph of the code to guarantee bias-free results. For a more complete
 example, see the [trace](src/tools/lib/trace.cpp) tool.
+
+### Domain splitting
+
+Whereas domain branching lets you sample different dimensions within each sample
+index, domain **splitting** is an operation to sample given dimensions with a
+higher sampling rate. Splitting allows you to tackle high variance in specific
+dimensions without the cost for the increased sampling rate on all dimensions.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-8-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-8-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-8-light.png">
+</picture>
+
+The diagram above shows the same domain tree extended with a stack for each
+domain. Each stack element represents an index in the domain's pattern. This
+example begins with two indices for each domain.
+
+If you were to consider direct light sampling, which is often a source of high
+variance. One possible approach is to sample lights at a higher rate than pixels
+by defining a multiplier on that rate, such as `N_LIGHT_SAMPLES`.
+
+```cpp
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const LightInterface& light)
+{
+	enum DomainKey
+	{
+		Camera,
+		Light,
+	};
+
+	// Compute 'cameraSample' as in previous examples.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+	const auto cameraSample = camera.sample(cameraDomain);
+
+	auto result = Result{};
+
+	// Loop a fixed N times.
+	for(int i = 0; i < N_LIGHT_SAMPLES; ++i)
+	{
+		// Compute 'lightSample' using the newDomainSplit API.
+		const auto lightDomain = pixelDomain.newDomainSplit(DomainKey::Light, N_LIGHT_SAMPLES, i);
+		const auto lightSample = light.sample(lightDomain);
+
+		// Average the pixel estimates from each light sample.
+		result += estimateLightTransport(cameraSample, lightSample) / N_LIGHT_SAMPLES;
+	}
+
+	return result;
+}
+```
+
+Here the calling code derives a `lightDomain` in a loop, using a different
+function than the other examples. Along with a key, this new function takes a
+fixed sample rate multiplier and an index within the multiplier range. You must
+pass all indices to the API and average the results.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5-light.png">
+</picture>
+
+In this domain tree, `N_LIGHT_SAMPLES` maintains a fixed value of 2, and thus,
+the light domain's sampling rate is twice that of the source pixel domain.
+
+A fixed sample rate multiplier like the one in this example correlates points
+globally *and* locally. This correlation makes the pattern optimal while saving
+compute costs in other domains. The following section will give options for when
+the sample rate multiplier is non-constant.
+
+### Adaptive rate multipliers
+
+Sometimes, the constraint of a fixed sample rate multiplier is not an option or
+is undesirable. In these cases, a couple of alternative strategies trade quality
+for the added flexibility of non-constant multipliers.
+
+```cpp
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const LightInterface& light)
+{
+	enum DomainKey
+	{
+		Camera,
+		Light,
+	};
+
+	// Compute 'cameraSample' as in previous examples.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+	const auto cameraSample = camera.sample(cameraDomain);
+
+	// Compute a non-fixed number of light samples.
+	const auto nLightSamples = light.adaptiveSampleRate();
+
+	auto result = Result{};
+
+	// Loop a non-fixed N times.
+	for(int i = 0; i < nLightSamples; ++i)
+	{
+		// Compute 'lightSample' using the newDomainDistrib API.
+		const auto lightDomain = pixelDomain.newDomainDistrib(DomainKey::Light, i);
+		const auto lightSample = light.sample(lightDomain);
+
+		// Average the pixel estimates from each light sample.
+		result += estimateLightTransport(cameraSample, lightSample) / nLightSamples;
+	}
+
+	return result;
+}
+```
+
+This example has a non-constant sample rate multiplier `nLightSample` for the
+light domain. Here, the caller uses the alternative `newDomainDistrib` function
+that allows for varying sample rate multipliers. Using this technique is called
+the **distribution strategy**.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-6-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-6-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-6-light.png">
+</picture>
+
+Here is the domain tree when using the distribution strategy. The split domain
+is not correlated globally, but it is locally. The domain is in fact branched
+into two locally correlated domains, one for each index from the source pixel
+domain. The first has a sample rate of 2, and the second a sample rate of 3,
+based on `nLightSamples`.
+
+```cpp
+Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
+                     const CameraInterface& camera,
+                     const LightInterface& light)
+{
+	enum DomainKey
+	{
+		Camera,
+		Light,
+	};
+
+	// Compute 'cameraSample' as in previous examples.
+	const auto cameraDomain = pixelDomain.newDomain(DomainKey::Camera);
+	const auto cameraSample = camera.sample(cameraDomain);
+
+	// Compute a non-fixed number of light samples.
+	const auto nLightSamples = light.adaptiveSampleRate();
+
+	auto result = Result{};
+
+	// Loop a non-fixed N times.
+	for(int i = 0; i < nLightSamples; ++i)
+	{
+		// Compute 'lightSample' by chaining the newDomain API.
+		const auto lightDomain = pixelDomain.newDomain(DomainKey::Light).newDomain(i);
+		const auto lightSample = light.sample(lightDomain);
+
+		// Average the pixel estimates from each light sample.
+		result += estimateLightTransport(cameraSample, lightSample) / nLightSamples;
+	}
+
+	return result;
+}
+```
+
+This last example is similar to the distribution strategy. But here the caller
+uses the `newDomain` function, chaining and branching the domains on the index,
+instead of splitting. This technique is called the **chaining strategy**.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-7-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-7-dark.png">
+  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-7-light.png">
+</picture>
+
+Here is the domain tree when using the chaining strategy. This new domain is
+correlated globally, but it is not locally. Each of the sample indices from the
+source pixel domain is free to branch at non-constant rate. The first branches
+into 2 domains, and the second into 3 domains, based on `nLightSamples`.
+
+*So which strategy to choose?* Following are the results from each strategy.
+Numbers after each strategy indicate RMSE. As expected, the initial option of
+splitting using a fixed sample rate multiplier produces the best results.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/plots/cornell-box-sample-splitting-2-8-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/cornell-box-sample-splitting-2-8-dark.png">
+  <img alt="sample plitting 2 and 8." src="./images/plots/cornell-box-sample-splitting-2-8-light.png">
+</picture>
+
+But when that isn't possible and using a non-constant sample rate multiplier,
+and that multiplier is expected to be higher than the source pixel sample rate,
+the distribution strategy is optimal as it is locally correlated.
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/plots/cornell-box-sample-splitting-8-2-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/cornell-box-sample-splitting-8-2-dark.png">
+  <img alt="sample plitting 8 and 2." src="./images/plots/cornell-box-sample-splitting-8-2-light.png">
+</picture>
+
+However, when an adaptive sample rate multiplier is expected to be lower than
+the original pixel sample rate, as demonstrated here, the chaining strategy is
+optimal as it is globally correlated.
 
 ## Implementation details
 
@@ -1045,9 +1227,8 @@ domains, while producing high quality random results upon drawing samples.
 
 Roadmap for version 1.0.0 of the library:
 
-- Gather feedback and iterate.
-- Add complete documentation.
-- Add more package managers.
+- Gather feedback and iterate on API.
+- Add support for package managers.
 
 ## Developer workflow
 

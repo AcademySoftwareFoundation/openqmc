@@ -287,12 +287,12 @@ OQMC_HOST_DEVICE constexpr std::uint32_t scrambleAndReverse(std::uint32_t value,
 
  * @param [in] index Input index of sequence value.
  * @param [in] seed Seed to randomise the sequence.
- * @param [out] samples Randomised sequence value.
+ * @param [out] sample Randomised sequence value.
  */
 template <int Depth>
-OQMC_HOST_DEVICE inline void
-shuffledScrambledSobol(std::uint32_t index, std::uint32_t seed,
-                       std::uint32_t samples[Depth])
+OQMC_HOST_DEVICE inline void shuffledScrambledSobol(std::uint32_t index,
+                                                    std::uint32_t seed,
+                                                    std::uint32_t sample[Depth])
 {
 	static_assert(Depth >= 1, "Pattern depth is greater or equal to one.");
 	static_assert(Depth <= 4, "Pattern depth is less or equal to four.");
@@ -301,8 +301,8 @@ shuffledScrambledSobol(std::uint32_t index, std::uint32_t seed,
 
 	for(int i = 0; i < Depth; ++i)
 	{
-		samples[i] = sobolReversedIndex(index >> 16, i);
-		samples[i] = scrambleAndReverse(samples[i], rotateBytes(seed, i));
+		sample[i] = sobolReversedIndex(index >> 16, i);
+		sample[i] = scrambleAndReverse(sample[i], rotateBytes(seed, i));
 	}
 }
 

@@ -70,18 +70,20 @@ def get_shape(shape):
     return image
 
 
-def get_image(sequence, max_depth, num_pixel_samples=2):
+def get_image(
+    sequence, max_depth, num_pixel_samples=2, num_light_samples=1, mode=b"split"
+):
     scene = b"box"
     width = 512
     height = 512
     frame = 0
-    num_light_samples = 1
     max_opacity = 1
     exposure = 3
 
     image = oqmc.trace(
         sequence,
         scene,
+        mode,
         width,
         height,
         frame,

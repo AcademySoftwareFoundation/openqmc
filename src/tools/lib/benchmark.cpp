@@ -29,14 +29,14 @@ OQMC_HOST_DEVICE void loop(int nsamples, int ndims, int index, int stride,
 		{
 			domain = domain.newDomain(0);
 
-			float samples[4];
-			domain.template drawSample<4>(samples);
+			float sample[4];
+			domain.template drawSample<4>(sample);
 
 			volatile float save[4];
-			save[0] = samples[0];
-			save[1] = samples[1];
-			save[2] = samples[2];
-			save[3] = samples[3];
+			save[0] = sample[0];
+			save[1] = sample[1];
+			save[2] = sample[2];
+			save[3] = sample[3];
 
 			OQMC_MAYBE_UNUSED(save);
 		}

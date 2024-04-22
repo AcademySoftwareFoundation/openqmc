@@ -41,12 +41,12 @@ OQMC_HOST_DEVICE void loop(int nsamples, int ndims, int seed, int index,
 		{
 			domain = domain.newDomain(seed);
 
-			float samples[4];
-			domain.template drawSample<4>(samples);
+			float sample[4];
+			domain.template drawSample<4>(sample);
 
 			for(int k = 0; k < 4 && j + k < ndims; ++k)
 			{
-				buffer.points[soaIndex(i, j + k, nsamples)] = samples[k];
+				buffer.points[soaIndex(i, j + k, nsamples)] = sample[k];
 			}
 		}
 	}

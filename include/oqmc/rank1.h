@@ -79,12 +79,12 @@ latticeReversedIndex(std::uint32_t index, int dimension)
 
  * @param [in] index Input index of lattice value.
  * @param [in] patternId Seed to randomise the lattice.
- * @param [out] samples Randomised lattice value.
+ * @param [out] sample Randomised lattice value.
  */
 template <int Depth>
 OQMC_HOST_DEVICE constexpr void
 shuffledRotatedLattice(std::uint32_t index, std::uint32_t patternId,
-                       std::uint32_t samples[Depth])
+                       std::uint32_t sample[Depth])
 {
 	static_assert(Depth >= 1, "Pattern depth is greater or equal to one.");
 	static_assert(Depth <= 4, "Pattern depth is less or equal to four.");
@@ -93,8 +93,8 @@ shuffledRotatedLattice(std::uint32_t index, std::uint32_t patternId,
 
 	for(int i = 0; i < Depth; ++i)
 	{
-		samples[i] = latticeReversedIndex(index, i);
-		samples[i] = rotate(samples[i], pcg::rng(patternId));
+		sample[i] = latticeReversedIndex(index, i);
+		sample[i] = rotate(sample[i], pcg::rng(patternId));
 	}
 }
 

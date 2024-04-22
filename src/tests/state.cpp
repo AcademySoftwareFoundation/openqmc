@@ -30,14 +30,12 @@ const oqmc::State64Bit defaultState(pixelX, pixelY, frame, index);
 TEST(StateTest, AlterPixelFrameLow)
 {
 	oqmc::State64Bit lastI(0, 0, 0, index);
-	oqmc::State64Bit lastDecorrelatedI = lastI;
-	lastDecorrelatedI.pixelDecorrelate();
+	oqmc::State64Bit lastDecorrelatedI = lastI.pixelDecorrelate();
 
 	for(int i = 1; i < lowValue; ++i)
 	{
 		oqmc::State64Bit lastJ(i, 0, 0, index);
-		oqmc::State64Bit lastDecorrelatedJ = lastJ;
-		lastDecorrelatedJ.pixelDecorrelate();
+		oqmc::State64Bit lastDecorrelatedJ = lastJ.pixelDecorrelate();
 
 		EXPECT_EQ(lastJ.patternId, lastI.patternId);
 		EXPECT_EQ(lastJ.sampleId, lastI.sampleId);
@@ -51,8 +49,7 @@ TEST(StateTest, AlterPixelFrameLow)
 		for(int j = 1; j < lowValue; ++j)
 		{
 			oqmc::State64Bit lastK(i, j, 0, index);
-			oqmc::State64Bit lastDecorrelatedK = lastK;
-			lastDecorrelatedK.pixelDecorrelate();
+			oqmc::State64Bit lastDecorrelatedK = lastK.pixelDecorrelate();
 
 			EXPECT_EQ(lastK.patternId, lastJ.patternId);
 			EXPECT_EQ(lastK.sampleId, lastJ.sampleId);
@@ -66,8 +63,7 @@ TEST(StateTest, AlterPixelFrameLow)
 			for(int k = 1; k < lowValue; ++k)
 			{
 				oqmc::State64Bit lastN(i, j, k, index);
-				oqmc::State64Bit lastDecorrelatedN = lastN;
-				lastDecorrelatedN.pixelDecorrelate();
+				oqmc::State64Bit lastDecorrelatedN = lastN.pixelDecorrelate();
 
 				EXPECT_EQ(lastN.patternId, lastK.patternId);
 				EXPECT_EQ(lastN.sampleId, lastK.sampleId);
@@ -86,14 +82,12 @@ TEST(StateTest, AlterPixelFrameLow)
 TEST(StateTest, AlterPixelFrameHigh)
 {
 	oqmc::State64Bit lastI(highValue, highValue, highValue, index);
-	oqmc::State64Bit lastDecorrelatedI = lastI;
-	lastDecorrelatedI.pixelDecorrelate();
+	oqmc::State64Bit lastDecorrelatedI = lastI.pixelDecorrelate();
 
 	for(int i = highValue + 1; i < highValue + lowValue; ++i)
 	{
 		oqmc::State64Bit lastJ(i, highValue, highValue, index);
-		oqmc::State64Bit lastDecorrelatedJ = lastJ;
-		lastDecorrelatedJ.pixelDecorrelate();
+		oqmc::State64Bit lastDecorrelatedJ = lastJ.pixelDecorrelate();
 
 		EXPECT_EQ(lastJ.patternId, lastI.patternId);
 		EXPECT_EQ(lastJ.sampleId, lastI.sampleId);
@@ -107,8 +101,7 @@ TEST(StateTest, AlterPixelFrameHigh)
 		for(int j = highValue + 1; j < highValue + lowValue; ++j)
 		{
 			oqmc::State64Bit lastK(i, j, highValue, index);
-			oqmc::State64Bit lastDecorrelatedK = lastK;
-			lastDecorrelatedK.pixelDecorrelate();
+			oqmc::State64Bit lastDecorrelatedK = lastK.pixelDecorrelate();
 
 			EXPECT_EQ(lastK.patternId, lastJ.patternId);
 			EXPECT_EQ(lastK.sampleId, lastJ.sampleId);
@@ -122,8 +115,7 @@ TEST(StateTest, AlterPixelFrameHigh)
 			for(int k = highValue + 1; k < highValue + lowValue; ++k)
 			{
 				oqmc::State64Bit lastN(i, j, k, index);
-				oqmc::State64Bit lastDecorrelatedN = lastN;
-				lastDecorrelatedN.pixelDecorrelate();
+				oqmc::State64Bit lastDecorrelatedN = lastN.pixelDecorrelate();
 
 				EXPECT_EQ(lastN.patternId, lastK.patternId);
 				EXPECT_EQ(lastN.sampleId, lastK.sampleId);
@@ -156,6 +148,18 @@ TEST(StateTest, AlterSample)
 			EXPECT_NE(state.sampleId, defaultState.sampleId);
 		}
 	}
+
+	{
+		constexpr auto sizeMinusZero = oqmc::State64Bit::maxIndexSize - 0;
+		constexpr auto sizeMinusOne = oqmc::State64Bit::maxIndexSize - 1;
+
+		const oqmc::State64Bit stateA(pixelX, pixelY, frame, sizeMinusZero);
+		const oqmc::State64Bit stateB(pixelX, pixelY, frame, sizeMinusOne);
+
+		EXPECT_EQ(stateA.sampleId, 0);
+		EXPECT_EQ(stateB.sampleId, sizeMinusOne);
+		EXPECT_NE(stateA.patternId, stateB.patternId);
+	}
 }
 
 TEST(StateTest, NewDomain)
@@ -167,24 +171,23 @@ TEST(StateTest, NewDomain)
 	for(const auto prime : primes)
 	{
 		const auto state = defaultState.newDomain(prime);
-		const auto distr = defaultState.newDomainDistrib(prime);
-		const auto split = defaultState.newDomainSplit(prime, lowValue);
+		const auto distr = defaultState.newDomainDistrib(prime, 0);
+		const auto split = defaultState.newDomainSplit(prime, lowValue, 0);
 
 		EXPECT_NE(state.patternId, defaultState.patternId);
 		EXPECT_NE(distr.patternId, defaultState.patternId);
 		EXPECT_NE(split.patternId, defaultState.patternId);
 
-		EXPECT_NE(state.patternId, distr.patternId);
-		EXPECT_EQ(state.patternId, split.patternId);
-
 		EXPECT_EQ(state.sampleId, defaultState.sampleId);
 		EXPECT_EQ(distr.sampleId, 0);
 		EXPECT_GE(split.sampleId, defaultState.sampleId);
-		EXPECT_GE(split.sampleId, state.sampleId);
 
 		EXPECT_EQ(state.pixelId, defaultState.pixelId);
 		EXPECT_EQ(distr.pixelId, defaultState.pixelId);
 		EXPECT_EQ(split.pixelId, defaultState.pixelId);
+
+		EXPECT_NE(state.patternId, distr.patternId);
+		EXPECT_NE(state.patternId, split.patternId);
 
 		for(const auto result : resultsState)
 		{
@@ -211,47 +214,33 @@ TEST(StateTest, NextDomainIndex)
 {
 	for(const auto prime : primes)
 	{
-		const auto distr = defaultState.newDomainDistrib(prime);
-		const auto split = defaultState.newDomainSplit(prime, lowValue);
+		const auto distr = defaultState.newDomainDistrib(prime, 0);
+		const auto split = defaultState.newDomainSplit(prime, lowValue, 0);
 
+		for(int i = 0; i < lowValue; ++i)
 		{
-			auto next = distr;
-			for(int i = 0; i < lowValue; ++i)
-			{
-				next = next.nextDomainIndex();
-				EXPECT_EQ(next.sampleId, distr.sampleId + i + 1);
-			}
+			const auto next = defaultState.newDomainDistrib(prime, i);
+			EXPECT_EQ(next.sampleId, distr.sampleId + i);
 		}
 
+		for(int i = 0; i < lowValue; ++i)
 		{
-			auto next = split;
-			for(int i = 0; i < lowValue; ++i)
-			{
-				next = next.nextDomainIndex();
-				EXPECT_EQ(next.sampleId, split.sampleId + i + 1);
-			}
+			const auto next = defaultState.newDomainSplit(prime, lowValue, i);
+			EXPECT_EQ(next.sampleId, split.sampleId + i);
 		}
 	}
 }
 
-TEST(StateTest, SampleIdAdd)
+TEST(StateTest, ComputeIndexKey)
 {
-	for(const auto prime : primes)
-	{
-		const auto sampleId = defaultState.sampleIdAdd(prime);
-
-		EXPECT_EQ(sampleId, defaultState.sampleId + prime);
-	}
+	constexpr auto index = 1234 << 16 | 5678;
+	EXPECT_EQ(oqmc::computeIndexKey(index), 1234);
 }
 
-TEST(StateTest, SampleIdMult)
+TEST(StateTest, ComputeIndexId)
 {
-	for(const auto prime : primes)
-	{
-		const auto sampleId = defaultState.sampleIdMult(prime);
-
-		EXPECT_EQ(sampleId, defaultState.sampleId * prime);
-	}
+	constexpr auto index = 1234 << 16 | 5678;
+	EXPECT_EQ(oqmc::computeIndexId(index), 5678);
 }
 
 template <int X, int Y>
