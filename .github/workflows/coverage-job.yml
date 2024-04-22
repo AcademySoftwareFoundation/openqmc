@@ -28,7 +28,7 @@ jobs:
 
       # Extract the total function coverage percentage
       - run: sudo apt-get update && sudo apt-get install jq
-      - run: echo "COVERAGE=$(jq '.data[0].totals.functions.percent' coverage.json)" >> $GITHUB_ENV
+      - run: echo "COVERAGE=$(jq '.data[0].totals.functions.percent' coverage.json | xargs printf '%.0f\n')" >> $GITHUB_ENV
 
       # Upload json data for coverage badge
       - uses: schneegans/dynamic-badges-action@v1.7.0
