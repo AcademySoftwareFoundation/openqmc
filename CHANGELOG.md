@@ -7,14 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - 2024-01-30
+## [0.5.0] - 2024-05-05
+
+### Added
+
+- Initial support for Microsoft Windows OS has been added and is now supported on the CI. Details in the documentation.
+- New integer range based variants of both `oqmc::SamplerInterface::drawSample()` and `oqmc::SamplerInterface::drawRnd()`.
+
 ### Changed
+
+- Samplers no longer have an upper index limit of 2^16 and can take any positive integer on construction or when splitting.
+- Simplified the API, updating `oqmc::SamplerInterface::newDomainDistrib()` and `oqmc::SamplerInterface::newDomainSplit()`.
+
+### Removed
+
+- Due to the changes above, the `oqmc::SamplerInterface::nextDomainIndex()` has been removed. Usage info in the documentation.
+
+## [0.4.0] - 2024-01-30
+
+### Changed
+
 - Improvements to the trace tool, aimed at making the API calls clearer when used as an example.
 
 ## [0.3.0] - 2022-11-30
+
 ### Added
+
 - Support default construction in the sampler interface to allow for placeholder objects.
 
 ## [0.2.0] - 2022-11-22
+
 ### Changed
+
 - Respect LIBDIR CMake setting when installing CMake config files.

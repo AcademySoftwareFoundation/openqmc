@@ -475,8 +475,7 @@ void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
  * @param [out] sample Output array to store sample values.
  */
 template <int Size>
-OQMC_HOST_DEVICE void drawSample(std::uint32_t range,
-                                 std::uint32_t sample[Size]) const;
+void oqmc::Sampler::drawSample(std::uint32_t range, std::uint32_t sample[Size]) const;
 ```
 
 ```cpp
@@ -527,8 +526,7 @@ void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
  * @param [out] rnd Output array to store rnd values.
  */
 template <int Size>
-OQMC_HOST_DEVICE void drawRnd(std::uint32_t range,
-                              std::uint32_t rnd[Size]) const;
+void oqmc::Sampler::drawRnd(std::uint32_t range, std::uint32_t rnd[Size]) const;
 ```
 
 ```cpp
