@@ -50,6 +50,7 @@ add_executable(tests EXCLUDE_FROM_ALL
 	pmj.cpp
 	pmjbn.cpp
 	permute.cpp
+	range.cpp
 	rank1.cpp
 	reverse.cpp
 	rotate.cpp

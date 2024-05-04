@@ -10,6 +10,7 @@
 
 #include "float.h" // NOLINT: false positive
 #include "gpu.h"
+#include "range.h"
 
 #include <cassert>
 #include <cstddef>
@@ -213,7 +214,7 @@ class SamplerInterface
 	                                                 int index) const;
 
 	/**
-	 * @brief Draw integer sample values from domain
+	 * @brief Draw integer sample values from domain.
 	 * @details This can compute sample values with up to 4 dimensions for the
 	 * given domain. The operation does not change the state of the object, and
 	 * for a single domain and index, the result of this function will always be
@@ -232,7 +233,21 @@ class SamplerInterface
 	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
 
 	/**
-	 * @brief Draw floating point sample values from domain
+	 * @brief Draw ranged integer sample values from domain.
+	 * @details This function wraps the integer variant of drawSample above. But
+	 * transforms the output values into uniformly distributed integers within
+	 * the range of [0, range).
+	 *
+	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
+	 *
+	 * @param [out] sample Output array to store sample values.
+	 */
+	template <int Size>
+	OQMC_HOST_DEVICE void drawSample(std::uint32_t range,
+	                                 std::uint32_t sample[Size]) const;
+
+	/**
+	 * @brief Draw floating point sample values from domain.
 	 * @details This function wraps the integer variant of drawSample above. But
 	 * transforms the output values into uniformly distributed floats within the
 	 * range of [0, 1).
@@ -245,7 +260,7 @@ class SamplerInterface
 	OQMC_HOST_DEVICE void drawSample(float sample[Size]) const;
 
 	/**
-	 * @brief Draw integer pseudo random values from domain
+	 * @brief Draw integer pseudo random values from domain.
 	 * @details This can compute rnd values with up to 4 dimensions for the
 	 * given domain. The operation does not change the state of the object, and
 	 * for a single domain and index, the result of this function will always be
@@ -264,7 +279,21 @@ class SamplerInterface
 	OQMC_HOST_DEVICE void drawRnd(std::uint32_t rnd[Size]) const;
 
 	/**
-	 * @brief Draw floating point pseudo random values from domain
+	 * @brief Draw ranged integer pseudo random values from domain.
+	 * @details This function wraps the integer variant of drawRnd above. But
+	 * transforms the output values into uniformly distributed integers within
+	 * the range of [0, range).
+	 *
+	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
+	 *
+	 * @param [out] rnd Output array to store rnd values.
+	 */
+	template <int Size>
+	OQMC_HOST_DEVICE void drawRnd(std::uint32_t range,
+	                              std::uint32_t rnd[Size]) const;
+
+	/**
+	 * @brief Draw floating point pseudo random values from domain.
 	 * @details This function wraps the integer variant of drawRnd above. But
 	 * transforms the output values into uniformly distributed floats within the
 	 * range of [0, 1).
@@ -333,6 +362,22 @@ void SamplerInterface<Impl>::drawSample(std::uint32_t sample[Size]) const
 
 template <typename Impl>
 template <int Size>
+void SamplerInterface<Impl>::drawSample(std::uint32_t range,
+                                        std::uint32_t sample[Size]) const
+{
+	assert(range > 0);
+
+	std::uint32_t integerSample[Size];
+	drawSample<Size>(integerSample);
+
+	for(int i = 0; i < Size; ++i)
+	{
+		sample[i] = uintToRange(integerSample[i], range);
+	}
+}
+
+template <typename Impl>
+template <int Size>
 void SamplerInterface<Impl>::drawSample(float sample[Size]) const
 {
 	std::uint32_t integerSample[Size];
@@ -352,6 +397,22 @@ void SamplerInterface<Impl>::drawRnd(std::uint32_t rnd[Size]) const
 	static_assert(Size <= maxDrawValue, "Draw size less or equal to max.");
 
 	impl.template drawRnd<Size>(rnd);
+}
+
+template <typename Impl>
+template <int Size>
+void SamplerInterface<Impl>::drawRnd(std::uint32_t range,
+                                     std::uint32_t rnd[Size]) const
+{
+	assert(range > 0);
+
+	std::uint32_t integerRnd[Size];
+	drawRnd<Size>(integerRnd);
+
+	for(int i = 0; i < Size; ++i)
+	{
+		rnd[i] = uintToRange(integerRnd[i], range);
+	}
 }
 
 template <typename Impl>

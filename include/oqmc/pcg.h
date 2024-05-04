@@ -131,66 +131,6 @@ OQMC_HOST_DEVICE constexpr std::uint32_t rng(std::uint32_t& state)
 	return output(state);
 }
 
-/**
- * @brief Compute an unsigned random integer within 0-bounded half-open range.
- * @details Given a range defined using a single unsigned integer, use a PRNG
- * to compute a random integer value within that range. This function will not
- * introduce any statistical bias that is typically present when using more
- * naive methods, such as a modulo operator.
- *
- * From the following paper: https://doi.org/10.48550/arXiv.1805.10941. Note
- * that this algorithm (see Java) reduces the number of expected divisions to
- * almost one. However, low-order bits which can be weak in some PRNGs pass
- * through to the output. PCG has strong low-order bits. For low-discrepency
- * sequences it is recomended to use a multiplcation method instead. This will
- * preserve good properties in the correlation between outputs of the sequence.
- *
- * @param [in] range Exclusive end of integer range. Greater than zero.
- * @param [in, out] state State value of the PRNG. Will be mutated.
- * @return Output PRNG value within integer range.
- *
- * @pre State must have been initialised using an init function.
- */
-OQMC_HOST_DEVICE constexpr std::uint32_t rngBounded(std::uint32_t range,
-                                                    std::uint32_t& state)
-{
-	assert(range > 0);
-
-	auto x = rng(state);
-	auto r = x % range;
-
-	while(x - r > (-range))
-	{
-		x = rng(state);
-		r = x % range;
-	}
-
-	return r;
-}
-
-/**
- * @brief Compute an unsigned random integer within half-open range.
- * @details Given a range defined using two unsigned integers, use a PRNG to
- * compute a random integer value within that range. This function will not
- * introduce any statistical bias that is typically present when using more
- * naive methods, such as a modulo operator.
- *
- * @param [in] begin Inclusive beginning of integer range. Less than end.
- * @param [in] end Exclusive end of integer range. Greater than begin.
- * @param [in, out] state State value of the PRNG. Will be mutated.
- * @return Output PRNG value within integer range.
- *
- * @pre State must have been initialised using an init function.
- */
-OQMC_HOST_DEVICE constexpr std::uint32_t
-rngBounded(std::uint32_t begin, std::uint32_t end, std::uint32_t& state)
-{
-	assert(begin < end);
-
-	const auto range = end - begin;
-	return rngBounded(range, state) + begin;
-}
-
 } // namespace pcg
 
 } // namespace oqmc

@@ -14,6 +14,7 @@
 #include <oqmc/lookup.h>
 #include <oqmc/owen.h>
 #include <oqmc/pcg.h>
+#include <oqmc/range.h>
 #include <oqmc/rank1.h>
 #include <oqmc/state.h>
 #include <oqmc/stochastic.h>
@@ -199,7 +200,8 @@ void initialisePermutations(int& seed, Array3d pixelFrame, int* permutations)
 	for(int i = 0; i < pixelFrame.size(); ++i)
 	{
 		swap(permutations[i],
-		     permutations[oqmc::pcg::rngBounded(i, pixelFrame.size(), state)]);
+		     permutations[oqmc::uintToRange(oqmc::pcg::rng(state), i,
+		                                    pixelFrame.size())]);
 	}
 }
 
