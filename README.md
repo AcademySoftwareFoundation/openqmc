@@ -444,7 +444,7 @@ oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
 
 ```cpp
 /**
- * @brief Draw integer sample values from domain
+ * @brief Draw integer sample values from domain.
  * @details This can compute sample values with up to 4 dimensions for the
  * given domain. The operation does not change the state of the object, and
  * for a single domain and index, the result of this function will always be
@@ -465,7 +465,23 @@ void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
 
 ```cpp
 /**
- * @brief Draw floating point sample values from domain
+ * @brief Draw ranged integer sample values from domain.
+ * @details This function wraps the integer variant of drawSample above. But
+ * transforms the output values into uniformly distributed integers within
+ * the range of [0, range).
+ *
+ * @tparam Size Number of dimensions to draw. Must be within [1, 4].
+ *
+ * @param [out] sample Output array to store sample values.
+ */
+template <int Size>
+OQMC_HOST_DEVICE void drawSample(std::uint32_t range,
+                                 std::uint32_t sample[Size]) const;
+```
+
+```cpp
+/**
+ * @brief Draw floating point sample values from domain.
  * @details This function wraps the integer variant of drawSample above. But
  * transforms the output values into uniformly distributed floats within the
  * range of [0, 1).
@@ -480,7 +496,7 @@ void oqmc::Sampler::drawSample(float sample[Size]) const;
 
 ```cpp
 /**
- * @brief Draw integer pseudo random values from domain
+ * @brief Draw integer pseudo random values from domain.
  * @details This can compute rnd values with up to 4 dimensions for the
  * given domain. The operation does not change the state of the object, and
  * for a single domain and index, the result of this function will always be
@@ -501,7 +517,23 @@ void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
 
 ```cpp
 /**
- * @brief Draw floating point pseudo random values from domain
+ * @brief Draw ranged integer pseudo random values from domain.
+ * @details This function wraps the integer variant of drawRnd above. But
+ * transforms the output values into uniformly distributed integers within
+ * the range of [0, range).
+ *
+ * @tparam Size Number of dimensions to draw. Must be within [1, 4].
+ *
+ * @param [out] rnd Output array to store rnd values.
+ */
+template <int Size>
+OQMC_HOST_DEVICE void drawRnd(std::uint32_t range,
+                              std::uint32_t rnd[Size]) const;
+```
+
+```cpp
+/**
+ * @brief Draw floating point pseudo random values from domain.
  * @details This function wraps the integer variant of drawRnd above. But
  * transforms the output values into uniformly distributed floats within the
  * range of [0, 1).
