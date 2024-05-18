@@ -240,6 +240,7 @@ class SamplerInterface
 	 *
 	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
 	 *
+	 * @param [in] range Exclusive end of range. Greater than zero.
 	 * @param [out] sample Output array to store sample values.
 	 */
 	template <int Size>
@@ -286,6 +287,7 @@ class SamplerInterface
 	 *
 	 * @tparam Size Number of dimensions to draw. Must be within [1, 4].
 	 *
+	 * @param [in] range Exclusive end of range. Greater than zero.
 	 * @param [out] rnd Output array to store rnd values.
 	 */
 	template <int Size>
