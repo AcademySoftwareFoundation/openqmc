@@ -26,6 +26,16 @@
 @notebook: build
   jupyter notebook python/notebooks
 
+# run notebook and save readme images
+@readme-images: build
+  SAVEPLOT=light jupyter execute python/notebooks/readme-images.ipynb
+  SAVEPLOT=dark jupyter execute python/notebooks/readme-images.ipynb
+
+# run notebook and save performance images
+@performance-images: build
+  SAVEPLOT=light jupyter execute python/notebooks/performance.ipynb
+  SAVEPLOT=dark jupyter execute python/notebooks/performance.ipynb
+
 # remove build and reset
 @clean:
   rm -rf build
