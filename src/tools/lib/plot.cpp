@@ -131,13 +131,13 @@ void plotError(Shape shape, int nsequences, int nsamples, float* out)
 			buffer[seed] += result;
 
 			const auto estimate = buffer[seed] / (index + 1);
-			const auto error = std::fabs(estimate - shape.integral());
+			const auto error = estimate - shape.integral();
 
-			sum += error;
+			sum += error * error;
 		}
 
 		out[index * 2 + 0] = index + 1;
-		out[index * 2 + 1] = sum / nsequences;
+		out[index * 2 + 1] = std::sqrt(sum / nsequences);
 	}
 
 	OQMC_FREE(cache);
@@ -262,12 +262,15 @@ void plotErrorFilterSpace(Shape shape, int resolution, int nsamples, int nsigma,
 		{
 			for(int y = 0; y < resolution; ++y)
 			{
-				sum += std::fabs(imageB[y + x * resolution] - shape.integral());
+				const auto error =
+				    imageB[y + x * resolution] - shape.integral();
+
+				sum += error * error;
 			}
 		}
 
 		out[s * 2 + 0] = sigma;
-		out[s * 2 + 1] = sum / npixels;
+		out[s * 2 + 1] = std::sqrt(sum / npixels);
 	}
 
 	OQMC_FREE(cache);
@@ -417,12 +420,14 @@ void plotErrorFilterTime(Shape shape, int resolution, int depth, int nsamples,
 		{
 			for(int z = 0; z < depth; ++z)
 			{
-				sum += std::fabs(imageB[z + x * depth] - shape.integral());
+				const auto error = imageB[z + x * depth] - shape.integral();
+
+				sum += error * error;
 			}
 		}
 
 		out[s * 2 + 0] = sigma;
-		out[s * 2 + 1] = sum / npixels;
+		out[s * 2 + 1] = std::sqrt(sum / npixels);
 	}
 
 	OQMC_FREE(cache);
