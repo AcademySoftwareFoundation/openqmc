@@ -36,6 +36,7 @@
             pkgs.git
             pkgs.glm
             pkgs.gtest
+            pkgs.doxygen
             pkgs.tbb_2021_8
             hypothesis.packages.${system}.default
           ];

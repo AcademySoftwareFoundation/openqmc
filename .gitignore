@@ -89,8 +89,8 @@ CMakeUserPresets.json
 # Cache files for clangd
 .cache/
 
-# Style guide files for vale
-.styles/
-
 # Nix build output
-result
+result/
+
+# Doxygen html output
+html/
