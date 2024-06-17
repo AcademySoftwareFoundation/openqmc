@@ -59,7 +59,7 @@ struct State64Bit
 	 */
 	OQMC_HOST_DEVICE State64Bit(int x, int y, int frame, int index);
 
-	/*
+	/**
 	 * @brief Decorrelate state between pixels.
 	 * @details Using the pixelId, randomise the object state so that
 	 * correlation between pixels is removed. You may want to call this after

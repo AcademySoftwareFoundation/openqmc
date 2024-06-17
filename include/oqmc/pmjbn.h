@@ -26,35 +26,8 @@ namespace oqmc
 
 /**
  * @brief Pmj blue noise sampler implementation without public interface.
- * @details Private implementation details of the pmj blue noise sampler.
- * Use the aliased PmjBnSampler type below to access the sampler via the
- * SamplerInterface.
- *
- * Same as oqmc::PmjImpl, with additional spatial blue noise dithering
- * between pixels, with progressive ranking for progressive pixel sampling.
- * This involves an offline optimisation process that's based on the work by
- * Belcour and Heitz in 'Lessons Learned and Improvements when Building Screen-
- * Space Samplers with Blue-Noise Error Distribution', and extends temporally
- * as described by Wolfe et al. in 'Spatiotemporal Blue Noise Masks'.
- *
- * The sampler achieves a blue noise distribution using two pixel tables, one
- * holds keys to seed the sequence, and the other index ranks. These tables are
- * then randomised by toroidally shifting the table lookups for each domain
- * using random offsets. Correlation between the offsets and the pixels allows
- * for a single pair of tables to provide keys and ranks for many domains.
- *
- * Although the spatial temporal blue noise doesn't reduce the error for an
- * individual pixel, it does give a better perceptual result due to less low
- * frequency structure in the error between pixels. Also if an image is either
- * spatially or temporally filtered (as with denoising or temporal
- * anti-aliasing), the resulting error can be much lower when using a blue noise
- * variant.
- *
- * The blue noise variant is recommended over the base version of the sampler,
- * as the additional performance cost will be minimal in relation to the gains
- * to be had at low sample counts. However the access to the data tables could
- * have a larger impact on performance depending on the artchecture (GPU), so
- * it is worth benchmarking if this is a concern.
+ * @details Private implementation details of the pmj blue noise sampler. Use
+ * the aliased PmjBnSampler type to access the sampler via the SamplerInterface.
  */
 class PmjBnImpl
 {
@@ -161,6 +134,13 @@ void PmjBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
 
+/**
+ * @brief Blue noise variant of pmj sampler.
+ * @details Same as oqmc::PmjSampler, with additional spatial temporal blue
+ * noise dithering between pixels, with progressive pixel sampling support.
+ *
+ * @ingroup samplers
+ */
 using PmjBnSampler = SamplerInterface<PmjBnImpl>;
 
 } // namespace oqmc

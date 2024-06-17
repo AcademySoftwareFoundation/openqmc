@@ -16,40 +16,103 @@
 #include <cstddef>
 #include <cstdint>
 
+/**
+ * @defgroup samplers Sampler API
+ * @brief Higher level sampler API and sampler types.
+ * @details This module outlines the higher level sampler API, as well as each
+ * availble sampler type. Sampler type implementations are non-public, and all
+ * functionality is accessible via the SamplerInterface. Sampler types and a
+ * corresponding header file are listed under Typedef Documentation.
+ *
+ * **Blue noise sampler variants**
+ *
+ * There are typically two varaints of each sampler type, a base variant and a
+ * blue noise variant. Each blue noise variant is constructed using an offline
+ * optimisation process that is based on the work by Belcour and Heitz in
+ * 'Lessons Learned and Improvements when Building Screen-Space Samplers with
+ * Blue-Noise Error Distribution', and extends temporally as described by Wolfe
+ * et al. in 'Spatiotemporal Blue Noise Masks'.
+ *
+ * Blue noise variants achieve a blue noise distribution using two pixel tables,
+ * one holds keys to seed the sequence, and the other index ranks. These tables
+ * are then randomised by toroidally shifting the table lookups for each domain
+ * using random offsets. Correlation between the offsets and the pixels allows
+ * for a single pair of tables to provide keys and ranks for all domains.
+ *
+ * Although the spatial temporal blue noise does not reduce the error for
+ * an individual pixel, it does give a better perceptual result due to less
+ * low frequency structure in the error between pixels. Also, if an image
+ * is either spatially or temporally filtered (as with denoising or temporal
+ * anti-aliasing), the resulting error can be lower when using a blue noise
+ * variant.
+ *
+ * Blue noise variants are recommended over the base variants of each sampler,
+ * as the additional performance cost will most likely be minimal in relation
+ * to the gains to be had at low sample counts. However, the access to the data
+ * tables could have a larger impact on performance depending on the artchecture
+ * (GPU, etc), so it is worth benchmarking if this is a concern.
+ *
+ * **Packing and passing samplers**
+ *
+ * The intention of the API is to allow for object instances to be efficiently
+ * copied on the stack. In doing so the objects can be easily packed and queued
+ * during wavefront rendering. Allowing for this means that along with the
+ * possible 64 bits to track a cache, the state that uniquely identifies the
+ * current domain and index of a sampler needs to be small as well.
+ *
+ * For this purpose, each implementation uses 64 bits. Along with an optional
+ * cache pointer, that gives a maximum of 128 bits for the entire object.
+ * Creating new states for each domain relies heavily on PCG-RXS-M-RX-32 from
+ * the PCG family of PRNGs as described by O'Neill in 'PCG: A Family of Simple
+ * Fast Space-Efficient Statistically Good Algorithms for Random Number
+ * Generation'.
+ *
+ * Each implementation uses the LCG state transition when advancing a domain,
+ * but then increases the quality of the lower order bits with a permutation
+ * prior to drawing samples. This allows the implementation to efficiently
+ * create and skip domains, while producing high quality random results upon
+ * drawing samples.
+ */
+
 namespace oqmc
 {
 
 /**
- * @brief Sampler interface wrapper.
- * @details This is a sampler interface that defines a generic API for
+ * @brief Sampler API.
+ * @details This is a sampler interface that defines a generic API for all
  * sampler types. The interface is composed of an internal implementation,
- * meaning only this API is exposed to the calling code. New implementations
- * should define an implementation type, and pass this type as a template
- * parameter to an instantiation of SamplerInterface.
+ * meaning only this public API is exposed to calling code.
  *
+ * @internal
+ * New implementations should define an implementation type, and pass this type
+ * as a template parameter to an instantiation of SamplerInterface.
+ *
+ * @code
  * class FooImpl
  * {
  * ...
  * }
  *
  * using FooSampler = SamplerInterface<FooImpl>;
+ * @endcode
  *
- * See 'oqmc/pmj.h' for a real-world example of an implementation.
+ * Samplers should aim to have a small memory footprint, and be cheap to copy,
+ * allowing copy by value when passing as a function argument.
+ * @endinternal
  *
  * Different samplers defined using the interface should be interchangeable
  * allowing for new implementations to be tested and compared without changing
  * the calling code. The interface is static, so all functions should be inlined
  * to allow for zero cost abstraction. This also means that enabling compile
- * time optimisations is important for performance reasons.
+ * time optimisations might provide a noticable improvement.
  *
- * Once a sampler is constructed its state cannot change. This means that in
- * most cases the object variable can be marked constant. New samplers are
- * created from a parent sampler using the newDomain* member functions. Sample
- * values are retrieved using the draw* member functions. Calls to newDomain*
- * functions should be cheap in comparison to calls to draw* functions.
+ * Samplers can only be constructed, their state cannot change. In most cases
+ * the object variable can be marked constant. New samplers are created from
+ * a parent sampler using the newDomain member functions. Sample values are
+ * retrieved using the draw member functions. Calls to newDomain functions
+ * should be cheap in comparison to calls to draw functions.
  *
- * Samplers should aim to have a small memory footprint, and be cheap to copy,
- * allowing copy by value when passing as a function argument.
+ * @ingroup samplers
  *
  * @tparam Impl Internal sampler implementation type as described above.
  */

@@ -9,4 +9,7 @@
 
 #pragma once
 
+/**
+ * @brief Macro to declare a symbol unused.
+ */
 #define OQMC_MAYBE_UNUSED(exp) (void)(exp)
