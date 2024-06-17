@@ -24,11 +24,20 @@ jobs:
       - run: cmake --preset unix
       - run: scripts/check-lint.sh
 
+  check-documentation:
+    name: Check documentation
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt-get update && sudo apt-get install doxygen graphviz
+      - run: scripts/check-documentation.sh
+
   install:
     name: Install library
     needs:
       - check-formatting
       - check-static-analyzer
+      - check-documentation
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
