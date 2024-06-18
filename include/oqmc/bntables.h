@@ -84,15 +84,28 @@ namespace pmj
 
 #if defined(OQMC_ENABLE_BINARY)
 
+/**
+ * @brief Optimised blue noise key table for pmj.
+ */
 extern const std::uint32_t keyTable[size];
+
+/**
+ * @brief Optimised blue noise rank table for pmj.
+ */
 extern const std::uint32_t rankTable[size];
 
 #else
 
+/**
+ * @brief Optimised blue noise key table for pmj.
+ */
 constexpr std::uint32_t keyTable[] = {
 #include "data/pmj/keys.txt"
 };
 
+/**
+ * @brief Optimised blue noise rank table for pmj.
+ */
 constexpr std::uint32_t rankTable[] = {
 #include "data/pmj/ranks.txt"
 };
@@ -106,15 +119,28 @@ namespace sobol
 
 #if defined(OQMC_ENABLE_BINARY)
 
+/**
+ * @brief Optimised blue noise key table for sobol.
+ */
 extern const std::uint32_t keyTable[size];
+
+/**
+ * @brief Optimised blue noise rank table for sobol.
+ */
 extern const std::uint32_t rankTable[size];
 
 #else
 
+/**
+ * @brief Optimised blue noise key table for sobol.
+ */
 constexpr std::uint32_t keyTable[] = {
 #include "data/sobol/keys.txt"
 };
 
+/**
+ * @brief Optimised blue noise rank table for sobol.
+ */
 constexpr std::uint32_t rankTable[] = {
 #include "data/sobol/ranks.txt"
 };
@@ -128,15 +154,28 @@ namespace lattice
 
 #if defined(OQMC_ENABLE_BINARY)
 
+/**
+ * @brief Optimised blue noise key table for lattice.
+ */
 extern const std::uint32_t keyTable[size];
+
+/**
+ * @brief Optimised blue noise rank table for lattice.
+ */
 extern const std::uint32_t rankTable[size];
 
 #else
 
+/**
+ * @brief Optimised blue noise key table for lattice.
+ */
 constexpr std::uint32_t keyTable[] = {
 #include "data/lattice/keys.txt"
 };
 
+/**
+ * @brief Optimised blue noise rank table for lattice.
+ */
 constexpr std::uint32_t rankTable[] = {
 #include "data/lattice/ranks.txt"
 };

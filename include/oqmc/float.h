@@ -17,8 +17,8 @@
 namespace oqmc
 {
 
-constexpr auto floatOneOverUintMax = 2.3283064365386963e-10f;
-constexpr auto floatOneMinusEpsilon = 0.99999994f;
+constexpr auto floatOneOverUintMax = 2.3283064365386963e-10f; ///< Integer norm.
+constexpr auto floatOneMinusEpsilon = 0.99999994f; ///< Max limit for [0, 1).
 
 /**
  * @brief Convert an integer into a [0, 1) float.

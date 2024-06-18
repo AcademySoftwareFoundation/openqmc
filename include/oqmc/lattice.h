@@ -22,20 +22,8 @@ namespace oqmc
 
 /**
  * @brief Lattice sampler implemention without public interface.
- * @details Private implementation details of the lattice sampler. Use
- * the aliased LatticeSampler type below to access the sampler via the
- * SamplerInterface.
- *
- * The implementation uses the generator vector from Hickernell et al. in
- * 'Weighted compound integration rules with higher order convergence for
- * all N' to construct a 4D lattice. This is then made into a progressive
- * sequence using a scalar based on a radical inversion of the sample index.
- * Randomisation uses toroidal shifts.
- *
- * This sampler has no cache initialisation cost, it generates all samples on
- * the fly without touching memory. Runtime performance is also high with a
- * relatively low computation cost for a single draw sample call. However the
- * rate of integration per pixel can be lower when compared to other samplers.
+ * @details Private implementation details of the lattice sampler. Use the
+ * aliased LatticeSampler type to access the sampler via the SamplerInterface.
  */
 class LatticeImpl
 {
@@ -109,6 +97,21 @@ void LatticeImpl::drawRnd(std::uint32_t rnd[Size]) const
 	state.drawRnd<Size>(rnd);
 }
 
+/**
+ * @brief Rank one lattice sampler.
+ * @details The implementation uses the generator vector from Hickernell et
+ * al. in 'Weighted compound integration rules with higher order convergence
+ * for all N' to construct a 4D lattice. This is then made into a progressive
+ * sequence using a scalar based on a radical inversion of the sample index.
+ * Randomisation uses toroidal shifts.
+ *
+ * This sampler has no cache initialisation cost, it generates all samples on
+ * the fly without touching memory. Runtime performance is also high with a
+ * relatively low computation cost for a single draw sample call. However the
+ * rate of integration per pixel can be lower when compared to other samplers.
+ *
+ * @ingroup samplers
+ */
 using LatticeSampler = SamplerInterface<LatticeImpl>;
 
 } // namespace oqmc

@@ -22,22 +22,8 @@ namespace oqmc
 
 /**
  * @brief Sobol sampler implementation without public interface.
- * @details Private implementation details of the sobol sampler. Use
- * the aliased SobolSampler type below to access the sampler via the
- * SamplerInterface.
- *
- * The implementation uses an elegant construction by Burley in 'Practical
- * Hash-based Owen Scrambling' for an Owen scrambled Sobol sequence. This also
- * includes performance improvements such as limiting the index to 16 bits,
- * pre-inverting the input and output matrices, and making use of CPU vector
- * intrinsics. You need to select an `OPENQMC_ARCH_TYPE` to make use of the
- * performance from vector intrinsics for a given architecture.
- *
- * This sampler has no cache initialisation cost, it generates all samples on
- * the fly without touching memory. However the cost per draw sample call is
- * computationally higher than other samplers. The quality of Owen scramble
- * sequences often outweigh this cost due to their random error cancellation
- * and incredibly high rate of integration for smooth functions.
+ * @details Private implementation details of the sobol sampler. Use the aliased
+ * SobolSampler type to access the sampler via the SamplerInterface.
  */
 class SobolImpl
 {
@@ -111,6 +97,23 @@ void SobolImpl::drawRnd(std::uint32_t rnd[Size]) const
 	state.drawRnd<Size>(rnd);
 }
 
+/**
+ * @brief Owen scrambled sobol sampler.
+ * @details The implementation uses an elegant construction by Burley in
+ * 'Practical Hash-based Owen Scrambling' for an Owen scrambled Sobol sequence.
+ * This also includes performance improvements such as limiting the index to
+ * 16 bits, pre-inverting the input and output matrices, and making use of CPU
+ * vector intrinsics. You need to select an `OPENQMC_ARCH_TYPE` to make use of
+ * the performance from vector intrinsics for a given architecture.
+ *
+ * This sampler has no cache initialisation cost, it generates all samples on
+ * the fly without touching memory. However the cost per draw sample call is
+ * computationally higher than other samplers. The quality of Owen scramble
+ * sequences often outweigh this cost due to their random error cancellation and
+ * incredibly high rate of integration for smooth functions.
+ *
+ * @ingroup samplers
+ */
 using SobolSampler = SamplerInterface<SobolImpl>;
 
 } // namespace oqmc
