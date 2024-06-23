@@ -23,12 +23,7 @@
 namespace oqmc
 {
 
-/**
- * @brief Lattice blue noise sampler implementation without public interface.
- * @details Private implementation details of the lattice blue noise sampler.
- * Use the aliased LatticeBnSampler type to access the sampler via the
- * SamplerInterface.
- */
+/// @cond
 class LatticeBnImpl
 {
 	// See SamplerInterface for public API documentation.
@@ -131,6 +126,7 @@ void LatticeBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
 	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
+/// @endcond
 
 /**
  * @brief Blue noise variant of lattice sampler.

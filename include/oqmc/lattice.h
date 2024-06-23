@@ -20,11 +20,7 @@
 namespace oqmc
 {
 
-/**
- * @brief Lattice sampler implemention without public interface.
- * @details Private implementation details of the lattice sampler. Use the
- * aliased LatticeSampler type to access the sampler via the SamplerInterface.
- */
+/// @cond
 class LatticeImpl
 {
 	// See SamplerInterface for public API documentation.
@@ -96,6 +92,7 @@ void LatticeImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
 	state.drawRnd<Size>(rnd);
 }
+/// @endcond
 
 /**
  * @brief Rank one lattice sampler.
