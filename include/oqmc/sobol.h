@@ -20,11 +20,7 @@
 namespace oqmc
 {
 
-/**
- * @brief Sobol sampler implementation without public interface.
- * @details Private implementation details of the sobol sampler. Use the aliased
- * SobolSampler type to access the sampler via the SamplerInterface.
- */
+/// @cond
 class SobolImpl
 {
 	// See SamplerInterface for public API documentation.
@@ -96,6 +92,7 @@ void SobolImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
 	state.drawRnd<Size>(rnd);
 }
+/// @endcond
 
 /**
  * @brief Owen scrambled sobol sampler.

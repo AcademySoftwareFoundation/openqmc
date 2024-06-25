@@ -24,11 +24,7 @@
 namespace oqmc
 {
 
-/**
- * @brief Pmj blue noise sampler implementation without public interface.
- * @details Private implementation details of the pmj blue noise sampler. Use
- * the aliased PmjBnSampler type to access the sampler via the SamplerInterface.
- */
+/// @cond
 class PmjBnImpl
 {
 	// See SamplerInterface for public API documentation.
@@ -133,6 +129,7 @@ void PmjBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
 	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
+/// @endcond
 
 /**
  * @brief Blue noise variant of pmj sampler.

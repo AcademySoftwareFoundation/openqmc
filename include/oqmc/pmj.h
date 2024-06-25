@@ -20,11 +20,7 @@
 namespace oqmc
 {
 
-/**
- * @brief Pmj sampler implementation without public interface.
- * @details Private implementation details of the pmj sampler. Use the aliased
- * PmjSampler type to access the sampler via the SamplerInterface.
- */
+/// @cond
 class PmjImpl
 {
 	// See SamplerInterface for public API documentation.
@@ -107,6 +103,7 @@ void PmjImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
 	state.drawRnd<Size>(rnd);
 }
+/// @endcond
 
 /**
  * @brief Low discrepancy pmj sampler.

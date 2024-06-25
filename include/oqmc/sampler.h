@@ -21,20 +21,21 @@
  * @brief Higher level sampler API and sampler types.
  * @details This module outlines the higher level sampler API, as well as each
  * availble sampler type. Sampler type implementations are non-public, and all
- * functionality is accessible via the SamplerInterface. Sampler types and a
- * corresponding header file are listed under Typedef Documentation.
+ * functionality is accessible via the SamplerInterface. There are two variants
+ * for each sampler, a base variant and a blue noise variant. Sampler types and
+ * a corresponding header file are listed under Typedef Documentation.
  *
  * **Blue noise sampler variants**
  *
- * There are typically two varaints of each sampler type, a base variant and a
- * blue noise variant. Each blue noise variant is constructed using an offline
+ * Blue noise variants offer spatial temporal blue noise dithering between
+ * pixels, with progressive pixel sampling. This is done using an offline
  * optimisation process that is based on the work by Belcour and Heitz in
  * 'Lessons Learned and Improvements when Building Screen-Space Samplers with
  * Blue-Noise Error Distribution', and extends temporally as described by Wolfe
  * et al. in 'Spatiotemporal Blue Noise Masks'.
  *
- * Blue noise variants achieve a blue noise distribution using two pixel tables,
- * one holds keys to seed the sequence, and the other index ranks. These tables
+ * Each variant achieves a blue noise distribution using two pixel tables, one
+ * holds keys to seed the sequence, and the other index ranks. These tables
  * are then randomised by toroidally shifting the table lookups for each domain
  * using random offsets. Correlation between the offsets and the pixels allows
  * for a single pair of tables to provide keys and ranks for all domains.
@@ -46,39 +47,35 @@
  * anti-aliasing), the resulting error can be lower when using a blue noise
  * variant.
  *
- * Blue noise variants are recommended over the base variants of each sampler,
- * as the additional performance cost will most likely be minimal in relation
- * to the gains to be had at low sample counts. However, the access to the data
- * tables could have a larger impact on performance depending on the artchecture
- * (GPU, etc), so it is worth benchmarking if this is a concern.
+ * Blue noise variants are recommended, as the additional performance cost will
+ * likely be a favourable tradeoff for the quality gains at low sample counts.
+ * However, access to the data tables can impact performance depending on the
+ * architecture (e.g. GPU), so it is worth benchmarking if this is a concern.
  *
- * **Packing and passing samplers**
+ * **Passing and packing samplers**
  *
- * The intention of the API is to allow for object instances to be efficiently
- * copied on the stack. In doing so the objects can be easily packed and queued
- * during wavefront rendering. Allowing for this means that along with the
- * possible 64 bits to track a cache, the state that uniquely identifies the
- * current domain and index of a sampler needs to be small as well.
+ * Sampler objects can be efficiently passed by value into functions, as well
+ * as packed and queued for deferred evaluation. Achieving this means that the
+ * memory footprint of a sampler must be very small, and the type trivially
+ * copyable.
  *
- * For this purpose, each implementation uses 64 bits. Along with an optional
- * cache pointer, that gives a maximum of 128 bits for the entire object.
- * Creating new states for each domain relies heavily on PCG-RXS-M-RX-32 from
- * the PCG family of PRNGs as described by O'Neill in 'PCG: A Family of Simple
- * Fast Space-Efficient Statistically Good Algorithms for Random Number
+ * Sampler types are either 8 or 16 bytes in size depending on the type. The
+ * small memory footprint is possible due to the state size of PCG-RXS-M-RX-32
+ * from the PCG family of PRNGs as described by O'Neill in 'PCG: A Family of
+ * Simple Fast Space-Efficient Statistically Good Algorithms for Random Number
  * Generation'.
  *
- * Each implementation uses the LCG state transition when advancing a domain,
- * but then increases the quality of the lower order bits with a permutation
- * prior to drawing samples. This allows the implementation to efficiently
- * create and skip domains, while producing high quality random results upon
- * drawing samples.
+ * When deriving domains the sampler will use an LCG state transition, and
+ * only perform a permutation prior to drawing samples analogous to PCG. This
+ * provides high quality bits when drawing samples, but keeps the cost low when
+ * deriving domains, which might not be used.
  */
 
 namespace oqmc
 {
 
 /**
- * @brief Sampler API.
+ * @brief Public sampler API.
  * @details This is a sampler interface that defines a generic API for all
  * sampler types. The interface is composed of an internal implementation,
  * meaning only this public API is exposed to calling code.

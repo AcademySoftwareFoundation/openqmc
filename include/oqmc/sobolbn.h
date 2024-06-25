@@ -23,12 +23,7 @@
 namespace oqmc
 {
 
-/**
- * @brief Sobol blue noise sampler implementation without public interface.
- * @details Private implementation details of the sobol blue noise sampler.
- * Use the aliased SobolBnSampler type to access the sampler via the
- * SamplerInterface.
- */
+/// @cond
 class SobolBnImpl
 {
 	// See SamplerInterface for public API documentation.
@@ -131,6 +126,7 @@ void SobolBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 {
 	state.newDomain(state.pixelId).drawRnd<Size>(rnd);
 }
+/// @endcond
 
 /**
  * @brief Blue noise variant of sobol sampler.

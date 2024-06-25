@@ -47,6 +47,7 @@ Project features are:
 - Solutions for different sampling use cases.
 - Supports progressive / adaptive pixel sampling.
 - Suitable for depth and wavefront rendering.
+- Includes spatial temporal blue noise.
 - Clear and extendable code base.
 - Unit and statistical testing.
 - Modern [CMake](https://cmake.org/) based build system.
@@ -1203,12 +1204,12 @@ integration per pixel can be lower when compared to other samplers.
   <img alt="Lattice pair plot." src="./images/plots/pair-plot-lattice-light.png">
 </picture>
 
-### Spatial temporal blue noise
+### Blue noise sampler variants
 
-The blue noise variants offer spatial temporal blue noise dithering between
-pixels, with progressive ranking for progressive pixel sampling. This involves
-an offline optimisation process that's based on the work by Belcour and Heitz
-[^4], and extends temporally as described by Wolfe et al. [^5].
+Blue noise variants offer spatial temporal blue noise dithering between pixels,
+with progressive pixel sampling. This is done using an offline optimisation
+process that's based on the work by Belcour and Heitz [^4], and extends
+temporally as described by Wolfe et al. [^5].
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/optimise-index-seed-light.png">
@@ -1220,7 +1221,7 @@ Each variant achieves a blue noise distribution using two pixel tables, one
 holds keys to seed the sequence, and the other index ranks. These tables are
 then randomised by toroidally shifting the table lookups for each domain using
 random offsets. Correlation between the offsets and the pixels allows for a
-single pair of tables to provide keys and ranks for many domains.
+single pair of tables to provide keys and ranks for all domains.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/blue-noise-procedure-light.png">
@@ -1235,25 +1236,27 @@ spatially or temporally filtered (as with denoising or temporal antialiasing),
 the resulting error can be much lower when using a blue noise variant as shown
 in [Rate of convergence](#rate-of-convergence).
 
+Blue noise variants are recommended, as the additional performance cost will
+likely be a favourable tradeoff for the quality gains at low sample counts.
+However, access to the data tables can impact performance depending on the
+architecture (e.g. GPU), so it is worth benchmarking if this is a concern.
+
 For more details, see the Optimise CLI in the [Tools](#tools) section.
 
-### Object state
+### Passing and packing samplers
 
-The intention of the API is to allow for object instances to be efficiently
-copied on the stack. In doing so the objects can be easily packed and queued
-during wavefront rendering. Allowing for this means that along with the
-possible 64 bits to track a cache, the state that uniquely identifies the
-current domain and index of a sampler needs to be small as well.
+Sampler objects can be efficiently passed by value into functions, as well as
+packed and queued for deferred evaluation. Achieving this means that the memory
+footprint of a sampler must be very small, and the type trivially copyable.
 
-For this purpose, each implementation uses 64 bits. Along with an optional
-cache pointer, that gives a maximum of 128 bits for the entire object. Creating
-new states for each domain relies heavily on PCG-RXS-M-RX-32 from the PCG
-family of PRNGs as described by O'Neill [^6].
+Sampler types are either 8 or 16 bytes in size depending on the type. The small
+memory footprint is possible due to the state size of PCG-RXS-M-RX-32 from the
+PCG family of PRNGs as described by O'Neill [^6].
 
-Each implementation uses the LCG state transition when advancing a domain, but
-then increases the quality of the lower order bits with a permutation prior to
-drawing samples. This allows the implementation to efficiently create and skip
-domains, while producing high quality random results upon drawing samples.
+When deriving domains the sampler will use an LCG state transition, and only
+perform a permutation prior to drawing samples analogous to PCG. This provides
+high quality bits when drawing samples, but keeps the cost low when deriving
+domains, which might not be used.
 
 ## Development roadmap
 
