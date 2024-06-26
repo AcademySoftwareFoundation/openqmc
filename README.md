@@ -47,7 +47,7 @@ Project features are:
 - Solutions for different sampling use cases.
 - Supports progressive / adaptive pixel sampling.
 - Suitable for depth and wavefront rendering.
-- Includes spatial temporal blue noise.
+- Spatial temporal blue noise dithering.
 - Clear and extendable code base.
 - Unit and statistical testing.
 - Modern [CMake](https://cmake.org/) based build system.
@@ -576,6 +576,55 @@ implementations and outline their tradeoffs, so that you can make an informed
 decision on what implementation would be best for your use case.
 
 ### Rate of convergence
+
+*Unreasonable Effectiveness of QMC* is a subject worth exploring. When
+discussing rates of convergence between different implementations, it can be
+helpful to have some context in how these relate to classic MC. The primary
+reason to use a QMC method in place of MC is the improvement it brings in
+convergence rate, and as a result a reduction in computational cost. The
+following figures illustrate this using an owen scrambled sobol sequence.
+
+[quality (SE) vs cost] [N vs effective N] [Gaussian] [rate MC vs QMC].
+
+Asymptotic complexity for a **Monte Carlo** (MC) estimator of some function $f$
+typically looks like:
+
+$$
+Q_{N}\equiv\frac{1}{N}\sum_{i=1}^{N}f(x_i)
+$$
+
+$$
+\mathcal{O}\left(N^{-0.5}\right)
+\quad\text{or}\quad
+\mathcal{O}\left(\frac{N^{0.5}}{N}\right)
+$$
+
+While both these formulas are equivalent, the second formula gives some
+intuition about the terms that result from the original estimator. In the
+numerator there is a factor due to the summation of independent random variables
+and the dispersion this causes according to the Central Limit Theorem (CLT). In
+the denominator the term represents the estimator normalisation.
+
+When $f$ is smooth, complexity for a **Quasi Monte Carlo** (QMC) estimator of
+function $f$ can equal:
+
+$$
+\mathcal{O}\left(N^{-1.5}\right)
+\quad\text{or}\quad
+\mathcal{O}\left(\frac{N^{-0.5}}{N}\right)
+$$
+
+More specifically, this is true for some Randomised Quasi Monte Carlo (RQMC)
+estimators when $N\in\lbrace2^k|k\in\mathbb{N}\rbrace$. Relative to MC, the
+efficiency factor is $N^3$. This is why QMC sampling becomes more critical with
+higher sample counts. For low sample counts, other features like blue noise
+dithering can have a greater impact on quality.
+
+Practically we can't expect to always see such efficiency gains in real world
+scenarios. These results are the best case, and typically what you see only when
+the function is smooth. However, QMC is never worse than MC, and usually lands
+somewhere between a notable improvement, and a dramatic improvement, as seen
+here. This depends on the integral being estimated.
 
 These plots show the rate of convergence for different implementations across
 different two-dimensional integrals. Each plot takes the average of 128 runs,
