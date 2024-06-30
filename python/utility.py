@@ -7,7 +7,7 @@ import numpy as np
 import wrapper as oqmc
 
 sequences_base = ("pmj", "sobol", "lattice")
-sequences_complete = ("pmj", "pmjbn", "sobol", "sobolbn", "lattice", "latticebn")
+sequences_complete = ("pmj", "sobol", "lattice", "pmjbn", "sobolbn", "latticebn")
 
 shapes = {
     "qdisk": "quarter disk",

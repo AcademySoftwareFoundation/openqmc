@@ -5,6 +5,7 @@
 
 #include "../../shapes.h"
 #include "parallel.h"
+#include "rng.h"
 #include <oqmc/float.h>
 #include <oqmc/oqmc.h>
 #include <oqmc/pcg.h>
@@ -170,6 +171,13 @@ bool plotError(const char* sampler, Shape shape, int nsequences, int nsamples,
 		return true;
 	}
 
+	if(std::string(sampler) == "rng")
+	{
+		plotError<Shape, RngSampler>(shape, nsequences, nsamples, out);
+
+		return true;
+	}
+
 	return false;
 }
 
@@ -326,6 +334,14 @@ bool plotErrorFilterSpace(const char* sampler, Shape shape, int resolution,
 	if(std::string(sampler) == "latticebn")
 	{
 		plotErrorFilterSpace<Shape, oqmc::LatticeBnSampler>(
+		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
+
+		return true;
+	}
+
+	if(std::string(sampler) == "rng")
+	{
+		plotErrorFilterSpace<Shape, RngSampler>(
 		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
 
 		return true;
@@ -494,6 +510,15 @@ bool plotErrorFilterTime(const char* sampler, Shape shape, int resolution,
 		return true;
 	}
 
+	if(std::string(sampler) == "rng")
+	{
+		plotErrorFilterTime<Shape, RngSampler>(shape, resolution, depth,
+		                                       nsamples, nsigma, sigmaMin,
+		                                       sigmaStep, out);
+
+		return true;
+	}
+
 	return false;
 }
 
@@ -614,6 +639,13 @@ OQMC_CABI bool oqmc_plot_zoneplate(const char* sampler, int nsamples,
 	if(std::string(sampler) == "latticebn")
 	{
 		plotZoneplate<oqmc::LatticeBnSampler>(nsamples, resolution, out);
+
+		return true;
+	}
+
+	if(std::string(sampler) == "rng")
+	{
+		plotZoneplate<RngSampler>(nsamples, resolution, out);
 
 		return true;
 	}
