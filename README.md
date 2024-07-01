@@ -582,16 +582,24 @@ discussing rates of convergence between different implementations, it can be
 helpful to have some context in how these relate to classic MC. The primary
 reason to use a QMC method in place of MC is the improvement it brings in
 convergence rate, and as a result a reduction in computational cost. The
-following figures illustrate this using an owen scrambled sobol sequence.
+following figures illustrate this using a pmj sequence.
 
-[quality (SE) vs cost] [N vs effective N] [Gaussian] [rate MC vs QMC].
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="./images/plots/mc-qmc-compared-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/mc-qmc-compared-dark.png">
+  <img alt="MC and QMC comparison." src="./images/plots/mc-qmc-compared-light.png">
+</picture>
 
-Asymptotic complexity for a **Monte Carlo** (MC) estimator of some function $f$
-typically looks like:
+Here is an example of an estimator where $x_i$ are points based on either an MC
+or QMC method. Given $N$ points, measurements are taken from $f$ and averaged to
+produce the final estimate:
 
 $$
 Q_{N}\equiv\frac{1}{N}\sum_{i=1}^{N}f(x_i)
 $$
+
+Asymptotic complexity for a **Monte Carlo** (MC) estimator to converge on a true
+value is quadratic in cost:
 
 $$
 \mathcal{O}\left(N^{-0.5}\right)
@@ -599,14 +607,13 @@ $$
 \mathcal{O}\left(\frac{N^{0.5}}{N}\right)
 $$
 
-While both these formulas are equivalent, the second formula gives some
-intuition about the terms that result from the original estimator. In the
-numerator there is a factor due to the summation of independent random variables
-and the dispersion this causes according to the Central Limit Theorem (CLT). In
-the denominator the term represents the estimator normalisation.
+While both these formulas are equivalent, the second gives some intuition about
+the terms that result from the original estimator. Central Limit Theorem (CLT)
+shows that the summation of **i.i.d.** variables approaches a convolution of
+normal distributions. This dispersion is represented in the numerator.
 
-When $f$ is smooth, complexity for a **Quasi Monte Carlo** (QMC) estimator of
-function $f$ can equal:
+In comparison, asymptotic complexity for a **Quasi Monte Carlo** (QMC) estimator
+is much lower in cost:
 
 $$
 \mathcal{O}\left(N^{-1.5}\right)
@@ -615,16 +622,18 @@ $$
 $$
 
 More specifically, this is true for some Randomised Quasi Monte Carlo (RQMC)
-estimators when $N\in\lbrace2^k|k\in\mathbb{N}\rbrace$. Relative to MC, the
-efficiency factor is $N^3$. This is why QMC sampling becomes more critical with
+estimators when $N\in\lbrace2^k|k\in\mathbb{N}\rbrace$ and $f$ is smooth. The
+cost is no longer quadratic. Relative to MC, the efficiency factor is $N^3$.
+
+This improvement in efficiency is why QMC sampling becomes more critical with
 higher sample counts. For low sample counts, other features like blue noise
 dithering can have a greater impact on quality.
 
 Practically we can't expect to always see such efficiency gains in real world
 scenarios. These results are the best case, and typically what you see only when
-the function is smooth. However, QMC is never worse than MC, and usually lands
-somewhere between a notable improvement, and a dramatic improvement, as seen
-here. This depends on the integral being estimated.
+the function is smooth. However, QMC is never worse than MC, and usually shows
+somewhere between a measurable improvement, and a considerable improvement as
+seen here.
 
 These plots show the rate of convergence for different implementations across
 different two-dimensional integrals. Each plot takes the average of 128 runs,
@@ -1571,12 +1580,16 @@ All Jupyter notebooks used to author the images on this page are under the
 [python/notebooks](python/notebooks) directory and are available to see
 directly online. These use the tools Python CTypes wrapper.
 
+```bash
+just notebook
+```
+
 Images on this page are generated with a build of the tools library, and then
 executing the notebooks from the command line. This is done twice, once for each
-colour theme. The process is automated in the following script:
+colour theme. Images can be regenerated using:
 
 ```bash
-./scripts/save-notebook-images.sh
+just readme-images
 ```
 
 ### Nix development environment
