@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Functions to reverse the order of bits in integer data types. This
- * operation is also known as a radical inversion or a Van der Corput sequence.
- */
+/// @file
+/// @details Functions to reverse the order of bits in integer data types. This
+/// operation is also known as a radical inversion or a Van der Corput sequence.
 
 #pragma once
 
@@ -16,14 +14,12 @@
 namespace oqmc
 {
 
-/**
- * @brief Reverse bits of an unsigned 32 bit integer.
- * @details Given a 32 bit unsigned integer value, reverse the order of bits so
- * that the most significant bits become the least significant, and vise versa.
- *
- * @param [in] value Integer value to reverse.
- * @return Reversed integer value.
- */
+/// Reverse bits of an unsigned 32 bit integer.
+/// Given a 32 bit unsigned integer value, reverse the order of bits so that the
+/// most significant bits become the least significant, and vise versa.
+///
+/// @param [in] value Integer value to reverse.
+/// @return Reversed integer value.
 OQMC_HOST_DEVICE constexpr std::uint32_t reverseBits32(std::uint32_t value)
 {
 #if defined(__CUDA_ARCH__)
@@ -44,14 +40,12 @@ OQMC_HOST_DEVICE constexpr std::uint32_t reverseBits32(std::uint32_t value)
 	return value;
 }
 
-/**
- * @brief Reverse bits of an unsigned 16 bit integer.
- * @details Given a 16 bit unsigned integer value, reverse the order of bits so
- * that the most significant bits become the least significant, and vise versa.
- *
- * @param [in] value Integer value to reverse.
- * @return Reversed integer value.
- */
+/// Reverse bits of an unsigned 16 bit integer.
+/// Given a 16 bit unsigned integer value, reverse the order of bits so that the
+/// most significant bits become the least significant, and vise versa.
+///
+/// @param [in] value Integer value to reverse.
+/// @return Reversed integer value.
 OQMC_HOST_DEVICE constexpr std::uint16_t reverseBits16(std::uint16_t value)
 {
 #if defined(__CUDA_ARCH__)

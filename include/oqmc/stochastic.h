@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details An efficient implementation of progressive multi-jittered (0,2)
- * sequences. This can be used to construct higher level sampler types. The
- * method is based on 'Stochastic Generation of (t, s) Sample Sequences'
- * by Andrew Helmer, et al. As progressive multi-jittered (0,2) XOR tables
- * only produce the first pair of the four dimensions, the second pair is a
- * randomisation of the first.
- */
+/// @file
+/// @details An efficient implementation of progressive multi-jittered (0,2)
+/// sequences. This can be used to construct higher level sampler types. The
+/// method is based on 'Stochastic Generation of (t, s) Sample Sequences' by
+/// Andrew Helmer, et al. As progressive multi-jittered (0,2) XOR tables only
+/// produce the first pair of the four dimensions, the second pair is a
+/// randomisation of the first.
 
 #pragma once
 
@@ -23,16 +21,14 @@
 namespace oqmc
 {
 
-/**
- * @brief Initialise a table with a progressive mult-jittered (0,2) sequence.
- * @details Given a data array and size, compute the corresponding progressive
- * multi-jittered (0,2) sequence value for each element of the array. Each
- * element in the array is a 4 dimensional sample. Number of samples must be
- * larger than zero and no more than 2^16.
- *
- * @param [in] nsamples Size of the table array.
- * @param [out] table Output array of 4 dimensional samples.
- */
+/// Initialise a table with a progressive mult-jittered (0,2) sequence.
+/// Given a data array and size, compute the corresponding progressive
+/// multi-jittered (0,2) sequence value for each element of the array. Each
+/// element in the array is a 4 dimensional sample. Number of samples must be
+/// larger than zero and no more than 2^16.
+///
+/// @param [in] nsamples Size of the table array.
+/// @param [out] table Output array of 4 dimensional samples.
 inline void stochasticPmjInit(int nsamples, std::uint32_t table[][4])
 {
 	constexpr auto maxIndexSize = 0x10000; // 2^16 index upper limit.

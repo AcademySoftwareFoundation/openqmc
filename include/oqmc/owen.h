@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details An efficient implementation of Owen scrambled sobol sequences. This
- * can be used to construct higher level sampler types. The method uses Brent
- * Burley's hash based 'Practical Hash-based Owen Scrambling' construction with
- * added optimisations.
- */
+/// @file
+/// @details An efficient implementation of Owen scrambled sobol sequences. This
+/// can be used to construct higher level sampler types. The method uses Brent
+/// Burley's hash based 'Practical Hash-based Owen Scrambling' construction with
+/// added optimisations.
 
 #pragma once
 
@@ -36,16 +34,14 @@
 namespace oqmc
 {
 
-/**
- * @brief Compute sobol sequence value at an index with reversed bits.
- * @details Given a 16 bit index, where the order of bits in the index have
- * been reversed, compute a sobol sequence value to 16 bits of precision for a
- * given dimension. Dimensions must be within the range [0, 4).
- *
- * @param [in] index Bit reversed index of element.
- * @param [in] dimension Dimension of sobol sequence.
- * @return Sobol sequence value.
- */
+/// Compute sobol sequence value at an index with reversed bits.
+/// Given a 16 bit index, where the order of bits in the index have been
+/// reversed, compute a sobol sequence value to 16 bits of precision for a given
+/// dimension. Dimensions must be within the range [0, 4).
+///
+/// @param [in] index Bit reversed index of element.
+/// @param [in] dimension Dimension of sobol sequence.
+/// @return Sobol sequence value.
 OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
                                                          int dimension)
 {
@@ -256,17 +252,15 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 #endif
 }
 
-/**
- * @brief Permute an input integer and reverse the bits.
- * @details Given an input integer value, perform a Laine and Karras style
- * permutation and reverse the resulting bits. The permutation can be randomised
- * with a given seed value. This will be equivalent to an Owen scramble when
- * the input bits of the integer are already reversed.
- *
- * @param [in] value Input integer value.
- * @param [in] seed Seed to change the permutation.
- * @return Permuted, reversed value.
- */
+/// Permute an input integer and reverse the bits.
+/// Given an input integer value, perform a Laine and Karras style permutation
+/// and reverse the resulting bits. The permutation can be randomised with a
+/// given seed value. This will be equivalent to an Owen scramble when the input
+/// bits of the integer are already reversed.
+///
+/// @param [in] value Input integer value.
+/// @param [in] seed Seed to change the permutation.
+/// @return Permuted, reversed value.
 OQMC_HOST_DEVICE constexpr std::uint32_t scrambleAndReverse(std::uint32_t value,
                                                             std::uint32_t seed)
 {
@@ -276,19 +270,16 @@ OQMC_HOST_DEVICE constexpr std::uint32_t scrambleAndReverse(std::uint32_t value,
 	return value;
 }
 
-/**
- * @brief Compute a randomised sobol sequence value.
- * @details Given an index and a seed, compute an Owen scrambled sobol sequence
- * value. The index will be shuffled in a manner that is progressive friendly.
- * The value can be multi-dimensional. For a given sequence, the seed value must
- * be constant. An index greater than 2^16 will repeat values.
- *
- * @tparam Depth Dimensional space of output, up to 4 dimensions.
-
- * @param [in] index Input index of sequence value.
- * @param [in] seed Seed to randomise the sequence.
- * @param [out] sample Randomised sequence value.
- */
+/// Compute a randomised sobol sequence value.
+/// Given an index and a seed, compute an Owen scrambled sobol sequence value.
+/// The index will be shuffled in a manner that is progressive friendly. The
+/// value can be multi-dimensional. For a given sequence, the seed value must be
+/// constant. An index greater than 2^16 will repeat values.
+///
+/// @tparam Depth Dimensional space of output, up to 4 dimensions.
+/// @param [in] index Input index of sequence value.
+/// @param [in] seed Seed to randomise the sequence.
+/// @param [out] sample Randomised sequence value.
 template <int Depth>
 OQMC_HOST_DEVICE inline void shuffledScrambledSobol(std::uint32_t index,
                                                     std::uint32_t seed,

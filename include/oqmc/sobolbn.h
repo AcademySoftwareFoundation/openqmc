@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Sobolbn sampler implementation.
- */
+/// @file
+/// @details Sobolbn sampler implementation.
 
 #pragma once
 
@@ -128,13 +126,11 @@ void SobolBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 }
 /// @endcond
 
-/**
- * @brief Blue noise variant of sobol sampler.
- * @details Same as oqmc::SobolSampler, with additional spatial temporal blue
- * noise dithering between pixels, with progressive pixel sampling support.
- *
- * @ingroup samplers
- */
+/// Blue noise variant of sobol sampler.
+/// Same as oqmc::SobolSampler, with additional spatial temporal blue noise
+/// dithering between pixels, with progressive pixel sampling support.
+///
+/// @ingroup samplers
 using SobolBnSampler = SamplerInterface<SobolBnImpl>;
 
 } // namespace oqmc

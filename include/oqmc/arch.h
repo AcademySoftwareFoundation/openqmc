@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Defines what architecture to target. This is based on what features
- * are enabled by the compiler using the build options.
- */
+/// @file
+/// @details Defines what architecture to target. This is based on what features
+/// are enabled by the compiler using the build options.
 
 #pragma once
 

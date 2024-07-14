@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Pmjbn sampler implementation.
- */
+/// @file
+/// @details Pmjbn sampler implementation.
 
 #pragma once
 
@@ -131,13 +129,11 @@ void PmjBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 }
 /// @endcond
 
-/**
- * @brief Blue noise variant of pmj sampler.
- * @details Same as oqmc::PmjSampler, with additional spatial temporal blue
- * noise dithering between pixels, with progressive pixel sampling support.
- *
- * @ingroup samplers
- */
+/// Blue noise variant of pmj sampler.
+/// Same as oqmc::PmjSampler, with additional spatial temporal blue noise
+/// dithering between pixels, with progressive pixel sampling support.
+///
+/// @ingroup samplers
 using PmjBnSampler = SamplerInterface<PmjBnImpl>;
 
 } // namespace oqmc
