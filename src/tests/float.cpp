@@ -33,6 +33,7 @@ TEST(FloatTest, Maximum)
 
 TEST(FloatTest, HalfValue)
 {
+	// Note that due to floating point rounding, this rounds up to 0.5 value.
 	EXPECT_EQ(oqmc::uintToFloat(UINT32_MAX / 2), 0.5f);
 }
 
