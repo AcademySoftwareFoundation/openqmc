@@ -5,35 +5,42 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <cstdint>
 
 namespace
 {
 
-TEST(FloatTest, OneOverUintMax)
+TEST(FloatTest, BitsToFloat)
 {
-	EXPECT_EQ(oqmc::floatOneOverUintMax, 1.0f / static_cast<float>(UINT32_MAX));
+	EXPECT_EQ(oqmc::bitsToFloat(0u), +0.0f);
+	EXPECT_EQ(oqmc::bitsToFloat(1u << 31), -0.0f);
+	EXPECT_EQ(oqmc::bitsToFloat(1u), std::nextafterf(0.0f, 1.0f));
+	EXPECT_EQ(oqmc::bitsToFloat(0x7F << 23), 1.0f);
 }
 
-TEST(FloatTest, OneMinusEpsilon)
+TEST(FloatTest, CountLeadingZeros)
 {
-	EXPECT_EQ(oqmc::floatOneMinusEpsilon, std::nextafter(1.0f, 0.0f));
+	EXPECT_EQ(oqmc::countLeadingZeros(1u), 31);
+	EXPECT_EQ(oqmc::countLeadingZeros(UINT32_MAX), 0);
+	EXPECT_EQ(oqmc::countLeadingZeros(1u << 31 >> 7 | 1u), 7);
 }
 
 TEST(FloatTest, Minimum)
 {
 	EXPECT_EQ(oqmc::uintToFloat(0u), 0.0f);
 	EXPECT_GT(oqmc::uintToFloat(1u), 0.0f);
+	EXPECT_LT(oqmc::uintToFloat(1u), oqmc::uintToFloat(2u));
 }
 
 TEST(FloatTest, Maximum)
 {
-	EXPECT_EQ(oqmc::uintToFloat(UINT32_MAX), oqmc::floatOneMinusEpsilon);
+	EXPECT_EQ(oqmc::uintToFloat(UINT32_MAX), std::nextafterf(1.0f, 0.0f));
 }
 
 TEST(FloatTest, HalfValue)
 {
-	EXPECT_EQ(oqmc::uintToFloat(UINT32_MAX / 2), 0.5f);
+	EXPECT_EQ(oqmc::uintToFloat(UINT32_MAX / 2 + 1), 0.5f);
 }
 
 TEST(FloatTest, Monotonic)
