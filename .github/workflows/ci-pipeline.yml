@@ -11,7 +11,7 @@ jobs:
     name: Check formatting
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: pip install ruff==0.1.6
       - run: scripts/check-format.sh
 
@@ -19,7 +19,7 @@ jobs:
     name: Check static analysis
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: pip install ruff==0.1.6
       - run: cmake --preset unix
       - run: scripts/check-lint.sh
@@ -28,7 +28,7 @@ jobs:
     name: Check documentation
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install doxygen graphviz
       - run: scripts/check-documentation.sh
 
@@ -40,12 +40,12 @@ jobs:
       - check-documentation
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
       - run: cmake --build --preset base --target install
 
       # Upload installation for example-config
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with: {name: install, path: "install"}
 
   example-config:
@@ -53,10 +53,10 @@ jobs:
     needs: install
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Download installation
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with: {name: install, path: "install"}
 
       - run: cmake -S cmake/examples/config -B build -D CMAKE_INSTALL_PREFIX=install
@@ -68,7 +68,7 @@ jobs:
     needs: install
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake -S cmake/examples/submodule -B build
       - run: cmake --build build
       - run: ./build/example-submodule
@@ -78,7 +78,7 @@ jobs:
     needs: install
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake -S cmake/examples/include -B build
       - run: cmake --build build
       - run: ./build/example-include
@@ -94,7 +94,7 @@ jobs:
         build: [Release, Debug]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset unix --target tests
       - run: ctest --preset unix
@@ -125,14 +125,14 @@ jobs:
           - {os: self-hosted, preset: unix, save: true}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: cmake --preset ${{ matrix.preset }} -D OPENQMC_ARCH_TYPE=${{ matrix.arch }} -D CMAKE_BUILD_TYPE=${{ matrix.build }}
       - run: cmake --build --preset ${{ matrix.preset }}
       - run: tar -czvf build.tar.gz build
         if: ${{ matrix.save }}
 
       # Upload tools build for test-generate
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with: {name: "${{ matrix.build }}-${{ matrix.arch }}", path: build.tar.gz}
         if: ${{ matrix.save }}
 
@@ -145,14 +145,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       # Download tools build
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with: {name: Release-Scalar}
 
       - run: tar -xzvf build.tar.gz
       - run: ./build/src/tools/cli/generate ${{ matrix.sampler }} > data
 
       # Upload sample data for test-generate
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with: {name: "${{ matrix.sampler }}", path: data}
 
   test-generate:
@@ -173,11 +173,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       # Download tools build
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with: {name: "${{ matrix.build }}-${{ matrix.arch }}"}
 
       # Download sample data
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with: {name: "${{ matrix.sampler }}"}
 
       - run: tar -xzvf build.tar.gz
