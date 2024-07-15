@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Pmj sampler implementation.
- */
+/// @file
+/// @details Pmj sampler implementation.
 
 #pragma once
 
@@ -105,25 +103,22 @@ void PmjImpl::drawRnd(std::uint32_t rnd[Size]) const
 }
 /// @endcond
 
-/**
- * @brief Low discrepancy pmj sampler.
- * @details The implementation uses the stochastic method described by Helmer
- * et la. in 'Stochastic Generation of (t, s) Sample Sequences' to efficiently
- * construct a progressive multi-jittered (0,2) sequence. The first pair of
- * dimensions in a domain have the same intergration properties as the Sobol
- * implementation. However as the sequence doesn't extend to more than two
- * dimensions, the second pair is randomised relative to the first in a single
- * domain.
- *
- * This sampler pre-computes a base 4D pattern for all sample indices during
- * the cache initialisation. Permuted index values are then looked up from
- * memory at runtime, before being XOR scrambled. This amortises the cost of
- * initialisation. The rate of integration is very high, especially for the
- * first and second pairs of dimensions. You may however not want to use this
- * implementation if memory space or access is a concern.
- *
- * @ingroup samplers
- */
+/// Low discrepancy pmj sampler.
+/// The implementation uses the stochastic method described by Helmer et la. in
+/// 'Stochastic Generation of (t, s) Sample Sequences' to efficiently construct
+/// a progressive multi-jittered (0,2) sequence. The first pair of dimensions in
+/// a domain have the same intergration properties as the Sobol implementation.
+/// However as the sequence doesn't extend to more than two dimensions, the
+/// second pair is randomised relative to the first in a single domain.
+///
+/// This sampler pre-computes a base 4D pattern for all sample indices during
+/// the cache initialisation. Permuted index values are then looked up from
+/// memory at runtime, before being XOR scrambled. This amortises the cost of
+/// initialisation. The rate of integration is very high, especially for the
+/// first and second pairs of dimensions. You may however not want to use this
+/// implementation if memory space or access is a concern.
+///
+/// @ingroup samplers
 using PmjSampler = SamplerInterface<PmjImpl>;
 
 } // namespace oqmc

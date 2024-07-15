@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Lattice sampler implementation.
- */
+/// @file
+/// @details Lattice sampler implementation.
 
 #pragma once
 
@@ -94,21 +92,19 @@ void LatticeImpl::drawRnd(std::uint32_t rnd[Size]) const
 }
 /// @endcond
 
-/**
- * @brief Rank one lattice sampler.
- * @details The implementation uses the generator vector from Hickernell et
- * al. in 'Weighted compound integration rules with higher order convergence
- * for all N' to construct a 4D lattice. This is then made into a progressive
- * sequence using a scalar based on a radical inversion of the sample index.
- * Randomisation uses toroidal shifts.
- *
- * This sampler has no cache initialisation cost, it generates all samples on
- * the fly without touching memory. Runtime performance is also high with a
- * relatively low computation cost for a single draw sample call. However the
- * rate of integration per pixel can be lower when compared to other samplers.
- *
- * @ingroup samplers
- */
+/// Rank one lattice sampler.
+/// The implementation uses the generator vector from Hickernell et al. in
+/// 'Weighted compound integration rules with higher order convergence for all
+/// N' to construct a 4D lattice. This is then made into a progressive sequence
+/// using a scalar based on a radical inversion of the sample index.
+/// Randomisation uses toroidal shifts.
+///
+/// This sampler has no cache initialisation cost, it generates all samples on
+/// the fly without touching memory. Runtime performance is also high with a
+/// relatively low computation cost for a single draw sample call. However the
+/// rate of integration per pixel can be lower when compared to other samplers.
+///
+/// @ingroup samplers
 using LatticeSampler = SamplerInterface<LatticeImpl>;
 
 } // namespace oqmc

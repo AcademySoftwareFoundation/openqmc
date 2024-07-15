@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Sampler state implementation.
- */
+/// @file
+/// @details Sampler state implementation.
 
 #pragma once
 
@@ -18,15 +16,13 @@
 namespace oqmc
 {
 
-/**
- * @brief Generic sampler state type.
- * @details This type is used to represent the state of higher level sampler
- * implementations. The size of the type is carefully handled to make sure it is
- * appropriate to pass-by-value. This allows for efficient functional style use
- * of the higher level API, an important requirement of the API design. This
- * type also provides functionality to mutate the state when building new
- * domains, along with the computation of generic PRNG values.
- */
+/// Generic sampler state type.
+/// This type is used to represent the state of higher level sampler
+/// implementations. The size of the type is carefully handled to make sure it
+/// is appropriate to pass-by-value. This allows for efficient functional style
+/// use of the higher level API, an important requirement of the API design.
+/// This type also provides functionality to mutate the state when building new
+/// domains, along with the computation of generic PRNG values.
 struct State64Bit
 {
 	static constexpr auto maxIndexBitSize = 16;   ///< 2^16 index upper limit.
@@ -38,35 +34,29 @@ struct State64Bit
 	static_assert(spatialEncodeBitSizeX == spatialEncodeBitSizeY,
 	              "Encoding must have equal resolution in x and y");
 
-	/**
-	 * @brief Construct an invalid object.
-	 * @details Create a placeholder object to allocate containers, etc. The
-	 * resulting object is invalid, and you should initialise it by replacing
-	 * the object with another from a parametrised constructor.
-	 */
+	/// Construct an invalid object.
+	/// Create a placeholder object to allocate containers, etc. The resulting
+	/// object is invalid, and you should initialise it by replacing the object
+	/// with another from a parametrised constructor.
 	/*AUTO_DEFINED*/ State64Bit() = default;
 
-	/**
-	 * @brief Parametrised pixel constructor.
-	 * @details Create an object based on the pixel, frame and sample indices.
-	 * Once constructed the state object is valid and ready to use. Pixels are
-	 * correlated by default, use pixelDecorrelate() to decorrelate pixels.
-	 *
-	 * @param [in] x Pixel coordinate on the x axis.
-	 * @param [in] y Pixel coordinate on the y axis.
-	 * @param [in] frame Time index value.
-	 * @param [in] index Sample index. Must be positive.
-	 */
+	/// Parametrised pixel constructor.
+	/// Create an object based on the pixel, frame and sample indices. Once
+	/// constructed the state object is valid and ready to use. Pixels are
+	/// correlated by default, use pixelDecorrelate() to decorrelate pixels.
+	///
+	/// @param [in] x Pixel coordinate on the x axis.
+	/// @param [in] y Pixel coordinate on the y axis.
+	/// @param [in] frame Time index value.
+	/// @param [in] index Sample index. Must be positive.
 	OQMC_HOST_DEVICE State64Bit(int x, int y, int frame, int index);
 
-	/**
-	 * @brief Decorrelate state between pixels.
-	 * @details Using the pixelId, randomise the object state so that
-	 * correlation between pixels is removed. You may want to call this after
-	 * initial construction of which leaves pixels correlated as default.
-	 *
-	 * @return Decorrelated state object.
-	 */
+	/// Decorrelate state between pixels.
+	/// Using the pixelId, randomise the object state so that correlation
+	/// between pixels is removed. You may want to call this after initial
+	/// construction of which leaves pixels correlated as default.
+	///
+	/// @return Decorrelated state object.
 	OQMC_HOST_DEVICE State64Bit pixelDecorrelate() const;
 
 	/// @copydoc oqmc::SamplerInterface::newDomain()
@@ -88,30 +78,26 @@ struct State64Bit
 	std::uint16_t pixelId;   ///< Identifier for pixel position.
 };
 
-/**
- * @brief Compute 16-bit key from index.
- * @details Given a sample index, compute a key value based on the top 16-bits
- * of the integer range. Use computeIndexId() to compute the corrosponding new
- * index to pair with the key.
- *
- * @param [in] index Sample index.
- * @return 16-bit Key value.
- */
+/// Compute 16-bit key from index.
+/// Given a sample index, compute a key value based on the top 16-bits of the
+/// integer range. Use computeIndexId() to compute the corrosponding new index
+/// to pair with the key.
+///
+/// @param [in] index Sample index.
+/// @return 16-bit Key value.
 OQMC_HOST_DEVICE constexpr int computeIndexKey(int index)
 {
 	constexpr auto offset = State64Bit::maxIndexBitSize;
 	return index >> offset;
 }
 
-/**
- * @brief Compute new 16-bit index from index.
- * @details Given a sample index, compute a new index value based on the bottom
- * 16-bits of the integer range. Use computeIndexKey() to compute the
- * corrosponding key value to pair with the new index.
- *
- * @param [in] index Sample index.
- * @return New 16-bit index.
- */
+/// Compute new 16-bit index from index.
+/// Given a sample index, compute a new index value based on the bottom 16-bits
+/// of the integer range. Use computeIndexKey() to compute the corrosponding key
+/// value to pair with the new index.
+///
+/// @param [in] index Sample index.
+/// @return New 16-bit index.
 OQMC_HOST_DEVICE constexpr int computeIndexId(int index)
 {
 	constexpr auto mask = State64Bit::maxIndexSize - 1;
@@ -179,6 +165,8 @@ inline State64Bit State64Bit::newDomainSplit(int key, int size, int index) const
 template <int Size>
 void State64Bit::drawRnd(std::uint32_t rnd[Size]) const
 {
+	static_assert(Size >= 0, "Draw size greater or equal to zero.");
+
 	auto rngState = patternId + sampleId;
 
 	for(int i = 0; i < Size; ++i)

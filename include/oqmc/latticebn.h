@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
-/**
- * @file
- * @details Latticebn sampler implementation.
- */
+/// @file
+/// @details Latticebn sampler implementation.
 
 #pragma once
 
@@ -128,13 +126,11 @@ void LatticeBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 }
 /// @endcond
 
-/**
- * @brief Blue noise variant of lattice sampler.
- * @details Same as oqmc::LatticeSampler, with additional spatial temporal blue
- * noise dithering between pixels, with progressive pixel sampling support.
- *
- * @ingroup samplers
- */
+/// Blue noise variant of lattice sampler.
+/// Same as oqmc::LatticeSampler, with additional spatial temporal blue noise
+/// dithering between pixels, with progressive pixel sampling support.
+///
+/// @ingroup samplers
 using LatticeBnSampler = SamplerInterface<LatticeBnImpl>;
 
 } // namespace oqmc

@@ -296,253 +296,221 @@ detail, as it allows for implementations to be passed-by-value without dynamic
 memory allocation, while also allowing inlining for zero-cost abstraction.
 
 ```cpp
-/**
- * @brief Required allocation size of the cache.
- * @details Prior to construction of a sampler object, a cache needs to be
- * allocated and initialised for any given sampler type. This variable is
- * the minimum required size in bytes of that allocation. The allocation
- * itself is performed and owned by the caller. Responsibility for the
- * de-allocation is also that of the caller.
- */
+/// Required allocation size of the cache.
+/// Prior to construction of a sampler object, a cache needs to be allocated
+/// and initialised for any given sampler type. This variable is the minimum
+/// required size in bytes of that allocation. The allocation itself is
+/// performed and owned by the caller. Responsibility for the de-allocation
+/// is also that of the caller.
 static std::size_t oqmc::Sampler::cacheSize;
 ```
 
 ```cpp
-/**
- * @brief Initialise the cache allocation.
- * @details Prior to construction of a sampler object, a cache needs to be
- * allocated and initialised for any given sampler type. This function will
- * initialise that allocation. Once the cache is initialised it may be used
- * to construct a sampler object, or copied to a new address.
- *
- * Care must be taken to make sure the memory address is accessible at the
- * point of construction. On the CPU this is trivial. But when constructing
- * a sampler object on the GPU, the caller is expected to either use unified
- * memory for the allocation, or manually copy the memory from the host to
- * the device after the cache has been initialised.
- *
- * A single cache (for each sampler type) is expected to be constructed only
- * once for the duration of a calling process. This single cache can be used
- * to construct many sampler objects.
- *
- * @param [in, out] cache Memory address of the cache allocation.
- *
- * @pre Memory for the cache must be allocated prior. The minimum size of
- * the allocation can be retrieved using the `cacheSize` variable above.
- *
- * @post Memory for the cache must be de-allocated after all instances of
- * the sampler object have been destroyed.
- */
+/// Initialise the cache allocation.
+/// Prior to construction of a sampler object, a cache needs to be allocated
+/// and initialised for any given sampler type. This function will
+/// initialise that allocation. Once the cache is initialised it may be used
+/// to construct a sampler object, or copied to a new address.
+///
+/// Care must be taken to make sure the memory address is accessible at the
+/// point of construction. On the CPU this is trivial. But when constructing
+/// a sampler object on the GPU, the caller is expected to either use
+/// unified memory for the allocation, or manually copy the memory from the
+/// host to the device after the cache has been initialised.
+///
+/// A single cache (for each sampler type) is expected to be constructed
+/// only once for the duration of a calling process. This single cache can
+/// be used to construct many sampler objects.
+///
+/// @param [in, out] cache Memory address of the cache allocation.
+/// @pre Memory for the cache must be allocated prior. The minimum size of
+/// the allocation can be retrieved using the `cacheSize` variable above.
+/// @post Memory for the cache must be de-allocated after all instances of
+/// the sampler object have been destroyed.
 static void oqmc::Sampler::initialiseCache(void* cache);
 ```
 
 ```cpp
-/**
- * @brief Parametrised pixel constructor.
- * @details Create a sampler object based on the pixel, frame and sample
- * indices. This also requires a pre-allocated and initialised cache. Once
- * constructed the sampler object is valid and ready for use.
- *
- * For each pixel this constructor is expected to be called multiple times,
- * once for each index. Pixels might have a varying number of indicies when
- * adaptive sampling.
- *
- * @param [in] x Pixel coordinate on the x axis.
- * @param [in] y Pixel coordinate on the y axis.
- * @param [in] frame Time index value.
- * @param [in] index Sample index. Must be positive.
- * @param [in] cache Allocated and initialised cache.
- *
- * @pre Cache has been allocated in memory accessible to the device calling
- * this constructor, and has also been initialised.
- */
+/// Parametrised pixel constructor.
+/// Create an object based on the pixel, frame and sample indices. This also
+/// requires a pre-allocated and initialised cache. Once constructed the
+/// object is valid and ready for use.
+///
+/// For each pixel this constructor is expected to be called multiple times,
+/// once for each index. Pixels might have a varying number of indicies when
+/// adaptive sampling.
+///
+/// @param [in] x Pixel coordinate on the x axis.
+/// @param [in] y Pixel coordinate on the y axis.
+/// @param [in] frame Time index value.
+/// @param [in] index Sample index. Must be positive.
+/// @param [in] cache Allocated and initialised cache.
+/// @pre Cache has been allocated in memory accessible to the device calling
+/// this constructor, and has also been initialised.
 oqmc::Sampler::Sampler(int x, int y, int frame, int index, const void* cache);
 ```
 
 ```cpp
-/**
- * @brief Derive an object in a new domain.
- * @details The function derives a mutated copy of the current sampler
- * object. This new object is called a domain. Each domain produces an
- * independent 4 dimensional pattern. Calling the draw* member functions
- * below on the new child domain will produce a different value to that of
- * the current parent domain.
- *
- * N child domains can be derived from a single parent domain with the use
- * of the key argument. Keys must have at least one bit difference, but can
- * be a simple incrementing sequence. A single child domain can itself
- * derive N child domains. This process results in a domain tree.
- *
- * The calling code can use up to 4 dimensions from each domain (these are
- * typically of the highest quality), joining them together to form an N
- * dimensional pattern. This technique is called padding.
- *
- * @param [in] key Index key of next domain.
- * @return Child domain based on the current object state and key.
- */
+/// Derive an object in a new domain.
+/// The function derives a mutated copy of the current sampler object. This
+/// new object is called a domain. Each domain produces an independent 4
+/// dimensional pattern. Calling the draw* member functions below on the new
+/// child domain will produce a different value to that of the current
+/// parent domain.
+///
+/// N child domains can be derived from a single parent domain with the use
+/// of the key argument. Keys must have at least one bit difference, but can
+/// be a simple incrementing sequence. A single child domain can itself
+/// derive N child domains. This process results in a domain tree.
+///
+/// The calling code can use up to 4 dimensions from each domain (these are
+/// typically of the highest quality), joining them together to form an N
+/// dimensional pattern. This technique is called padding.
+///
+/// @param [in] key Index key of next domain.
+/// @return Child domain based on the current object state and key.
 oqmc::Sampler oqmc::Sampler::newDomain(int key) const;
 ```
 
 ```cpp
-/**
- * @brief Derive an object in a new domain for a local distribution.
- * @details Like newDomain, this function derives a mutated copy of the
- * current sampler object. The difference is it decorrelates the pattern
- * with the sample index, allowing for sample splitting with a non-constant
- * or unknown multiplier.
- *
- * The result from taking N indexed domains with this function will be a
- * locally well distributed sub-pattern. This sub-pattern will be of lower
- * quality when combined with the sub-patterns of other samples. That is
- * because the correlation between the sub-patterns globally is lost.
- *
- * If a mutliplier is known and constant then newDomainSplit will produce
- * better quality sample points and should be used instead. This is because
- * newDomainSplit will preserved correlation between sub-patterns from other
- * samples.
- *
- * Calling code should use a constant key for any given domain while then
- * incrementing the index value N times to increase the sampling rate by N
- * for that given domain. The function will be called N times, once for each
- * unique index.
- *
- * @param [in] key Index key of next domain.
- * @param [in] index Sample index of next domain. Must be positive.
- * @return Child domain based on the current object state and key.
- */
+/// Derive an object in a new domain for a local distribution.
+/// Like newDomain, this function derives a mutated copy of the current
+/// sampler object. The difference is it decorrelates the pattern with the
+/// sample index, allowing for sample splitting with a non-constant or
+/// unknown multiplier.
+///
+/// The result from taking N indexed domains with this function will be a
+/// locally well distributed sub-pattern. This sub-pattern will be of lower
+/// quality when combined with the sub-patterns of other samples. That is
+/// because the correlation between the sub-patterns globally is lost.
+///
+/// If a mutliplier is known and constant then newDomainSplit will produce
+/// better quality sample points and should be used instead. This is because
+/// newDomainSplit will preserved correlation between sub-patterns from
+/// other samples.
+///
+/// Calling code should use a constant key for any given domain while then
+/// incrementing the index value N times to increase the sampling rate by N
+/// for that given domain. The function will be called N times, once for
+/// each unique index.
+///
+/// @param [in] key Index key of next domain.
+/// @param [in] index Sample index of next domain. Must be positive.
+/// @return Child domain based on the current object state and key.
 oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key, int index) const;
 ```
 
 ```cpp
-/**
- * @brief Derive an object in a new domain for global splitting.
- * @details Like the other newDomain* functions, this function derives a
- * mutated copy of the current sampler object. The difference is it remaps
- * the sample index, allowing for sample splitting with a known and constant
- * multiplier.
- *
- * The result from taking N indexed domains with this function will be both
- * a locally and a gloablly well distributed sub-pattern. This sub-pattern
- * will of the highest quality due to being globally correlated with the
- * sub-patterns of other samples.
- *
- * If a mutliplier is non-constant or unknown then newDomainDistrib should
- * be used instead. This is because newDomainDistrib relaxes the constraints
- * in excahnge for a reduction in the global quality of the pattern.
- *
- * Calling code should use a constant key for any given domain while then
- * incrementing the index value N times to increase the sampling rate by N
- * for that given domain. The function will be called N times, once for each
- * unique index. N must be passed as 'size' and remain constant.
- *
- * @param [in] key Index key of next domain.
- * @param [in] size Sample index multiplier. Must greater than zero.
- * @param [in] index Sample index of next domain. Must be positive.
- * @return Child domain based on the current object state, key and size.
- */
+/// Derive an object in a new domain for global splitting.
+/// Like the other newDomain* functions, this function derives a mutated
+/// copy of the current sampler object. The difference is it remaps the
+/// sample index, allowing for sample splitting with a known and constant
+/// multiplier.
+///
+/// The result from taking N indexed domains with this function will be both
+/// a locally and a gloablly well distributed sub-pattern. This sub-pattern
+/// will of the highest quality due to being globally correlated with the
+/// sub-patterns of other samples.
+///
+/// If a mutliplier is non-constant or unknown then newDomainDistrib should
+/// be used instead. This is because newDomainDistrib relaxes the
+/// constraints in excahnge for a reduction in the global quality of the
+/// pattern.
+///
+/// Calling code should use a constant key for any given domain while then
+/// incrementing the index value N times to increase the sampling rate by N
+/// for that given domain. The function will be called N times, once for
+/// each unique index. N must be passed as 'size' and remain constant.
+///
+/// @param [in] key Index key of next domain.
+/// @param [in] size Sample index multiplier. Must greater than zero.
+/// @param [in] index Sample index of next domain. Must be positive.
+/// @return Child domain based on the current object state, key and size.
 oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
 ```
 
 ```cpp
-/**
- * @brief Draw integer sample values from domain.
- * @details This can compute sample values with up to 4 dimensions for the
- * given domain. The operation does not change the state of the object, and
- * for a single domain and index, the result of this function will always be
- * the same. Output values are uniformly distributed integers within the
- * range of [0, 2^32).
- *
- * These values are of high quality and should be handled with care as to
- * not introduce bias into an estimate. For low quality, but fast and safe
- * random numbers, use the drawRnd member functions below.
- *
- * @tparam Size Number of dimensions to draw. Must be within [1, 4].
- *
- * @param [out] sample Output array to store sample values.
- */
+/// Draw integer sample values from domain.
+/// This can compute sample values with up to 4 dimensions for the given
+/// domain. The operation does not change the state of the object, and for a
+/// single domain and index, the result of this function will always be the
+/// same. Output values are uniformly distributed integers within the range
+/// of [0, 2^32).
+///
+/// These values are of high quality and should be handled with care as to
+/// not introduce bias into an estimate. For low quality, but fast and safe
+/// random numbers, use the drawRnd member functions below.
+///
+/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
+/// @param [out] sample Output array to store sample values.
 template <int Size>
 void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
 ```
 
 ```cpp
-/**
- * @brief Draw ranged integer sample values from domain.
- * @details This function wraps the integer variant of drawSample above. But
- * transforms the output values into uniformly distributed integers within
- * the range of [0, range).
- *
- * @tparam Size Number of dimensions to draw. Must be within [1, 4].
- *
- * @param [in] range Exclusive end of range. Greater than zero.
- * @param [out] sample Output array to store sample values.
- */
+/// Draw ranged integer sample values from domain.
+/// This function wraps the integer variant of drawSample above. But
+/// transforms the output values into uniformly distributed integers within
+/// the range of [0, range).
+///
+/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
+/// @param [in] range Exclusive end of range. Greater than zero.
+/// @param [out] sample Output array to store sample values.
 template <int Size>
 void oqmc::Sampler::drawSample(std::uint32_t range, std::uint32_t sample[Size]) const;
 ```
 
 ```cpp
-/**
- * @brief Draw floating point sample values from domain.
- * @details This function wraps the integer variant of drawSample above. But
- * transforms the output values into uniformly distributed floats within the
- * range of [0, 1).
- *
- * @tparam Size Number of dimensions to draw. Must be within [1, 4].
- *
- * @param [out] sample Output array to store sample values.
- */
+/// Draw floating point sample values from domain.
+/// This function wraps the integer variant of drawSample above. But
+/// transforms the output values into uniformly distributed floats within
+/// the range of [0, 1).
+///
+/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
+/// @param [out] sample Output array to store sample values.
 template <int Size>
 void oqmc::Sampler::drawSample(float sample[Size]) const;
 ```
 
 ```cpp
-/**
- * @brief Draw integer pseudo random values from domain.
- * @details This can compute rnd values with up to 4 dimensions for the
- * given domain. The operation does not change the state of the object, and
- * for a single domain and index, the result of this function will always be
- * the same. Output values are uniformly distributed integers within the
- * range of [0, 2^32).
- *
- * These values are of low quality but are fast to compute and have little
- * risk of biasing an estimate. For higher quality samples, use the
- * drawSample member functions above.
- *
- * @tparam Size Number of dimensions to draw. Must be within [1, 4].
- *
- * @param [out] rnd Output array to store rnd values.
- */
+/// Draw integer pseudo random values from domain.
+/// This can compute rnd values with up to 4 dimensions for the given
+/// domain. The operation does not change the state of the object, and for a
+/// single domain and index, the result of this function will always be the
+/// same. Output values are uniformly distributed integers within the range
+/// of [0, 2^32).
+///
+/// These values are of low quality but are fast to compute and have little
+/// risk of biasing an estimate. For higher quality samples, use the
+/// drawSample member functions above.
+///
+/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
+/// @param [out] rnd Output array to store rnd values.
 template <int Size>
 void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
 ```
 
 ```cpp
-/**
- * @brief Draw ranged integer pseudo random values from domain.
- * @details This function wraps the integer variant of drawRnd above. But
- * transforms the output values into uniformly distributed integers within
- * the range of [0, range).
- *
- * @tparam Size Number of dimensions to draw. Must be within [1, 4].
- *
- * @param [in] range Exclusive end of range. Greater than zero.
- * @param [out] rnd Output array to store rnd values.
- */
+/// Draw ranged integer pseudo random values from domain.
+/// This function wraps the integer variant of drawRnd above. But transforms
+/// the output values into uniformly distributed integers within the range
+/// of [0, range).
+///
+/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
+/// @param [in] range Exclusive end of range. Greater than zero.
+/// @param [out] rnd Output array to store rnd values.
 template <int Size>
 void oqmc::Sampler::drawRnd(std::uint32_t range, std::uint32_t rnd[Size]) const;
 ```
 
 ```cpp
-/**
- * @brief Draw floating point pseudo random values from domain.
- * @details This function wraps the integer variant of drawRnd above. But
- * transforms the output values into uniformly distributed floats within the
- * range of [0, 1).
- *
- * @tparam Size Number of dimensions to draw. Must be within [1, 4].
- *
- * @param [out] rnd Output array to store rnd values.
- */
+/// Draw floating point pseudo random values from domain.
+/// This function wraps the integer variant of drawRnd above. But transforms
+/// the output values into uniformly distributed floats within the range of
+/// [0, 1).
+///
+/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
+/// @param [out] rnd Output array to store rnd values.
 template <int Size>
 void oqmc::Sampler::drawRnd(float rnd[Size]) const;
 ```
