@@ -832,7 +832,7 @@ directLighting(const Session& session, Method method, int numLightSamples,
 				root = directDomain.newDomainDistrib(i, j);
 				break;
 			case Method::Chain:
-				root = directDomain.newDomain(i).newDomain(j);
+				root = directDomain.newDomainChain(i, j);
 				break;
 			};
 

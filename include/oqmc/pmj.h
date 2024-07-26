@@ -38,8 +38,8 @@ class PmjImpl
 	                         const void* cache);
 
 	OQMC_HOST_DEVICE PmjImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE PmjImpl newDomainDistrib(int key, int index) const;
 	OQMC_HOST_DEVICE PmjImpl newDomainSplit(int key, int size, int index) const;
+	OQMC_HOST_DEVICE PmjImpl newDomainDistrib(int key, int index) const;
 
 	template <int Size>
 	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
@@ -79,14 +79,14 @@ inline PmjImpl PmjImpl::newDomain(int key) const
 	return {state.newDomain(key), cache};
 }
 
-inline PmjImpl PmjImpl::newDomainDistrib(int key, int index) const
-{
-	return {state.newDomainDistrib(key, index), cache};
-}
-
 inline PmjImpl PmjImpl::newDomainSplit(int key, int size, int index) const
 {
 	return {state.newDomainSplit(key, size, index), cache};
+}
+
+inline PmjImpl PmjImpl::newDomainDistrib(int key, int index) const
+{
+	return {state.newDomainDistrib(key, index), cache};
 }
 
 template <int Size>
