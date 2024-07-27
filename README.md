@@ -95,8 +95,8 @@ for(int x = 0; x < resolution; ++x)
 			domain.drawSample<2>(sample);
 
 			// 7. Offset the point into the pixel.
-			const auto xOffset = sample[0] + x;
-			const auto yOffset = sample[1] + y;
+			const auto xOffset = x + sample[0];
+			const auto yOffset = y + sample[1];
 
 			// 8. Add value to the pixel if within disk.
 			if(xOffset * xOffset + yOffset * yOffset < resolution * resolution)
@@ -351,7 +351,7 @@ oqmc::Sampler::Sampler(int x, int y, int frame, int index, const void* cache);
 ```
 
 ```cpp
-/// Derive an object in a new domain.
+/// Derive a sampler object as a new domain.
 /// The function derives a mutated copy of the current sampler object. This
 /// new object is called a domain. Each domain produces an independent 4
 /// dimensional pattern. Calling the draw* member functions below on the new
@@ -373,21 +373,48 @@ oqmc::Sampler oqmc::Sampler::newDomain(int key) const;
 ```
 
 ```cpp
-/// Derive an object in a new domain for a local distribution.
+/// Derive a split sampler object with a local and a global distribution.
 /// Like newDomain, this function derives a mutated copy of the current
-/// sampler object. The difference is it decorrelates the pattern with the
-/// sample index, allowing for sample splitting with a non-constant or
-/// unknown multiplier.
+/// sampler object. However, using a technique called splitting, this
+/// domain can have a higher sample rate based on a fixed multiplier.
+///
+/// The result from taking N indexed domains with this function will be both
+/// a locally and a gloablly well distributed sub-pattern. This sub-pattern
+/// will of the highest quality due to being globally correlated with the
+/// sub-patterns of other samples.
+///
+/// If a mutliplier is adaptive (non-constant or unknown) then either the
+/// newDomainDistrib or newDomainChain functions should be used instead.
+/// These methods relax the constraint for a fixed multiplier, allowing for
+/// adaptive multilpiers in excahnge for a reduction in the quality
+///
+/// Calling code should use a constant key for any given domain while then
+/// incrementing the index value N times to increase the sampling rate by N
+/// for that given domain. The function will be called N times, once for
+/// each unique index. N must be passed as 'size' and remain constant.
+///
+/// @param [in] key Index key of next domain.
+/// @param [in] size Sample index multiplier. Must greater than zero.
+/// @param [in] index Sample index of next domain. Must be positive.
+/// @return Child domain based on the current object state, key and size.
+oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
+```
+
+```cpp
+/// Derive a split sampler object with a local distribution.
+/// Like newDomain, this function derives a mutated copy of the current
+/// sampler object. However, using a technique called splitting, this
+/// domain can have a higher sample rate based on an adaptive multiplier.
 ///
 /// The result from taking N indexed domains with this function will be a
 /// locally well distributed sub-pattern. This sub-pattern will be of lower
 /// quality when combined with the sub-patterns of other samples. That is
 /// because the correlation between the sub-patterns globally is lost.
 ///
-/// If a mutliplier is known and constant then newDomainSplit will produce
-/// better quality sample points and should be used instead. This is because
-/// newDomainSplit will preserved correlation between sub-patterns from
-/// other samples.
+/// If a mutliplier is fixed (constant and known) then the newDomainSplit
+/// function will produce better quality sample points and should be used
+/// instead. This is because newDomainSplit will preserved correlation
+/// between sub-patterns from other samples.
 ///
 /// Calling code should use a constant key for any given domain while then
 /// incrementing the index value N times to increase the sampling rate by N
@@ -401,32 +428,30 @@ oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key, int index) const;
 ```
 
 ```cpp
-/// Derive an object in a new domain for global splitting.
-/// Like the other newDomain* functions, this function derives a mutated
-/// copy of the current sampler object. The difference is it remaps the
-/// sample index, allowing for sample splitting with a known and constant
-/// multiplier.
+/// Derive a split sampler object with a global distribution.
+/// Like newDomain, this function derives a mutated copy of the current
+/// sampler object. However, using a technique called splitting, this
+/// domain can have a higher sample rate based on an adaptive multiplier.
 ///
-/// The result from taking N indexed domains with this function will be both
-/// a locally and a gloablly well distributed sub-pattern. This sub-pattern
-/// will of the highest quality due to being globally correlated with the
-/// sub-patterns of other samples.
+/// The result from taking N indexed domains with this function will be a
+/// globally well distributed sub-pattern. This sub-pattern will be of lower
+/// quality when looking at the local correlation between different index
+/// values. But, each index will be correlated globally.
 ///
-/// If a mutliplier is non-constant or unknown then newDomainDistrib should
-/// be used instead. This is because newDomainDistrib relaxes the
-/// constraints in excahnge for a reduction in the global quality of the
-/// pattern.
+/// If a mutliplier is fixed (constant and known) then the newDomainSplit
+/// function will produce better quality sample points and should be used
+/// instead. This is because newDomainSplit will preserved correlation
+/// between local points from different index values.
 ///
 /// Calling code should use a constant key for any given domain while then
 /// incrementing the index value N times to increase the sampling rate by N
 /// for that given domain. The function will be called N times, once for
-/// each unique index. N must be passed as 'size' and remain constant.
+/// each unique index.
 ///
 /// @param [in] key Index key of next domain.
-/// @param [in] size Sample index multiplier. Must greater than zero.
 /// @param [in] index Sample index of next domain. Must be positive.
-/// @return Child domain based on the current object state, key and size.
-oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
+/// @return Child domain based on the current object state and key.
+oqmc::Sampler oqmc::Sampler::newDomainChain(int key, int index) const;
 ```
 
 ```cpp
@@ -1096,7 +1121,7 @@ Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
 	for(int i = 0; i < nLightSamples; ++i)
 	{
 		// Compute 'lightSample' by chaining the newDomain API.
-		const auto lightDomain = pixelDomain.newDomain(DomainKey::Light).newDomain(i);
+		const auto lightDomain = pixelDomain.newDomainChain(DomainKey::Light, i);
 		const auto lightSample = light.sample(lightDomain);
 
 		// Average the pixel estimates from each light sample.
@@ -1108,8 +1133,8 @@ Result estimatePixel(const oqmc::PmjBnSampler pixelDomain,
 ```
 
 This last example is similar to the distribution strategy. But here the caller
-uses the `newDomain` function, chaining and branching the domains on the index,
-instead of splitting. This technique is called the **chaining strategy**.
+uses the `newDomainChain` function, which is the equivalent of chaining two
+`newDomain` functions. This technique is called the **chaining strategy**.
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-7-light.png">
@@ -1121,6 +1146,12 @@ Here is the domain tree when using the chaining strategy. This new domain is
 correlated globally, but it is not locally. Each of the sample indices from the
 source pixel domain is free to branch at non-constant rate. The first branches
 into 2 domains, and the second into 3 domains, based on `nLightSamples`.
+
+Notice that the transformation of the light domain tree between the distribution
+and the chaining strategies is a transposition. And the optimal choice between
+both of these strategies will depend on the ratio between the global and the
+local sample rate multipliers. In this example the distribution strategy is
+optimal because the local sample rate multiplier is higher than the global.
 
 *So which strategy to choose?* Following are the results from each strategy.
 Numbers after each strategy indicate RMSE. As expected, the initial option of

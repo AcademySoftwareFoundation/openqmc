@@ -33,9 +33,9 @@ class LatticeImpl
 	                             const void* cache);
 
 	OQMC_HOST_DEVICE LatticeImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE LatticeImpl newDomainDistrib(int key, int index) const;
 	OQMC_HOST_DEVICE LatticeImpl newDomainSplit(int key, int size,
 	                                            int index) const;
+	OQMC_HOST_DEVICE LatticeImpl newDomainDistrib(int key, int index) const;
 
 	template <int Size>
 	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
@@ -68,15 +68,15 @@ inline LatticeImpl LatticeImpl::newDomain(int key) const
 	return {state.newDomain(key)};
 }
 
-inline LatticeImpl LatticeImpl::newDomainDistrib(int key, int index) const
-{
-	return {state.newDomainDistrib(key, index)};
-}
-
 inline LatticeImpl LatticeImpl::newDomainSplit(int key, int size,
                                                int index) const
 {
 	return {state.newDomainSplit(key, size, index)};
+}
+
+inline LatticeImpl LatticeImpl::newDomainDistrib(int key, int index) const
+{
+	return {state.newDomainDistrib(key, index)};
 }
 
 template <int Size>

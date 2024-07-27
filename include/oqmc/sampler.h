@@ -150,7 +150,7 @@ class SamplerInterface
 	/// the sampler object have been destroyed.
 	static void initialiseCache(void* cache);
 
-	/// Construct an invalid object.
+	/// Construct an invalid sampler object.
 	/// Create a placeholder object to allocate containers, etc. The resulting
 	/// object is invalid, and you should initialise it by replacing the object
 	/// with another from a parametrised constructor.
@@ -175,7 +175,7 @@ class SamplerInterface
 	OQMC_HOST_DEVICE SamplerInterface(int x, int y, int frame, int index,
 	                                  const void* cache);
 
-	/// Derive an object in a new domain.
+	/// Derive a sampler object as a new domain.
 	/// The function derives a mutated copy of the current sampler object. This
 	/// new object is called a domain. Each domain produces an independent 4
 	/// dimensional pattern. Calling the draw* member functions below on the new
@@ -195,48 +195,20 @@ class SamplerInterface
 	/// @return Child domain based on the current object state and key.
 	OQMC_HOST_DEVICE SamplerInterface newDomain(int key) const;
 
-	/// Derive an object in a new domain for a local distribution.
+	/// Derive a split sampler object with a local and a global distribution.
 	/// Like newDomain, this function derives a mutated copy of the current
-	/// sampler object. The difference is it decorrelates the pattern with the
-	/// sample index, allowing for sample splitting with a non-constant or
-	/// unknown multiplier.
-	///
-	/// The result from taking N indexed domains with this function will be a
-	/// locally well distributed sub-pattern. This sub-pattern will be of lower
-	/// quality when combined with the sub-patterns of other samples. That is
-	/// because the correlation between the sub-patterns globally is lost.
-	///
-	/// If a mutliplier is known and constant then newDomainSplit will produce
-	/// better quality sample points and should be used instead. This is because
-	/// newDomainSplit will preserved correlation between sub-patterns from
-	/// other samples.
-	///
-	/// Calling code should use a constant key for any given domain while then
-	/// incrementing the index value N times to increase the sampling rate by N
-	/// for that given domain. The function will be called N times, once for
-	/// each unique index.
-	///
-	/// @param [in] key Index key of next domain.
-	/// @param [in] index Sample index of next domain. Must be positive.
-	/// @return Child domain based on the current object state and key.
-	OQMC_HOST_DEVICE SamplerInterface newDomainDistrib(int key,
-	                                                   int index) const;
-
-	/// Derive an object in a new domain for global splitting.
-	/// Like the other newDomain* functions, this function derives a mutated
-	/// copy of the current sampler object. The difference is it remaps the
-	/// sample index, allowing for sample splitting with a known and constant
-	/// multiplier.
+	/// sampler object. However, using a technique called splitting, this
+	/// domain can have a higher sample rate based on a fixed multiplier.
 	///
 	/// The result from taking N indexed domains with this function will be both
 	/// a locally and a gloablly well distributed sub-pattern. This sub-pattern
 	/// will of the highest quality due to being globally correlated with the
 	/// sub-patterns of other samples.
 	///
-	/// If a mutliplier is non-constant or unknown then newDomainDistrib should
-	/// be used instead. This is because newDomainDistrib relaxes the
-	/// constraints in excahnge for a reduction in the global quality of the
-	/// pattern.
+	/// If a mutliplier is adaptive (non-constant or unknown) then either the
+	/// newDomainDistrib or newDomainChain functions should be used instead.
+	/// These methods relax the constraint for a fixed multiplier, allowing for
+	/// adaptive multilpiers in excahnge for a reduction in the quality
 	///
 	/// Calling code should use a constant key for any given domain while then
 	/// incrementing the index value N times to increase the sampling rate by N
@@ -249,6 +221,57 @@ class SamplerInterface
 	/// @return Child domain based on the current object state, key and size.
 	OQMC_HOST_DEVICE SamplerInterface newDomainSplit(int key, int size,
 	                                                 int index) const;
+
+	/// Derive a split sampler object with a local distribution.
+	/// Like newDomain, this function derives a mutated copy of the current
+	/// sampler object. However, using a technique called splitting, this
+	/// domain can have a higher sample rate based on an adaptive multiplier.
+	///
+	/// The result from taking N indexed domains with this function will be a
+	/// locally well distributed sub-pattern. This sub-pattern will be of lower
+	/// quality when combined with the sub-patterns of other samples. That is
+	/// because the correlation between the sub-patterns globally is lost.
+	///
+	/// If a mutliplier is fixed (constant and known) then the newDomainSplit
+	/// function will produce better quality sample points and should be used
+	/// instead. This is because newDomainSplit will preserved correlation
+	/// between sub-patterns from other samples.
+	///
+	/// Calling code should use a constant key for any given domain while then
+	/// incrementing the index value N times to increase the sampling rate by N
+	/// for that given domain. The function will be called N times, once for
+	/// each unique index.
+	///
+	/// @param [in] key Index key of next domain.
+	/// @param [in] index Sample index of next domain. Must be positive.
+	/// @return Child domain based on the current object state and key.
+	OQMC_HOST_DEVICE SamplerInterface newDomainDistrib(int key,
+	                                                   int index) const;
+
+	/// Derive a split sampler object with a global distribution.
+	/// Like newDomain, this function derives a mutated copy of the current
+	/// sampler object. However, using a technique called splitting, this
+	/// domain can have a higher sample rate based on an adaptive multiplier.
+	///
+	/// The result from taking N indexed domains with this function will be a
+	/// globally well distributed sub-pattern. This sub-pattern will be of lower
+	/// quality when looking at the local correlation between different index
+	/// values. But, each index will be correlated globally.
+	///
+	/// If a mutliplier is fixed (constant and known) then the newDomainSplit
+	/// function will produce better quality sample points and should be used
+	/// instead. This is because newDomainSplit will preserved correlation
+	/// between local points from different index values.
+	///
+	/// Calling code should use a constant key for any given domain while then
+	/// incrementing the index value N times to increase the sampling rate by N
+	/// for that given domain. The function will be called N times, once for
+	/// each unique index.
+	///
+	/// @param [in] key Index key of next domain.
+	/// @param [in] index Sample index of next domain. Must be positive.
+	/// @return Child domain based on the current object state and key.
+	OQMC_HOST_DEVICE SamplerInterface newDomainChain(int key, int index) const;
 
 	/// Draw integer sample values from domain.
 	/// This can compute sample values with up to 4 dimensions for the given
@@ -353,6 +376,16 @@ SamplerInterface<Impl> SamplerInterface<Impl>::newDomain(int key) const
 }
 
 template <typename Impl>
+SamplerInterface<Impl> SamplerInterface<Impl>::newDomainSplit(int key, int size,
+                                                              int index) const
+{
+	assert(size > 0);
+	assert(index >= 0);
+
+	return {impl.newDomainSplit(key, size, index)};
+}
+
+template <typename Impl>
 SamplerInterface<Impl> SamplerInterface<Impl>::newDomainDistrib(int key,
                                                                 int index) const
 {
@@ -362,13 +395,12 @@ SamplerInterface<Impl> SamplerInterface<Impl>::newDomainDistrib(int key,
 }
 
 template <typename Impl>
-SamplerInterface<Impl> SamplerInterface<Impl>::newDomainSplit(int key, int size,
+SamplerInterface<Impl> SamplerInterface<Impl>::newDomainChain(int key,
                                                               int index) const
 {
-	assert(size > 0);
 	assert(index >= 0);
 
-	return {impl.newDomainSplit(key, size, index)};
+	return {impl.newDomain(key).newDomain(index)};
 }
 
 template <typename Impl>

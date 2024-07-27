@@ -62,12 +62,12 @@ struct State64Bit
 	/// @copydoc oqmc::SamplerInterface::newDomain()
 	OQMC_HOST_DEVICE State64Bit newDomain(int key) const;
 
-	/// @copydoc oqmc::SamplerInterface::newDomainDistrib()
-	OQMC_HOST_DEVICE State64Bit newDomainDistrib(int key, int index) const;
-
 	/// @copydoc oqmc::SamplerInterface::newDomainSplit()
 	OQMC_HOST_DEVICE State64Bit newDomainSplit(int key, int size,
 	                                           int index) const;
+
+	/// @copydoc oqmc::SamplerInterface::newDomainDistrib()
+	OQMC_HOST_DEVICE State64Bit newDomainDistrib(int key, int index) const;
 
 	/// @copydoc oqmc::SamplerInterface::drawRnd()
 	template <int Size>
@@ -135,19 +135,6 @@ inline State64Bit State64Bit::newDomain(int key) const
 	return ret;
 }
 
-inline State64Bit State64Bit::newDomainDistrib(int key, int index) const
-{
-	assert(index >= 0);
-
-	const auto indexKey = computeIndexKey(index);
-	const auto indexId = computeIndexId(index);
-
-	auto ret = newDomain(key).newDomain(indexKey).newDomain(sampleId);
-	ret.sampleId = indexId;
-
-	return ret;
-}
-
 inline State64Bit State64Bit::newDomainSplit(int key, int size, int index) const
 {
 	assert(size > 0);
@@ -157,6 +144,19 @@ inline State64Bit State64Bit::newDomainSplit(int key, int size, int index) const
 	const auto indexId = computeIndexId(sampleId * size + index);
 
 	auto ret = newDomain(key).newDomain(indexKey);
+	ret.sampleId = indexId;
+
+	return ret;
+}
+
+inline State64Bit State64Bit::newDomainDistrib(int key, int index) const
+{
+	assert(index >= 0);
+
+	const auto indexKey = computeIndexKey(index);
+	const auto indexId = computeIndexId(index);
+
+	auto ret = newDomain(key).newDomain(indexKey).newDomain(sampleId);
 	ret.sampleId = indexId;
 
 	return ret;

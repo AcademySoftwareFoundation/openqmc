@@ -24,8 +24,8 @@ class RngImpl
 	                         const void* cache);
 
 	OQMC_HOST_DEVICE RngImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE RngImpl newDomainDistrib(int key, int index) const;
 	OQMC_HOST_DEVICE RngImpl newDomainSplit(int key, int size, int index) const;
+	OQMC_HOST_DEVICE RngImpl newDomainDistrib(int key, int index) const;
 
 	template <int Size>
 	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
@@ -57,14 +57,14 @@ inline RngImpl RngImpl::newDomain(int key) const
 	return {state.newDomain(key)};
 }
 
-inline RngImpl RngImpl::newDomainDistrib(int key, int index) const
-{
-	return {state.newDomainDistrib(key, index)};
-}
-
 inline RngImpl RngImpl::newDomainSplit(int key, int size, int index) const
 {
 	return {state.newDomainSplit(key, size, index)};
+}
+
+inline RngImpl RngImpl::newDomainDistrib(int key, int index) const
+{
+	return {state.newDomainDistrib(key, index)};
 }
 
 template <int Size>

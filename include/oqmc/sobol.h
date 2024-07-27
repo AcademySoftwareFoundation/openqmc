@@ -33,9 +33,9 @@ class SobolImpl
 	                           const void* cache);
 
 	OQMC_HOST_DEVICE SobolImpl newDomain(int key) const;
-	OQMC_HOST_DEVICE SobolImpl newDomainDistrib(int key, int index) const;
 	OQMC_HOST_DEVICE SobolImpl newDomainSplit(int key, int size,
 	                                          int index) const;
+	OQMC_HOST_DEVICE SobolImpl newDomainDistrib(int key, int index) const;
 
 	template <int Size>
 	OQMC_HOST_DEVICE void drawSample(std::uint32_t sample[Size]) const;
@@ -68,14 +68,14 @@ inline SobolImpl SobolImpl::newDomain(int key) const
 	return {state.newDomain(key)};
 }
 
-inline SobolImpl SobolImpl::newDomainDistrib(int key, int index) const
-{
-	return {state.newDomainDistrib(key, index)};
-}
-
 inline SobolImpl SobolImpl::newDomainSplit(int key, int size, int index) const
 {
 	return {state.newDomainSplit(key, size, index)};
+}
+
+inline SobolImpl SobolImpl::newDomainDistrib(int key, int index) const
+{
+	return {state.newDomainDistrib(key, index)};
 }
 
 template <int Size>
