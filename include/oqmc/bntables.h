@@ -24,6 +24,7 @@ namespace bntables
 {
 
 /// Return type for table value.
+///
 /// This type composes both a key and a rank value as a pair. These values can
 /// then be used to randomise a sequence.
 struct TableReturnValue
@@ -33,6 +34,7 @@ struct TableReturnValue
 };
 
 /// Lookup value pair from table.
+///
 /// Given an encoded pixel coordinate and an encoded pixel shift, decode the
 /// values and add the shift to the coordinate to compute an index. Using the
 /// index lookup a key and rank value pair from the input tables.

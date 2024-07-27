@@ -93,6 +93,7 @@ void LatticeImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// @endcond
 
 /// Rank one lattice sampler.
+///
 /// The implementation uses the generator vector from Hickernell et al. in
 /// 'Weighted compound integration rules with higher order convergence for all
 /// N' to construct a 4D lattice. This is then made into a progressive sequence

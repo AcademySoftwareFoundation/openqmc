@@ -36,6 +36,10 @@
   SAVEPLOT=light jupyter execute python/notebooks/performance.ipynb
   SAVEPLOT=dark jupyter execute python/notebooks/performance.ipynb
 
+# build docs
+@docs:
+  doxygen
+
 # remove build and reset
 @clean:
-  rm -rf build
+  rm -rf build html

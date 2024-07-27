@@ -297,6 +297,7 @@ memory allocation, while also allowing inlining for zero-cost abstraction.
 
 ```cpp
 /// Required allocation size of the cache.
+///
 /// Prior to construction of a sampler object, a cache needs to be allocated
 /// and initialised for any given sampler type. This variable is the minimum
 /// required size in bytes of that allocation. The allocation itself is
@@ -307,6 +308,7 @@ static std::size_t oqmc::Sampler::cacheSize;
 
 ```cpp
 /// Initialise the cache allocation.
+///
 /// Prior to construction of a sampler object, a cache needs to be allocated
 /// and initialised for any given sampler type. This function will
 /// initialise that allocation. Once the cache is initialised it may be used
@@ -332,6 +334,7 @@ static void oqmc::Sampler::initialiseCache(void* cache);
 
 ```cpp
 /// Parametrised pixel constructor.
+///
 /// Create an object based on the pixel, frame and sample indices. This also
 /// requires a pre-allocated and initialised cache. Once constructed the
 /// object is valid and ready for use.
@@ -352,6 +355,7 @@ oqmc::Sampler::Sampler(int x, int y, int frame, int index, const void* cache);
 
 ```cpp
 /// Derive a sampler object as a new domain.
+///
 /// The function derives a mutated copy of the current sampler object. This
 /// new object is called a domain. Each domain produces an independent 4
 /// dimensional pattern. Calling the draw* member functions below on the new
@@ -374,6 +378,7 @@ oqmc::Sampler oqmc::Sampler::newDomain(int key) const;
 
 ```cpp
 /// Derive a split sampler object with a local and a global distribution.
+///
 /// Like newDomain, this function derives a mutated copy of the current
 /// sampler object. However, using a technique called splitting, this
 /// domain can have a higher sample rate based on a fixed multiplier.
@@ -402,6 +407,7 @@ oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
 
 ```cpp
 /// Derive a split sampler object with a local distribution.
+///
 /// Like newDomain, this function derives a mutated copy of the current
 /// sampler object. However, using a technique called splitting, this
 /// domain can have a higher sample rate based on an adaptive multiplier.
@@ -429,6 +435,7 @@ oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key, int index) const;
 
 ```cpp
 /// Derive a split sampler object with a global distribution.
+///
 /// Like newDomain, this function derives a mutated copy of the current
 /// sampler object. However, using a technique called splitting, this
 /// domain can have a higher sample rate based on an adaptive multiplier.
@@ -456,6 +463,7 @@ oqmc::Sampler oqmc::Sampler::newDomainChain(int key, int index) const;
 
 ```cpp
 /// Draw integer sample values from domain.
+///
 /// This can compute sample values with up to 4 dimensions for the given
 /// domain. The operation does not change the state of the object, and for a
 /// single domain and index, the result of this function will always be the
@@ -474,6 +482,7 @@ void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
 
 ```cpp
 /// Draw ranged integer sample values from domain.
+///
 /// This function wraps the integer variant of drawSample above. But
 /// transforms the output values into uniformly distributed integers within
 /// the range of [0, range).
@@ -487,6 +496,7 @@ void oqmc::Sampler::drawSample(std::uint32_t range, std::uint32_t sample[Size]) 
 
 ```cpp
 /// Draw floating point sample values from domain.
+///
 /// This function wraps the integer variant of drawSample above. But
 /// transforms the output values into uniformly distributed floats within
 /// the range of [0, 1).
@@ -499,6 +509,7 @@ void oqmc::Sampler::drawSample(float sample[Size]) const;
 
 ```cpp
 /// Draw integer pseudo random values from domain.
+///
 /// This can compute rnd values with up to 4 dimensions for the given
 /// domain. The operation does not change the state of the object, and for a
 /// single domain and index, the result of this function will always be the
@@ -517,6 +528,7 @@ void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
 
 ```cpp
 /// Draw ranged integer pseudo random values from domain.
+///
 /// This function wraps the integer variant of drawRnd above. But transforms
 /// the output values into uniformly distributed integers within the range
 /// of [0, range).
@@ -530,6 +542,7 @@ void oqmc::Sampler::drawRnd(std::uint32_t range, std::uint32_t rnd[Size]) const;
 
 ```cpp
 /// Draw floating point pseudo random values from domain.
+///
 /// This function wraps the integer variant of drawRnd above. But transforms
 /// the output values into uniformly distributed floats within the range of
 /// [0, 1).

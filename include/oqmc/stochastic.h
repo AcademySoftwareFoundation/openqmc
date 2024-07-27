@@ -22,6 +22,7 @@ namespace oqmc
 {
 
 /// Initialise a table with a progressive mult-jittered (0,2) sequence.
+///
 /// Given a data array and size, compute the corresponding progressive
 /// multi-jittered (0,2) sequence value for each element of the array. Each
 /// element in the array is a 4 dimensional sample. Number of samples must be

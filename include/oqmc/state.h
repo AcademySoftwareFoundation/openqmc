@@ -17,6 +17,7 @@ namespace oqmc
 {
 
 /// Generic sampler state type.
+///
 /// This type is used to represent the state of higher level sampler
 /// implementations. The size of the type is carefully handled to make sure it
 /// is appropriate to pass-by-value. This allows for efficient functional style
@@ -35,12 +36,14 @@ struct State64Bit
 	              "Encoding must have equal resolution in x and y");
 
 	/// Construct an invalid object.
+	///
 	/// Create a placeholder object to allocate containers, etc. The resulting
 	/// object is invalid, and you should initialise it by replacing the object
 	/// with another from a parametrised constructor.
 	/*AUTO_DEFINED*/ State64Bit() = default;
 
 	/// Parametrised pixel constructor.
+	///
 	/// Create an object based on the pixel, frame and sample indices. Once
 	/// constructed the state object is valid and ready to use. Pixels are
 	/// correlated by default, use pixelDecorrelate() to decorrelate pixels.
@@ -52,6 +55,7 @@ struct State64Bit
 	OQMC_HOST_DEVICE State64Bit(int x, int y, int frame, int index);
 
 	/// Decorrelate state between pixels.
+	///
 	/// Using the pixelId, randomise the object state so that correlation
 	/// between pixels is removed. You may want to call this after initial
 	/// construction of which leaves pixels correlated as default.
@@ -79,6 +83,7 @@ struct State64Bit
 };
 
 /// Compute 16-bit key from index.
+///
 /// Given a sample index, compute a key value based on the top 16-bits of the
 /// integer range. Use computeIndexId() to compute the corrosponding new index
 /// to pair with the key.
@@ -92,6 +97,7 @@ OQMC_HOST_DEVICE constexpr int computeIndexKey(int index)
 }
 
 /// Compute new 16-bit index from index.
+///
 /// Given a sample index, compute a new index value based on the bottom 16-bits
 /// of the integer range. Use computeIndexKey() to compute the corrosponding key
 /// value to pair with the new index.

@@ -20,6 +20,7 @@ namespace oqmc
 {
 
 /// Random digit scramble an element in a sequence.
+///
 /// Given a value and a random number, efficiently randomise the value using the
 /// random digit scramble method from Kollig and Keller in 'Efficient
 /// Multidimensional Sampling'. The implementation just requires a single XOR
@@ -36,6 +37,7 @@ randomDigitScramble(std::uint32_t value, std::uint32_t hash)
 }
 
 /// Compute a randomised value from a pre-computed table.
+///
 /// Given an index and a seed, compute an scrambled sequence value. The index
 /// will be shuffled in a manner that is progressive friendly. The value can be
 /// multi-dimensional. For a given sequence, the seed value must be constant.

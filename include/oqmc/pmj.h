@@ -104,6 +104,7 @@ void PmjImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// @endcond
 
 /// Low discrepancy pmj sampler.
+///
 /// The implementation uses the stochastic method described by Helmer et la. in
 /// 'Stochastic Generation of (t, s) Sample Sequences' to efficiently construct
 /// a progressive multi-jittered (0,2) sequence. The first pair of dimensions in

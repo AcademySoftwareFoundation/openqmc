@@ -19,6 +19,7 @@ constexpr auto floatOneOverUintMax = 2.3283064365386962890625e-10f; ///< 0x1p-32
 constexpr auto floatOneMinusEpsilon = 0.999999940395355224609375f;  ///< max flt
 
 /// Convert an integer into a [0, 1) float.
+///
 /// Given any representable 32 bit unsigned integer, scale the value into a [0,
 /// 1) floating point representation. Note that this operation is lossy and may
 /// not be reversible.

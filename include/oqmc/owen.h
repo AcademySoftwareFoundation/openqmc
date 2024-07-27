@@ -35,6 +35,7 @@ namespace oqmc
 {
 
 /// Compute sobol sequence value at an index with reversed bits.
+///
 /// Given a 16 bit index, where the order of bits in the index have been
 /// reversed, compute a sobol sequence value to 16 bits of precision for a given
 /// dimension. Dimensions must be within the range [0, 4).
@@ -253,6 +254,7 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 }
 
 /// Permute an input integer and reverse the bits.
+///
 /// Given an input integer value, perform a Laine and Karras style permutation
 /// and reverse the resulting bits. The permutation can be randomised with a
 /// given seed value. This will be equivalent to an Owen scramble when the input
@@ -271,6 +273,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t scrambleAndReverse(std::uint32_t value,
 }
 
 /// Compute a randomised sobol sequence value.
+///
 /// Given an index and a seed, compute an Owen scrambled sobol sequence value.
 /// The index will be shuffled in a manner that is progressive friendly. The
 /// value can be multi-dimensional. For a given sequence, the seed value must be

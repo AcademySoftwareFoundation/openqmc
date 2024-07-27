@@ -130,6 +130,7 @@ void PmjBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// @endcond
 
 /// Blue noise variant of pmj sampler.
+///
 /// Same as oqmc::PmjSampler, with additional spatial temporal blue noise
 /// dithering between pixels, with progressive pixel sampling support.
 ///

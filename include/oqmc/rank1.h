@@ -20,6 +20,7 @@ namespace oqmc
 {
 
 /// Rotate an integer a given distance.
+///
 /// Given a 32 bit unsigned integer value, offset the value a given distance,
 /// and rely on integer overflow for the value to wrap around. When applied to
 /// elements in a lattice, this represents a toroidal shift or rotation, upon
@@ -36,6 +37,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t rotate(std::uint32_t value,
 }
 
 /// Compute a rank 1 lattice value at an index with reversed bits.
+///
 /// Given a 32 bit index, where the order of bits in the index have been
 /// reversed, compute a rank 1 lattice value to 32 bits of precision for a given
 /// dimension. Dimensions must be within the range [0, 4).
@@ -62,6 +64,7 @@ latticeReversedIndex(std::uint32_t index, int dimension)
 }
 
 /// Compute a randomised rank 1 lattice value.
+///
 /// Given an index and a patternId, compute a rank 1 lattice value. The index
 /// will be shuffled in a manner that is progressive friendly. The value can be
 /// multi-dimensional. For a given lattice, the patternId value must be
