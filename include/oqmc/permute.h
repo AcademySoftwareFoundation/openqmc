@@ -20,6 +20,7 @@ namespace oqmc
 {
 
 /// Laine and Karras style permutation.
+///
 /// Given an unsigned integer number, permute the bits so that lower bits effect
 /// higher bits, but not the other way around. When combined with a reversal of
 /// bits before and after, this forms an efficient hash based owen scrambling
@@ -41,6 +42,7 @@ laineKarrasPermutation(std::uint32_t value, std::uint32_t seed)
 }
 
 /// Reverse input bits and shuffle order.
+///
 /// Given an unsigned integer number, reverse the bit order and then perform a
 /// Laine and Karras style permutation.
 ///
@@ -57,6 +59,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t reverseAndShuffle(std::uint32_t value,
 }
 
 /// Compute a hash based owen scramble.
+///
 /// Given an unsigned integer, use a hash based technique to perform an owen
 /// scramble. This can be used to scramble a value, or to shuffle the order of a
 /// sequence in a progressive friendly manner.

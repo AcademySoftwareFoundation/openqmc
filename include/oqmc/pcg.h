@@ -26,6 +26,7 @@ namespace pcg
 {
 
 /// State transition function.
+///
 /// Transition state using an LCG to increment the PRNG index along the
 /// sequence. Incrementing the input state can be used to select a new sequence
 /// stream. Note that you may want to use the higher level functionality below.
@@ -40,6 +41,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t stateTransition(std::uint32_t state)
 }
 
 /// Output permutation function.
+///
 /// Output permutation of the PRNG state, resulting in a usable random value
 /// with good statistical properties. This implements the three permutation
 /// operations used in PCG-RXS-M-32. Note you may want to use the higher level
@@ -63,6 +65,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t output(std::uint32_t state)
 }
 
 /// Default initialise the PRNG state.
+///
 /// If given no seed, initialise the PRNG state using a zero value. This must be
 /// done prior to passing the state to other functionality within this file.
 ///
@@ -73,6 +76,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t init()
 }
 
 /// Initialise the PRNG state using a seed value.
+///
 /// If given a seed, initialise the PRNG state using said seed value. This must
 /// be done prior to passing the state to other functionality within this file.
 ///
@@ -84,6 +88,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t init(std::uint32_t seed)
 }
 
 /// Compute a hash value based on an input key.
+///
 /// Given an input key, compute a random hash value. This can be used to
 /// initialise a system or to compute an array of random values in parallel.
 ///
@@ -96,6 +101,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t hash(std::uint32_t key)
 }
 
 /// Compute a random number from the PRNG sequence.
+///
 /// Given a PRNG state, compute the next random number, and iterate the state
 /// for the next value in the sequence. Useful for generating high quality
 /// random numbers when computing them sequentially. The output number will be

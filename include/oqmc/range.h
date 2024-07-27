@@ -16,6 +16,7 @@ namespace oqmc
 {
 
 /// Compute an unsigned integer within 0-bounded half-open range.
+///
 /// Given a range defined using a single unsigned integer, map a full range 32
 /// bit unsigned integer into range.
 ///
@@ -48,6 +49,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t uintToRange(std::uint32_t value,
 }
 
 /// Compute an unsigned integer within half-open range.
+///
 /// Given a range defined using two unsigned integers, map a full range 32 bit
 /// unsigned integer into range. This function is based upon the other uint to
 /// range function and has the same properties.

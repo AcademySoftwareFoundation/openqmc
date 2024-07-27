@@ -127,6 +127,7 @@ void LatticeBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// @endcond
 
 /// Blue noise variant of lattice sampler.
+///
 /// Same as oqmc::LatticeSampler, with additional spatial temporal blue noise
 /// dithering between pixels, with progressive pixel sampling support.
 ///

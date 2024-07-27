@@ -93,6 +93,7 @@ void SobolImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// @endcond
 
 /// Owen scrambled sobol sampler.
+///
 /// The implementation uses an elegant construction by Burley in 'Practical
 /// Hash-based Owen Scrambling' for an Owen scrambled Sobol sequence. This also
 /// includes performance improvements such as limiting the index to 16 bits,

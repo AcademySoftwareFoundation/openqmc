@@ -15,6 +15,7 @@ namespace oqmc
 {
 
 /// Rotate bits in an integer value.
+///
 /// Offset bits in a 32 bit integer a given distance, while wrapping the bits so
 /// that the value remains the same every distance multiplier of 32.
 ///
@@ -28,6 +29,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t rotateBits(std::uint32_t value,
 }
 
 /// Rotate bytes in an integer value.
+///
 /// Offset bytes in a 4 byte integer a given distance, while wrapping the bytes
 /// so that the value remains the same every distance multiplier of 4.
 ///
