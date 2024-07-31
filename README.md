@@ -1620,6 +1620,23 @@ notebooks, there is a dedicated development environment:
 nix develop .#notebook
 ```
 
+### Docker development environment
+
+On systems without Nix, a Dockerfile is also provided to build a development
+environment as a container. First you need to build the container:
+
+
+```bash
+docker build -t openqmc-develop .
+```
+
+This might take some time as it pulls in the dependencies. But once it is
+complete the environment can then be efficiently run using:
+
+```bash
+docker run --rm -it openqmc-develop
+```
+
 ## Related projects
 
 Here are details on other related projects, and how OpenQMC is different. If
