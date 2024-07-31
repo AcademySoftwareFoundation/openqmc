@@ -42,4 +42,4 @@
 
 # remove build and reset
 @clean:
-  rm -rf build html
+  rm -rf build html result
