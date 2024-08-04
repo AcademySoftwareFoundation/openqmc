@@ -1622,19 +1622,18 @@ nix develop .#notebook
 
 ### Docker development environment
 
-On systems without Nix, a Dockerfile is also provided to build a development
-environment as a container. First you need to build the container:
-
+On systems without Nix, a Docker solution is also provided to run a development
+environment as a service. This is done using Docker Compose:
 
 ```bash
-docker build -t openqmc-develop .
+docker compose run --rm develop
 ```
 
-This might take some time as it pulls in the dependencies. But once it is
-complete the environment can then be efficiently run using:
+From within the service container you can also install other tools as required
+from Nixpkgs, such as an editor like Helix:
 
 ```bash
-docker run --rm -it openqmc-develop
+nix profile install nixpkgs#helix
 ```
 
 ## Related projects
