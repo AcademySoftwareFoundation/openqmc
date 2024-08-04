@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New `oqmc::SamplerInterface::newDomainChain()` function is a shorthand for two `oqmc::SamplerInterface::newDomain()`.
+- Support and documentation for using Docker Compose to set up a development environment.
 
 ## [0.5.0] - 2024-05-05
 
