@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2024-08-04
+
 ### Added
 
 - New `oqmc::SamplerInterface::newDomainChain()` function is a shorthand for two `oqmc::SamplerInterface::newDomain()`.
