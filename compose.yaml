@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the OpenQMC Project.
+
+services:
+  develop:
+    image: nixpkgs/nix-flakes:nixos-24.05
+    command: nix develop
+    working_dir: /tmp/src
+    volumes:
+      - .:/tmp/src
