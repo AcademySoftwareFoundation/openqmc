@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the OpenQMC Project.
+
 # list available recipes
 @default:
   just --list --unsorted
@@ -24,7 +27,7 @@
 
 # open up a jupyter notebook
 @notebook: build
-  jupyter notebook python/notebooks
+  jupyter notebook --ip 0.0.0.0 --allow-root python/notebooks
 
 # run notebook and save readme images
 @readme-images: build
