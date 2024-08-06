@@ -1348,11 +1348,40 @@ Some of the files in the repository require Git Large File Storage which is a
 common Git extension for handling large file types. You can find installation
 instructions on the [LFS](https://git-lfs.github.com) website.
 
+### Nix development environment
+
+Once the project is cloned, on NixOS or systems with Nix available, you can load
+a developer environment with all required dependencies:
+
+```bash
+nix develop
+```
+
+### Docker development environment
+
+On systems without Nix, a Docker solution is also provided to run a development
+environment as a service. This is done using Docker Compose:
+
+```bash
+docker compose run --rm --service-ports develop
+```
+
+From within the containerised service you can also install other tools as required
+from Nixpkgs, such as Helix for editing text:
+
+```bash
+nix profile install nixpkgs#helix
+```
+
+Alternatively you can build the project without using a provided development
+environment using a local compiler. This should work just fine on most systems.
+
 ### Dependencies
 
 The tools and tests have dependencies on external projects. If these are already
-installed on the system they can be found automatically. If a dependency isn't
-installed, then it will be downloaded and compiled along with the project.
+installed on the system they can be found automatically, such as when using one
+of the development environments. If a dependency isn't installed, then it will
+be downloaded and compiled along with the project.
 
 The dependencies are:
 
@@ -1575,6 +1604,13 @@ use a different generator, you can pass a parameter to `setup`:
 just setup `Unix Makefiles`
 ```
 
+Another useful recipe is `clean` which will remove the build directory and reset
+the project. You would want to call this before `setup` for a hard reset:
+
+```bash
+just clean
+```
+
 After this point you can use any of the other recipes just lists, some of
 these take arguments as you saw with `setup` and should simplify the commands
 listed in the [Build configuration](#build-configuration), [Tools](#tools) and
@@ -1597,43 +1633,19 @@ just notebook
 ```
 
 Images on this page are generated with a build of the tools library, and then
-executing the notebooks from the command line. This is done twice, once for each
-colour theme. Images can be regenerated using:
+executing the notebooks from the command line. Images can be regenerated using:
 
 ```bash
 just readme-images
 ```
 
-### Nix development environment
+### Doxygen
 
-On NixOS or systems with Nix available, the provided flake can be used to load a
-working and reproducible developer environment. Load this with:
-
-```bash
-nix develop
-```
-
-For the extra dependencies and environment variables required to run the Jupyter
-notebooks, there is a dedicated development environment:
+API documentation is built using Doxygen with pages under the [doxygen](doxygen)
+directory. Building the documentation site can be done using:
 
 ```bash
-nix develop .#notebook
-```
-
-### Docker development environment
-
-On systems without Nix, a Docker solution is also provided to run a development
-environment as a service. This is done using Docker Compose:
-
-```bash
-docker compose run --rm develop
-```
-
-From within the service container you can also install other tools as required
-from Nixpkgs, such as an editor like Helix:
-
-```bash
-nix profile install nixpkgs#helix
+just docs
 ```
 
 ## Related projects

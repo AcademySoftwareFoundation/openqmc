@@ -33,23 +33,12 @@
             pkgs.ninja
             pkgs.just
             pkgs.ruff
-            pkgs.git
             pkgs.glm
             pkgs.gtest
             pkgs.doxygen
             pkgs.graphviz
             pkgs.tbb_2021_8
             hypothesis.packages.${system}.default
-          ];
-          inputsFrom = [
-            self.packages.${system}.default
-          ];
-        };
-        devShells.notebook = pkgs.mkShell.override {
-          stdenv = pkgs.stdenvNoCC;
-        } {
-          name = "notebook";
-          packages = [
             (pkgs.python311.withPackages(ps: with ps; [
               python-lsp-server
               python-lsp-black
@@ -61,7 +50,7 @@
             ]))
           ];
           inputsFrom = [
-            self.devShells.${system}.default
+            self.packages.${system}.default
           ];
           shellHook = ''
             export TOOLSPATH=$PWD/build/src/tools/lib

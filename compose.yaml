@@ -3,8 +3,10 @@
 
 services:
   develop:
-    image: nixpkgs/nix-flakes:nixos-24.05
+    build: .
     command: nix develop
     working_dir: /tmp/src
     volumes:
       - .:/tmp/src
+    ports:
+      - 8888:8888
