@@ -25,12 +25,11 @@
 ///
 /// **Blue noise sampler variants**
 ///
-/// Blue noise variants offer spatial temporal blue noise dithering between
-/// pixels, with progressive pixel sampling. This is done using an offline
-/// optimisation process that is based on the work by Belcour and Heitz in
-/// 'Lessons Learned and Improvements when Building Screen-Space Samplers with
-/// Blue-Noise Error Distribution', and extends temporally as described by Wolfe
-/// et al. in 'Spatiotemporal Blue Noise Masks'.
+/// Blue noise variants offer spatial blue noise dithering between pixels,
+/// with progressive pixel sampling. This is done using an offline optimisation
+/// process that is based on the work by Belcour and Heitz in 'Lessons Learned
+/// and Improvements when Building Screen-Space Samplers with Blue-Noise Error
+/// Distribution'.
 ///
 /// Each variant achieves a blue noise distribution using two pixel tables, one
 /// holds keys to seed the sequence, and the other index ranks. These tables
@@ -38,12 +37,11 @@
 /// using random offsets. Correlation between the offsets and the pixels allows
 /// for a single pair of tables to provide keys and ranks for all domains.
 ///
-/// Although the spatial temporal blue noise does not reduce the error for
-/// an individual pixel, it does give a better perceptual result due to less
-/// low frequency structure in the error between pixels. Also, if an image
-/// is either spatially or temporally filtered (as with denoising or temporal
-/// anti-aliasing), the resulting error can be lower when using a blue noise
-/// variant.
+/// Although the spatial blue noise does not reduce the error for an individual
+/// pixel, it does give a better perceptual result due to less low frequency
+/// structure in the error between pixels. Also, if an image is either spatially
+/// filtered (as with denoising), the resulting error can be lower when using a
+/// blue noise variant.
 ///
 /// Blue noise variants are recommended, as the additional performance cost will
 /// likely be a favourable tradeoff for the quality gains at low sample counts.

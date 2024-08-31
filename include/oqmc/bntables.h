@@ -66,10 +66,9 @@ tableValue(std::uint16_t pixel, std::uint16_t shift,
 	};
 }
 
-constexpr auto xBits = 6;                           ///< 64 pixels in x.
-constexpr auto yBits = 6;                           ///< 64 pixels in y.
-constexpr auto zBits = 4;                           ///< 16 pixels in time.
-constexpr auto size = 1 << (xBits + yBits + zBits); ///< 2^16 table size.
+constexpr auto xBits = 8;                   ///< 256 pixels in x.
+constexpr auto yBits = 8;                   ///< 256 pixels in y.
+constexpr auto size = 1 << (xBits + yBits); ///< 2^16 table size.
 
 static_assert(xBits == yBits,
               "Optimisation tables have equal resolution in x and y");

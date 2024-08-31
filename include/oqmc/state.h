@@ -28,9 +28,8 @@ struct State64Bit
 {
 	static constexpr auto maxIndexBitSize = 16;   ///< 2^16 index upper limit.
 	static constexpr auto maxIndexSize = 1 << 16; ///< 2^16 index upper limit.
-	static constexpr auto spatialEncodeBitSizeX = 6; ///< 64 pixels in x.
-	static constexpr auto spatialEncodeBitSizeY = 6; ///< 64 pixels in y.
-	static constexpr auto temporalEncodeBitSize = 4; ///< 16 pixels in time.
+	static constexpr auto spatialEncodeBitSizeX = 8; ///< 256 pixels in x.
+	static constexpr auto spatialEncodeBitSizeY = 8; ///< 256 pixels in y.
 
 	static_assert(spatialEncodeBitSizeX == spatialEncodeBitSizeY,
 	              "Encoding must have equal resolution in x and y");
@@ -119,9 +118,8 @@ inline State64Bit::State64Bit(int x, int y, int frame, int index)
 
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
-	constexpr auto zBits = State64Bit::temporalEncodeBitSize;
 
-	const auto pixelId = encodeBits16<xBits, yBits, zBits>({x, y, frame});
+	const auto pixelId = encodeBits16<xBits, yBits, 0>({x, y, frame});
 
 	this->patternId = pcg::init(indexKey);
 	this->sampleId = indexId;
