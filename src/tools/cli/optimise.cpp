@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
 	constexpr auto ntests = 8192;
 	constexpr auto niterations = 262144;
-	constexpr auto nsamples = 128;
+	constexpr auto nsamples = 32;
 	constexpr auto resolution = 1 << xBits;
 	constexpr auto seed = 0;
 
