@@ -105,16 +105,13 @@ void PmjBnImpl::drawSample(std::uint32_t sample[Size]) const
 {
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
-	constexpr auto zBits = State64Bit::temporalEncodeBitSize;
 
 	static_assert(xBits == bntables::xBits,
 	              "Pixel x encoding must match table.");
 	static_assert(yBits == bntables::yBits,
 	              "Pixel y encoding must match table.");
-	static_assert(zBits == bntables::zBits,
-	              "Pixel z encoding must match table.");
 
-	const auto table = bntables::tableValue<xBits, yBits, zBits>(
+	const auto table = bntables::tableValue<xBits, yBits, 0>(
 	    state.pixelId, pcg::output(state.patternId), cache->keyTable,
 	    cache->rankTable);
 
@@ -131,8 +128,8 @@ void PmjBnImpl::drawRnd(std::uint32_t rnd[Size]) const
 
 /// Blue noise variant of pmj sampler.
 ///
-/// Same as oqmc::PmjSampler, with additional spatial temporal blue noise
-/// dithering between pixels, with progressive pixel sampling support.
+/// Same as oqmc::PmjSampler, with additional spatial blue noise dithering
+/// between pixels, with progressive pixel sampling support.
 ///
 /// @ingroup samplers
 using PmjBnSampler = SamplerInterface<PmjBnImpl>;

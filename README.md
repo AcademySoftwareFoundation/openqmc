@@ -47,7 +47,7 @@ Project features are:
 - Solutions for different sampling use cases.
 - Supports progressive / adaptive pixel sampling.
 - Suitable for depth and wavefront rendering.
-- Spatial temporal blue noise dithering.
+- Includes spatial blue noise dithering.
 - Clear and extendable code base.
 - Unit and statistical testing.
 - Modern [CMake](https://cmake.org/) based build system.
@@ -569,7 +569,7 @@ implementations and their required header files:
 
 This diagram gives a high level view of the available implementations and how
 they relate to one another. Each implementation includes a blue noise variant
-which you can read more about [here](#spatial-temporal-blue-noise).
+which you can read more about [here](#blue-noise-sampler-variants).
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/high-level-overview-light.png">
@@ -661,17 +661,6 @@ with a de-noise pass.
   <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-filter-space-plot-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/plots/error-filter-space-plot-dark.png">
   <img alt="Error filter space plot comparison." src="./images/plots/error-filter-space-plot-light.png">
-</picture>
-
-The preceding plots filtered the error spatially. The following plots filter
-the error temporally. They show that averaging the frames over time also
-favours the blue noise variants. Useful if you feed the frames into a temporal
-antialiasing algorithm.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/plots/error-filter-time-plot-light.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/error-filter-time-plot-dark.png">
-  <img alt="Error filter time plot comparison." src="./images/plots/error-filter-time-plot-light.png">
 </picture>
 
 ### Zoneplates
@@ -1276,10 +1265,9 @@ integration per pixel can be lower when compared to other samplers.
 
 ### Blue noise sampler variants
 
-Blue noise variants offer spatial temporal blue noise dithering between pixels,
-with progressive pixel sampling. This is done using an offline optimisation
-process that's based on the work by Belcour and Heitz [^4], and extends
-temporally as described by Wolfe et al. [^5].
+Blue noise variants offer spatial blue noise dithering between pixels, with
+progressive pixel sampling. This is done using an offline optimisation process
+that's based on the work by Belcour and Heitz [^4].
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/optimise-index-seed-light.png">
@@ -1299,12 +1287,11 @@ single pair of tables to provide keys and ranks for all domains.
   <img alt="lattice pair plot." src="./images/diagrams/blue-noise-procedure-light.png">
 </picture>
 
-Although the spatial temporal blue noise doesn't reduce the error for an
-individual pixel, it does give a better perceptual result due to less low
-frequency structure in the error between pixels. Also, if an image is either
-spatially or temporally filtered (as with denoising or temporal antialiasing),
-the resulting error can be much lower when using a blue noise variant as shown
-in [Rate of convergence](#rate-of-convergence).
+Although the spatial blue noise doesn't reduce the error for an individual
+pixel, it does give a better perceptual result due to less low frequency
+structure in the error between pixels. Also, if an image is either spatially
+filtered (as with denoising), the resulting error can be much lower when using a
+blue noise variant as shown in [Rate of convergence](#rate-of-convergence).
 
 Blue noise variants are recommended, as the additional performance cost will
 likely be a favourable tradeoff for the quality gains at low sample counts.
@@ -1523,15 +1510,15 @@ ARGS:
 
 ```
 The 'optimise' tool targets a single base sampler implementation and produces
-the data needed to construct a spatial temporal blue noise variant. The output
+the data needed to construct a spatial blue noise variant. The output
 is two tables, files named 'keys.txt' and 'ranks.txt'.
 
 The table data can be mapped to a 3D array, with the axes representing 2D pixel
 coordinates and 1D time. The optimisation process works toroidally, so you can
-tile each table to cover a large spatial and temporal area.
+tile each table to cover a large spatial area.
 
 Keys are 32 bit integers, and seed unique sampler domains. Ranks are also 32 bit
-integers, and when XORed with the sample index allow for spatial temporal blue
+integers, and when XORed with the sample index allow for spatial blue
 noise with progressive and adaptive rendering.
 
 When optimising final quality results it's advisable to use a GPU build of the
@@ -1693,10 +1680,6 @@ https://dx.doi.org/10.1007/s11075-011-9482-5
 [^4]: Laurent Belcour and Eric Heitz. 2021.  
 Lessons Learned and Improvements when Building Screen-Space Samplers with Blue-Noise Error Distribution. ACM SIGGRAPH 2021 Talks.  
 https://dx.doi.org/10.1145/3450623.3464645
-
-[^5]: Alan Wolfe, Nathan Morrical, Tomas Akenine-Möller and Ravi Ramamoorthi. 2022.  
-Spatiotemporal Blue Noise Masks. EGSR.  
-https://dx.doi.org/10.2312/sr.20221161
 
 [^6]: Melissa E. O'Neill. 2014.  
 PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation.  

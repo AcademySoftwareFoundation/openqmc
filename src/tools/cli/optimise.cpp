@@ -18,9 +18,9 @@ struct Output
 	float* frequencies;
 };
 
-Output start(int resolution, int depth)
+Output start(int resolution)
 {
-	const auto npixels = resolution * resolution * depth;
+	const auto npixels = resolution * resolution;
 
 	Output ret;
 	ret.keys = new std::uint32_t[npixels];
@@ -57,9 +57,8 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	constexpr auto xBits = 6;
-	constexpr auto yBits = 6;
-	constexpr auto zBits = 4;
+	constexpr auto xBits = 8;
+	constexpr auto yBits = 8;
 
 	static_assert(xBits == yBits,
 	              "Optimisation tables have equal resolution in x and y");
@@ -68,14 +67,12 @@ int main(int argc, char* argv[])
 	constexpr auto niterations = 262144;
 	constexpr auto nsamples = 128;
 	constexpr auto resolution = 1 << xBits;
-	constexpr auto depth = 1 << zBits;
 	constexpr auto seed = 0;
 
-	auto out = start(resolution, depth);
+	auto out = start(resolution);
 
-	if(!oqmc_optimise(argv[1], ntests, niterations, nsamples, resolution, depth,
-	                  seed, out.keys, out.ranks, out.estimates,
-	                  out.frequencies))
+	if(!oqmc_optimise(argv[1], ntests, niterations, nsamples, resolution, seed,
+	                  out.keys, out.ranks, out.estimates, out.frequencies))
 	{
 		std::fprintf(stderr, "Sampler that was requested was not found; "
 		                     "options are pmj, sobol, lattice.\n");
@@ -83,22 +80,12 @@ int main(int argc, char* argv[])
 		goto failure;
 	}
 
-	write::integers("keys.txt", resolution * resolution * depth, out.keys);
-	write::integers("ranks.txt", resolution * resolution * depth, out.ranks);
+	write::integers("keys.txt", resolution * resolution, out.keys);
+	write::integers("ranks.txt", resolution * resolution, out.ranks);
 
-	for(int i = 0; i < depth; ++i)
-	{
-		const auto estimatesName = "estimates" + std::to_string(i) + ".pfm";
-		const auto frequenciesName = "frequencies" + std::to_string(i) + ".pfm";
-
-		const auto offset = i * resolution * resolution;
-
-		write::greyscales(estimatesName.c_str(), resolution, resolution,
-		                  out.estimates + offset);
-
-		write::greyscales(frequenciesName.c_str(), resolution, resolution,
-		                  out.frequencies + offset);
-	}
+	write::greyscales("estimates.pfm", resolution, resolution, out.estimates);
+	write::greyscales("frequencies.pfm", resolution, resolution,
+	                  out.frequencies);
 
 	stop(out);
 	return EXIT_SUCCESS;
