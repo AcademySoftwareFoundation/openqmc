@@ -473,7 +473,7 @@ keysEnergySpatial(Array3d pixelFrame, FullyConnectedGraph graphFrame,
                   int3 pCoordinate, int3 swapCoordinate, const int* indicesA,
                   const float* distances)
 {
-	constexpr auto sigma = 2.1f;
+	constexpr auto sigma = 1.0f;
 	constexpr auto sigmaSqr = sigma * sigma;
 	constexpr auto sigmaSqrRcp = 1 / sigmaSqr;
 	constexpr auto sigmaSqrRcpNeg = -sigmaSqrRcp;
@@ -640,7 +640,7 @@ ranksEnergySpatial(Array3d pixelFrame, FullyConnectedGraph graphFrame,
                    int3 pCoordinate, const bool* swapsA,
                    const float* distancesHold, const float* distancesSwap)
 {
-	constexpr auto sigma = 2.1f;
+	constexpr auto sigma = 1.0f;
 	constexpr auto sigmaSqr = sigma * sigma;
 	constexpr auto sigmaSqrRcp = 1 / sigmaSqr;
 	constexpr auto sigmaSqrRcpNeg = -sigmaSqrRcp;
