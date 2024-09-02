@@ -134,25 +134,5 @@ OQMC_CABI bool oqmc_benchmark(const char* sampler, const char* measurement,
 		return run<oqmc::PmjBnSampler>(measurement, nsamples, ndims, out);
 	}
 
-	if(std::string(sampler) == "sobol")
-	{
-		return run<oqmc::SobolSampler>(measurement, nsamples, ndims, out);
-	}
-
-	if(std::string(sampler) == "sobolbn")
-	{
-		return run<oqmc::SobolBnSampler>(measurement, nsamples, ndims, out);
-	}
-
-	if(std::string(sampler) == "lattice")
-	{
-		return run<oqmc::LatticeSampler>(measurement, nsamples, ndims, out);
-	}
-
-	if(std::string(sampler) == "latticebn")
-	{
-		return run<oqmc::LatticeBnSampler>(measurement, nsamples, ndims, out);
-	}
-
 	return false;
 }

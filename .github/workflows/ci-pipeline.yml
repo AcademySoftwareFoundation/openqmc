@@ -141,7 +141,7 @@ jobs:
     needs: build-tools
     strategy:
       matrix:
-        sampler: [pmj, sobol, lattice]
+        sampler: [pmj]
     runs-on: ubuntu-22.04
     steps:
       # Download tools build
@@ -163,7 +163,7 @@ jobs:
         os: [ubuntu-22.04, self-hosted]
         arch: [Scalar, SSE, AVX, ARM, GPU]
         build: [Release, Debug]
-        sampler: [pmj, sobol, lattice]
+        sampler: [pmj]
         exclude:
           - {os: ubuntu-22.04, arch: ARM}
           - {os: ubuntu-22.04, arch: GPU}

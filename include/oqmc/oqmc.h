@@ -8,9 +8,5 @@
 
 #pragma once
 
-#include <oqmc/lattice.h>
-#include <oqmc/latticebn.h>
 #include <oqmc/pmj.h>
 #include <oqmc/pmjbn.h>
-#include <oqmc/sobol.h>
-#include <oqmc/sobolbn.h>

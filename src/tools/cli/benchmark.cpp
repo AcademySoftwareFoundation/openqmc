@@ -42,8 +42,7 @@ int main(int argc, char* argv[])
 	if(!oqmc_benchmark(argv[1], argv[2], nsamples, ndims, &time))
 	{
 		std::fprintf(stderr, "Configuration that was requested was not found; "
-		                     "sampler options are pmj, pmjbn, sobol, sobolbn, "
-		                     "lattice, latticebn; "
+		                     "sampler options are pmj, pmjbn; "
 		                     "measurement options are init, samples.\n");
 
 		return EXIT_FAILURE;

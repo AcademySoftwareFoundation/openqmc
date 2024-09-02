@@ -1543,34 +1543,6 @@ OQMC_CABI bool oqmc_trace(const char* name, const char* scene, const char* mode,
 		                               maxDepth, maxOpacity, image);
 	}
 
-	if(std::string(name) == "sobol")
-	{
-		return run<oqmc::SobolSampler>(scene, mode, width, height, frame,
-		                               numPixelSamples, numLightSamples,
-		                               maxDepth, maxOpacity, image);
-	}
-
-	if(std::string(name) == "sobolbn")
-	{
-		return run<oqmc::SobolBnSampler>(scene, mode, width, height, frame,
-		                                 numPixelSamples, numLightSamples,
-		                                 maxDepth, maxOpacity, image);
-	}
-
-	if(std::string(name) == "lattice")
-	{
-		return run<oqmc::LatticeSampler>(scene, mode, width, height, frame,
-		                                 numPixelSamples, numLightSamples,
-		                                 maxDepth, maxOpacity, image);
-	}
-
-	if(std::string(name) == "latticebn")
-	{
-		return run<oqmc::LatticeBnSampler>(scene, mode, width, height, frame,
-		                                   numPixelSamples, numLightSamples,
-		                                   maxDepth, maxOpacity, image);
-	}
-
 	if(std::string(name) == "rng")
 	{
 		return run<RngSampler>(scene, mode, width, height, frame,

@@ -561,10 +561,6 @@ implementations and their required header files:
 
 - [`oqmc/pmj.h`](include/oqmc/pmj.h): Includes low discrepancy `oqmc::PmjSampler`.
 - [`oqmc/pmjbn.h`](include/oqmc/pmjbn.h): Includes blue noise variant `oqmc::PmjBnSampler`.
-- [`oqmc/sobol.h`](include/oqmc/sobol.h): Includes Owen scrambled `oqmc::SobolSampler`.
-- [`oqmc/sobolbn.h`](include/oqmc/sobolbn.h): Includes blue noise variant `oqmc::SobolBnSampler`.
-- [`oqmc/lattice.h`](include/oqmc/lattice.h): Includes rank one `oqmc::LatticeSampler`.
-- [`oqmc/latticebn.h`](include/oqmc/latticebn.h): Includes blue noise variant `oqmc::LatticeBnSampler`.
 - [`oqmc/oqmc.h`](include/oqmc/oqmc.h): Convenience header includes all implementations.
 
 This diagram gives a high level view of the available implementations and how
@@ -784,7 +780,7 @@ caller can always derive a new domain.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-1-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-1-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-1-light.png">
+  <img alt="Domain tree graph 1." src="./images/diagrams/domain-tree-graph-1-light.png">
 </picture>
 
 This example works, but isn't very flexible. This can be improved. Types that
@@ -900,7 +896,7 @@ become equivalent in value.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-2-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-2-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-2-light.png">
+  <img alt="Domain tree graph 2." src="./images/diagrams/domain-tree-graph-2-light.png">
 </picture>
 
 This will result in lens and light dimensions correlating, leaving gaps in the
@@ -943,7 +939,7 @@ here, or by passing an integer value directly.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-3-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-3-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-3-light.png">
+  <img alt="Domain tree graph 3." src="./images/diagrams/domain-tree-graph-3-light.png">
 </picture>
 
 Now that `cameraDomain` and `lightDomain` are independent, the `ThinLensCamera`
@@ -957,7 +953,7 @@ bias-free results.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-4-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-4-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-4-light.png">
+  <img alt="Domain tree graph 4." src="./images/diagrams/domain-tree-graph-4-light.png">
 </picture>
 
 OpenQMC's design makes domain trees a first-class concept and lets you focus on
@@ -979,7 +975,7 @@ dimensions without the cost for the increased sampling rate on all dimensions.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-8-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-8-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-8-light.png">
+  <img alt="Domain tree graph 8." src="./images/diagrams/domain-tree-graph-8-light.png">
 </picture>
 
 The diagram above shows the same domain tree extended with a stack for each
@@ -1030,7 +1026,7 @@ pass all indices to the API and average the results.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-5-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-5-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-5-light.png">
+  <img alt="Domain tree graph 5." src="./images/diagrams/domain-tree-graph-5-light.png">
 </picture>
 
 In this domain tree, `N_LIGHT_SAMPLES` maintains a fixed value of 2, and thus,
@@ -1090,7 +1086,7 @@ the **distribution strategy**.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-6-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-6-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-6-light.png">
+  <img alt="Domain tree graph 6." src="./images/diagrams/domain-tree-graph-6-light.png">
 </picture>
 
 Here is the domain tree when using the distribution strategy. The split domain
@@ -1141,7 +1137,7 @@ uses the `newDomainChain` function, which is the equivalent of chaining two
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/domain-tree-graph-7-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/domain-tree-graph-7-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/domain-tree-graph-7-light.png">
+  <img alt="Domain tree graph 7." src="./images/diagrams/domain-tree-graph-7-light.png">
 </picture>
 
 Here is the domain tree when using the chaining strategy. This new domain is
@@ -1188,10 +1184,10 @@ each option, so you can decide which is best for your use case.
 ### PMJ sequences
 
 The implementation uses the stochastic method described by Helmer et la. [^2]
-to efficiently construct a progressive multi-jittered (0,2) sequence. The first
-pair of dimensions in a domain have the same integration properties as the
-Sobol implementation. However, as the sequence doesn't extend to more than two
-dimensions, the second pair is randomised relative to the first in a single
+to efficiently construct a progressive multi-jittered (0,2) sequence. The
+first pair of dimensions in a domain have the same integration properties as
+a Sobol implementation. However, as the sequence doesn't extend to more than
+two dimensions, the second pair is randomised relative to the first in a single
 domain.
 
 <picture>
@@ -1213,56 +1209,6 @@ space or access is a concern.
   <img alt="PMJ pair plot." src="./images/plots/pair-plot-pmj-light.png">
 </picture>
 
-### Sobol sequences
-
-The implementation uses an elegant construction by Burley [^1] for an Owen
-scrambled Sobol sequence. This also includes performance improvements such as
-limiting the index to 16 bits, pre-inverting the input and output matrices, and
-making use of CPU vector intrinsics. You need to select a `OPENQMC_ARCH_TYPE` to
-make use of the performance from vector intrinsics for a given architecture.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/sobol-design-light.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/sobol-design-dark.png">
-  <img alt="sobol pair plot." src="./images/diagrams/sobol-design-light.png">
-</picture>
-
-This sampler has no cache initialisation cost, it generates all samples on
-the fly without touching memory. However, the cost per draw sample call is
-computationally higher than other samplers. The quality of Owen scramble
-sequences often outweigh this cost due to their random error cancellation and
-incredibly high rate of integration for smooth functions.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/plots/pair-plot-sobol-light.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/pair-plot-sobol-dark.png">
-  <img alt="Sobol pair plot." src="./images/plots/pair-plot-sobol-light.png">
-</picture>
-
-### Lattice sequences
-
-The implementation uses the generator vector from Hickernell et al. [^3] to
-construct a 4D lattice. This is then made into a progressive sequence using
-a scalar based on a radical inversion of the sample index. Randomisation uses
-toroidal shifts.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/lattice-design-light.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/lattice-design-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/lattice-design-light.png">
-</picture>
-
-This sampler has no cache initialisation cost, it generates all samples on the
-fly without touching memory. Runtime performance is also high with a relatively
-low computation cost for a single draw sample call. However, the rate of
-integration per pixel can be lower when compared to other samplers.
-
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="./images/plots/pair-plot-lattice-light.png">
-  <source media="(prefers-color-scheme: dark)" srcset="./images/plots/pair-plot-lattice-dark.png">
-  <img alt="Lattice pair plot." src="./images/plots/pair-plot-lattice-light.png">
-</picture>
-
 ### Blue noise sampler variants
 
 Blue noise variants offer spatial blue noise dithering between pixels, with
@@ -1272,7 +1218,7 @@ that's based on the work by Belcour and Heitz [^4].
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/optimise-index-seed-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/optimise-index-seed-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/optimise-index-seed-light.png">
+  <img alt="Optimise index and seed diagram." src="./images/diagrams/optimise-index-seed-light.png">
 </picture>
 
 Each variant achieves a blue noise distribution using two pixel tables, one
@@ -1284,7 +1230,7 @@ single pair of tables to provide keys and ranks for all domains.
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/blue-noise-procedure-light.png">
   <source media="(prefers-color-scheme: dark)" srcset="./images/diagrams/blue-noise-procedure-dark.png">
-  <img alt="lattice pair plot." src="./images/diagrams/blue-noise-procedure-light.png">
+  <img alt="Blue noise decode procedure diagram." src="./images/diagrams/blue-noise-procedure-light.png">
 </picture>
 
 Although the spatial blue noise doesn't reduce the error for an individual
@@ -1465,7 +1411,7 @@ the hardware, as well as the build configuration.
 USAGE: ./build/src/tools/cli/benchmark <sampler> <measurement>
 
 ARGS:
-  <sampler> Options are 'pmj', 'pmjbn', 'sobol', 'sobolbn', 'lattice', 'latticebn'.
+  <sampler> Options are 'pmj', 'pmjbn'.
   <measurement> Options are 'init', 'samples'.
 ```
 
@@ -1482,7 +1428,7 @@ sequences, 256 samples, and 8 dimensions.
 USAGE: ./build/src/tools/cli/generate <sampler>
 
 ARGS:
-  <sampler> Options are 'pmj', 'sobol', 'lattice'.
+  <sampler> Options are 'pmj'.
 ```
 
 </details>
@@ -1499,7 +1445,7 @@ also demonstrates how each sampler implementation practically performs.
 USAGE: ./build/src/tools/cli/trace <sampler> <scene>
 
 ARGS:
-  <sampler> Options are 'pmj', 'pmjbn', 'sobol', 'sobolbn', 'lattice', 'latticebn'.
+  <sampler> Options are 'pmj', 'pmjbn'.
   <scene> Options are 'box', 'presence', 'blur'.
 ```
 
@@ -1528,7 +1474,7 @@ that this provided a speedup of ~400x that of the CPU.
 USAGE: ./build/src/tools/cli/optimise <sampler>
 
 ARGS:
-  <sampler> Options are 'pmj', 'sobol', 'lattice'.
+  <sampler> Options are 'pmj'.
 ```
 
 </details>

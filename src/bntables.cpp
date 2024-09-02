@@ -22,32 +22,6 @@ extern const std::uint32_t rankTable[] = {
 
 } // namespace pmj
 
-namespace sobol
-{
-
-extern const std::uint32_t keyTable[] = {
-#include <oqmc/data/sobol/keys.txt>
-};
-
-extern const std::uint32_t rankTable[] = {
-#include <oqmc/data/sobol/ranks.txt>
-};
-
-} // namespace sobol
-
-namespace lattice
-{
-
-extern const std::uint32_t keyTable[] = {
-#include <oqmc/data/lattice/keys.txt>
-};
-
-extern const std::uint32_t rankTable[] = {
-#include <oqmc/data/lattice/ranks.txt>
-};
-
-} // namespace lattice
-
 } // namespace bntables
 
 } // namespace oqmc

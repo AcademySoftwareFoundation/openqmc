@@ -41,22 +41,16 @@ add_executable(tests EXCLUDE_FROM_ALL
 	encode.cpp
 	float.cpp
 	gpu.cpp
-	lattice.cpp
-	latticebn.cpp
 	lookup.cpp
 	oqmc.cpp
-	owen.cpp
 	pcg.cpp
 	pmj.cpp
 	pmjbn.cpp
 	permute.cpp
 	range.cpp
-	rank1.cpp
 	reverse.cpp
 	rotate.cpp
 	sampler.cpp
-	sobol.cpp
-	sobolbn.cpp
 	state.cpp
 	stochastic.cpp
 	unused.cpp)

@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 	                  out.keys, out.ranks, out.estimates, out.frequencies))
 	{
 		std::fprintf(stderr, "Sampler that was requested was not found; "
-		                     "options are pmj, sobol, lattice.\n");
+		                     "options are pmj.\n");
 
 		goto failure;
 	}

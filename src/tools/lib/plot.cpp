@@ -156,21 +156,6 @@ bool plotError(const char* sampler, Shape shape, int nsequences, int nsamples,
 		return true;
 	}
 
-	if(std::string(sampler) == "sobol")
-	{
-		plotError<Shape, oqmc::SobolSampler>(shape, nsequences, nsamples, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "lattice")
-	{
-		plotError<Shape, oqmc::LatticeSampler>(shape, nsequences, nsamples,
-		                                       out);
-
-		return true;
-	}
-
 	if(std::string(sampler) == "rng")
 	{
 		plotError<Shape, RngSampler>(shape, nsequences, nsamples, out);
@@ -302,38 +287,6 @@ bool plotErrorFilterSpace(const char* sampler, Shape shape, int resolution,
 	if(std::string(sampler) == "pmjbn")
 	{
 		plotErrorFilterSpace<Shape, oqmc::PmjBnSampler>(
-		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "sobol")
-	{
-		plotErrorFilterSpace<Shape, oqmc::SobolSampler>(
-		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "sobolbn")
-	{
-		plotErrorFilterSpace<Shape, oqmc::SobolBnSampler>(
-		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "lattice")
-	{
-		plotErrorFilterSpace<Shape, oqmc::LatticeSampler>(
-		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "latticebn")
-	{
-		plotErrorFilterSpace<Shape, oqmc::LatticeBnSampler>(
 		    shape, resolution, nsamples, nsigma, sigmaMin, sigmaStep, out);
 
 		return true;
@@ -474,42 +427,6 @@ bool plotErrorFilterTime(const char* sampler, Shape shape, int resolution,
 		return true;
 	}
 
-	if(std::string(sampler) == "sobol")
-	{
-		plotErrorFilterTime<Shape, oqmc::SobolSampler>(
-		    shape, resolution, depth, nsamples, nsigma, sigmaMin, sigmaStep,
-		    out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "sobolbn")
-	{
-		plotErrorFilterTime<Shape, oqmc::SobolBnSampler>(
-		    shape, resolution, depth, nsamples, nsigma, sigmaMin, sigmaStep,
-		    out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "lattice")
-	{
-		plotErrorFilterTime<Shape, oqmc::LatticeSampler>(
-		    shape, resolution, depth, nsamples, nsigma, sigmaMin, sigmaStep,
-		    out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "latticebn")
-	{
-		plotErrorFilterTime<Shape, oqmc::LatticeBnSampler>(
-		    shape, resolution, depth, nsamples, nsigma, sigmaMin, sigmaStep,
-		    out);
-
-		return true;
-	}
-
 	if(std::string(sampler) == "rng")
 	{
 		plotErrorFilterTime<Shape, RngSampler>(shape, resolution, depth,
@@ -611,34 +528,6 @@ OQMC_CABI bool oqmc_plot_zoneplate(const char* sampler, int nsamples,
 	if(std::string(sampler) == "pmjbn")
 	{
 		plotZoneplate<oqmc::PmjBnSampler>(nsamples, resolution, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "sobol")
-	{
-		plotZoneplate<oqmc::SobolSampler>(nsamples, resolution, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "sobolbn")
-	{
-		plotZoneplate<oqmc::SobolBnSampler>(nsamples, resolution, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "lattice")
-	{
-		plotZoneplate<oqmc::LatticeSampler>(nsamples, resolution, out);
-
-		return true;
-	}
-
-	if(std::string(sampler) == "latticebn")
-	{
-		plotZoneplate<oqmc::LatticeBnSampler>(nsamples, resolution, out);
 
 		return true;
 	}

@@ -59,8 +59,7 @@ int main(int argc, char* argv[])
 	               numPixelSamples, numLightSamples, maxDepth, maxOpacity, out))
 	{
 		std::fprintf(stderr, "Configuration that was requested was not found; "
-		                     "sampler options are pmj, pmjbn, sobol, sobolbn, "
-		                     "lattice, latticebn, rng; "
+		                     "sampler options are pmj, pmjbn, rng; "
 		                     "scene options are box, presence, blur.\n");
 
 		goto failure;

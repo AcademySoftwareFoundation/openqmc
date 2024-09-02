@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	if(!oqmc_generate(argv[1], nsequences, nsamples, ndims, out))
 	{
 		std::fprintf(stderr, "Sampler that was requested was not found; "
-		                     "options are pmj, sobol, lattice.\n");
+		                     "options are pmj.\n");
 
 		goto failure;
 	}

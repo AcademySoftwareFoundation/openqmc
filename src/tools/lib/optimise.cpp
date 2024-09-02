@@ -12,10 +12,8 @@
 #include <oqmc/float.h>
 #include <oqmc/gpu.h>
 #include <oqmc/lookup.h>
-#include <oqmc/owen.h>
 #include <oqmc/pcg.h>
 #include <oqmc/range.h>
-#include <oqmc/rank1.h>
 #include <oqmc/state.h>
 #include <oqmc/stochastic.h>
 #include <oqmc/unused.h>
@@ -924,48 +922,6 @@ struct Pmj
 	}
 };
 
-struct Sobol
-{
-	OQMC_HOST_DEVICE static void* initialiseCache()
-	{
-		return nullptr;
-	}
-
-	OQMC_HOST_DEVICE static void deinitialiseCache(void* cache)
-	{
-		OQMC_MAYBE_UNUSED(cache);
-	}
-
-	OQMC_HOST_DEVICE static void sample(int index, std::uint32_t hash,
-	                                    const void* cache, std::uint32_t out[2])
-	{
-		OQMC_MAYBE_UNUSED(cache);
-
-		oqmc::shuffledScrambledSobol<2>(index, hash, out);
-	}
-};
-
-struct Lattice
-{
-	OQMC_HOST_DEVICE static void* initialiseCache()
-	{
-		return nullptr;
-	}
-
-	OQMC_HOST_DEVICE static void deinitialiseCache(void* cache)
-	{
-		OQMC_MAYBE_UNUSED(cache);
-	}
-
-	OQMC_HOST_DEVICE static void sample(int index, std::uint32_t hash,
-	                                    const void* cache, std::uint32_t out[2])
-	{
-		OQMC_MAYBE_UNUSED(cache);
-
-		oqmc::shuffledRotatedLattice<2>(index, hash, out);
-	}
-};
-
 } // namespace
 
 // This optimisation process is based on 'Lessons Learned and Improvements
@@ -1001,22 +957,6 @@ OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
 	{
 		run<Pmj>(ntests, niterations, nsamples, resolution, seed,
 		         {keys, ranks, estimates, frequencies});
-
-		return true;
-	}
-
-	if(std::string(name) == "sobol")
-	{
-		run<Sobol>(ntests, niterations, nsamples, resolution, seed,
-		           {keys, ranks, estimates, frequencies});
-
-		return true;
-	}
-
-	if(std::string(name) == "lattice")
-	{
-		run<Lattice>(ntests, niterations, nsamples, resolution, seed,
-		             {keys, ranks, estimates, frequencies});
 
 		return true;
 	}

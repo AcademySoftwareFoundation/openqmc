@@ -140,17 +140,5 @@ OQMC_CABI bool oqmc_generate(const char* name, int nsequences, int nsamples,
 		return true;
 	}
 
-	if(std::string(name) == "sobol")
-	{
-		run<oqmc::SobolSampler>(nsequences, nsamples, ndims, out);
-		return true;
-	}
-
-	if(std::string(name) == "lattice")
-	{
-		run<oqmc::LatticeSampler>(nsequences, nsamples, ndims, out);
-		return true;
-	}
-
 	return false;
 }

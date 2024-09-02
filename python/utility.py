@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import wrapper as oqmc
 
-sequences_base = ("pmj", "sobol", "lattice")
-sequences_complete = ("pmj", "sobol", "lattice", "pmjbn", "sobolbn", "latticebn")
+sequences_base = "pmj"
+sequences_complete = ("pmj", "pmjbn")
 
 shapes = {
     "qdisk": "quarter disk",
