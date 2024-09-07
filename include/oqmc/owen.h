@@ -54,6 +54,10 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 		return reverseBits16(index);
 	}
 
+	// Following matrices were produced using the matrices cli tool found in the
+	// source file src/tools/cli/matrices.cpp. This in turn uses matrices that
+	// were copied from MIT licensed code written by Leonhard Gruenschloss.
+
 	// clang-format off
 	constexpr std::uint16_t masks[16] = {
 		0b0000000000000001,

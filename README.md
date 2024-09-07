@@ -1376,9 +1376,27 @@ nix profile install nixpkgs#helix
 Alternatively you can build the project without using a provided development
 environment using a local compiler. This should work just fine on most systems.
 
+### Navigation
+
+The project has a simple layout. As the library is header only the library
+source code is under the include directory. A large proportion of the project
+code is also the tooling and testing. This is found under the src directory.
+
+The directories are:
+
+- `cmake`: CMake examples for adding OpenQMC as a dependency.
+- `doxygen`: Extra static pages for Doxygen API documentation site.
+- `images`: Documentation images generated using the tools and notebooks.
+- `include`: OpenQMC library source code.
+- `python`: Jupyter notebooks and Python wrapper for tooling.
+- `scripts`: Utility scripts for command line and CI usage.
+- `src/tests`: Unit and statistical hypothesis testing.
+- `src/tools`: Project tooling for analysis and offline optimisation.
+- `tsc`: Meeting notes and project process documentation.
+
 ### Dependencies
 
-The tools and tests have dependencies on external projects. If these are already
+Tools and tests have dependencies on external libraries. If these are already
 installed on the system they can be found automatically, such as when using one
 of the development environments. If a dependency isn't installed, then it will
 be downloaded and compiled along with the project.

@@ -74,6 +74,9 @@ constexpr auto size = 1 << (xBits + yBits + zBits); ///< 2^16 table size.
 static_assert(xBits == yBits,
               "Optimisation tables have equal resolution in x and y");
 
+// Following optimised blue noise randomisation values were generated using the
+// optimise cli tool found in the source file src/tools/lib/optimise.cpp.
+
 namespace pmj
 {
 
