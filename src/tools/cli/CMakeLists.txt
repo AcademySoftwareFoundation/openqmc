@@ -28,6 +28,14 @@ target_compile_options(generate PRIVATE ${OPENQMC_CXX_FLAGS})
 target_compile_features(generate PRIVATE cxx_std_14)
 target_link_libraries(generate PRIVATE tools)
 
+# Create hilbert executable
+
+add_executable(hilbert
+	hilbert.cpp)
+
+target_compile_options(hilbert PRIVATE ${OPENQMC_CXX_FLAGS})
+target_compile_features(hilbert PRIVATE cxx_std_14)
+
 # Create matrices executable
 
 add_executable(matrices

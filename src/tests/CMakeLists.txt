@@ -59,7 +59,8 @@ add_executable(tests EXCLUDE_FROM_ALL
 	sobolbn.cpp
 	state.cpp
 	stochastic.cpp
-	unused.cpp)
+	unused.cpp
+	zorder.cpp)
 
 target_link_libraries(tests PRIVATE
 	${PROJECT_NAME}

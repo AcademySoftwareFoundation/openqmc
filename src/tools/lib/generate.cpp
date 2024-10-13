@@ -152,5 +152,11 @@ OQMC_CABI bool oqmc_generate(const char* name, int nsequences, int nsamples,
 		return true;
 	}
 
+	if(std::string(name) == "zorder")
+	{
+		run<oqmc::ZorderSampler>(nsequences, nsamples, ndims, out);
+		return true;
+	}
+
 	return false;
 }

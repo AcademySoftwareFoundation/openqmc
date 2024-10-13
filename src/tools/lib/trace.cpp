@@ -815,59 +815,80 @@ directLighting(const Session& session, Method method, int numLightSamples,
                Sampler directDomain)
 {
 	glm::vec3 direct = glm::vec3();
-	for(int i = 0; i < session.numLights; ++i)
+
+	if(session.numLights == 0)
 	{
-		const auto& light = session.lights[i];
+		return direct;
+	}
 
-		for(int j = 0; j < numLightSamples; ++j)
+	for(int j = 0; j < numLightSamples; ++j)
+	{
+		enum DomainKey
 		{
-			auto root = Sampler{};
+			Pick,
+			Light,
+			Opacity,
+		};
 
-			switch(method)
-			{
-			case Method::Split:
-				root = directDomain.newDomainSplit(i, numLightSamples, j);
-				break;
-			case Method::Distrib:
-				root = directDomain.newDomainDistrib(i, j);
-				break;
-			case Method::Chain:
-				root = directDomain.newDomainChain(i, j);
-				break;
-			};
+		auto root = Sampler{};
 
-			enum DomainKey
-			{
-				Light,
-				Opacity,
-			};
+		switch(method)
+		{
+		case Method::Split:
+			root = directDomain.newDomainSplit(0, numLightSamples, j);
+			break;
+		case Method::Distrib:
+			root = directDomain.newDomainDistrib(0, j);
+			break;
+		case Method::Chain:
+			root = directDomain.newDomainChain(0, j);
+			break;
+		};
 
-			const auto lightDomain = root.newDomain(DomainKey::Light);
-			const auto opacityDomain = root.newDomain(DomainKey::Opacity);
+		const auto opacityDomain = root.newDomain(DomainKey::Opacity);
 
-			float lightSample[2];
-			lightDomain.template drawSample<2>(lightSample);
+		float lightIndex[1];
+		float lightSample[2];
 
-			float rcpDistSqr;
-			const auto dir =
-			    light.sample(pathEvent.pos, lightSample, rcpDistSqr);
+#if 0 // LIGHT SAMPLE 3D
+		const auto lightDomain = root.newDomain(DomainKey::Light);
 
-			const auto shadowRay =
-			    Ray(pathEvent.pos, dir, pathRay.time, pathEvent.normal);
+		float lightTemp[3];
+		lightDomain.template drawSample<3>(lightTemp);
 
-			Interaction shadowEvent;
-			const auto shadowHit = intersectOpacityCheck(
-			    session, maxOpacity, shadowRay, opacityDomain, shadowEvent);
+		lightIndex[0] = lightTemp[0];
+		lightSample[1] = lightTemp[1];
+		lightSample[0] = lightTemp[2];
+#else // LIGHT SAMPLE 1D + 2D
+		const auto pickDomain = root.newDomain(DomainKey::Pick);
+		const auto lightDomain = root.newDomain(DomainKey::Light);
 
-			if(shadowHit && shadowEvent.prim.materialId == light.materialId &&
-			   !shadowEvent.exit)
-			{
-				const auto project = std::abs(glm::dot(dir, pathEvent.normal));
-				const auto illuminance = light.emission(dir) * rcpDistSqr;
+		pickDomain.template drawSample<1>(lightIndex);
+		lightDomain.template drawSample<2>(lightSample);
+#endif
 
-				direct +=
-				    project * illuminance / static_cast<float>(numLightSamples);
-			}
+		const auto& light =
+		    session.lights[static_cast<int>(lightIndex[0] * session.numLights)];
+
+		float rcpDistSqr;
+		const auto dir = light.sample(pathEvent.pos, lightSample, rcpDistSqr);
+
+		const auto shadowRay =
+		    Ray(pathEvent.pos, dir, pathRay.time, pathEvent.normal);
+
+		Interaction shadowEvent;
+		const auto shadowHit = intersectOpacityCheck(
+		    session, maxOpacity, shadowRay, opacityDomain, shadowEvent);
+
+		if(shadowHit && shadowEvent.prim.materialId == light.materialId &&
+		   !shadowEvent.exit)
+		{
+			const auto project = std::abs(glm::dot(dir, pathEvent.normal));
+			const auto illuminance = light.emission(dir) * rcpDistSqr;
+			const auto prob = 1.0f / session.numLights;
+
+			direct += project * illuminance * prob /
+			          static_cast<float>(numLightSamples);
 		}
 	}
 
@@ -1569,6 +1590,13 @@ OQMC_CABI bool oqmc_trace(const char* name, const char* scene, const char* mode,
 		return run<oqmc::LatticeBnSampler>(scene, mode, width, height, frame,
 		                                   numPixelSamples, numLightSamples,
 		                                   maxDepth, maxOpacity, image);
+	}
+
+	if(std::string(name) == "zorder")
+	{
+		return run<oqmc::ZorderSampler>(scene, mode, width, height, frame,
+		                                numPixelSamples, numLightSamples,
+		                                maxDepth, maxOpacity, image);
 	}
 
 	if(std::string(name) == "rng")

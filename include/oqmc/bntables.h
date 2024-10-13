@@ -154,6 +154,25 @@ constexpr std::uint32_t rankTable[] = {
 
 } // namespace lattice
 
+namespace hilbert
+{
+
+#if defined(OQMC_ENABLE_BINARY)
+
+/// Hilbert curve indices.
+extern const std::uint32_t indexTable[size];
+
+#else
+
+/// Hilbert curve indices.
+constexpr std::uint32_t indexTable[] = {
+#include "data/hilbert/indices.txt"
+};
+
+#endif
+
+} // namespace hilbert
+
 } // namespace bntables
 
 } // namespace oqmc

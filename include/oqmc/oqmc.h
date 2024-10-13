@@ -14,3 +14,4 @@
 #include <oqmc/pmjbn.h>
 #include <oqmc/sobol.h>
 #include <oqmc/sobolbn.h>
+#include <oqmc/zorder.h>

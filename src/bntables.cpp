@@ -48,6 +48,15 @@ extern const std::uint32_t rankTable[] = {
 
 } // namespace lattice
 
+namespace hilbert
+{
+
+extern const std::uint32_t indexTable[] = {
+#include <oqmc/data/hilbert/indices.txt>
+};
+
+} // namespace hilbert
+
 } // namespace bntables
 
 } // namespace oqmc

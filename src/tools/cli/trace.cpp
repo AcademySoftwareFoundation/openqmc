@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	constexpr auto width = 1080;
 	constexpr auto height = 720;
 	constexpr auto frame = 0;
-	constexpr auto numPixelSamples = 2;
+	constexpr auto numPixelSamples = 1;
 	constexpr auto numLightSamples = 1;
 	constexpr auto maxDepth = 0;
 	constexpr auto maxOpacity = 2;
