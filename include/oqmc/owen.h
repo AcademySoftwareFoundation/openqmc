@@ -300,4 +300,191 @@ OQMC_HOST_DEVICE inline void shuffledScrambledSobol(std::uint32_t index,
 	}
 }
 
+OQMC_HOST_DEVICE constexpr std::uint16_t sobolDimension5(std::uint16_t index)
+{
+	// clang-format off
+	constexpr std::uint16_t masks[16] = {
+		0b0000000000000001,
+		0b0000000000000010,
+		0b0000000000000100,
+		0b0000000000001000,
+		0b0000000000010000,
+		0b0000000000100000,
+		0b0000000001000000,
+		0b0000000010000000,
+		0b0000000100000000,
+		0b0000001000000000,
+		0b0000010000000000,
+		0b0000100000000000,
+		0b0001000000000000,
+		0b0010000000000000,
+		0b0100000000000000,
+		0b1000000000000000,
+	};
+
+	constexpr std::uint16_t matrix[16] = {
+		0b1000000000000000,
+		0b0100000000000000,
+		0b0010000000000000,
+		0b1011000000000000,
+		0b1111100000000000,
+		0b1101110000000000,
+		0b0111101000000000,
+		0b1001110100000000,
+		0b0101101010000000,
+		0b0010111111000000,
+		0b1010000101100000,
+		0b1111000010110000,
+		0b1101101010001000,
+		0b0110111111000100,
+		0b1000000101100010,
+		0b0100000010111011,
+	};
+	// clang-format on
+
+	std::uint16_t sample = 0;
+	for(int i = 0; i < 16; ++i)
+	{
+		if((index & masks[i]) != 0)
+		{
+			sample ^= matrix[i];
+		}
+	}
+
+	return sample;
+}
+
+OQMC_HOST_DEVICE constexpr std::uint16_t
+sobolDimension5Inv(std::uint16_t sample)
+{
+	// clang-format off
+	constexpr std::uint16_t masks[16] = {
+		0b0000000000000001,
+		0b0000000000000010,
+		0b0000000000000100,
+		0b0000000000001000,
+		0b0000000000010000,
+		0b0000000000100000,
+		0b0000000001000000,
+		0b0000000010000000,
+		0b0000000100000000,
+		0b0000001000000000,
+		0b0000010000000000,
+		0b0000100000000000,
+		0b0001000000000000,
+		0b0010000000000000,
+		0b0100000000000000,
+		0b1000000000000000,
+	};
+
+	constexpr std::uint16_t masksInversed[16] = {
+		0b1000000000000000,
+		0b0100000000000000,
+		0b0010000000000000,
+		0b0001000000000000,
+		0b0000100000000000,
+		0b0000010000000000,
+		0b0000001000000000,
+		0b0000000100000000,
+		0b0000000010000000,
+		0b0000000001000000,
+		0b0000000000100000,
+		0b0000000000010000,
+		0b0000000000001000,
+		0b0000000000000100,
+		0b0000000000000010,
+		0b0000000000000001,
+	};
+
+	constexpr std::uint16_t matrix[16] = {
+		0b1000000000000000,
+		0b0100000000000000,
+		0b0010000000000000,
+		0b1011000000000000,
+		0b1111100000000000,
+		0b1101110000000000,
+		0b0111101000000000,
+		0b1001110100000000,
+		0b0101101010000000,
+		0b0010111111000000,
+		0b1010000101100000,
+		0b1111000010110000,
+		0b1101101010001000,
+		0b0110111111000100,
+		0b1000000101100010,
+		0b0100000010111011,
+	};
+	// clang-format on
+
+	std::uint16_t index = 0;
+	for(int i = 16 - 1; i >= 0; --i)
+	{
+		if((sample & masksInversed[i]) != 0)
+		{
+			index |= masks[i];
+			sample ^= matrix[i];
+		}
+	}
+
+	assert(sample == 0);
+
+	return index;
+}
+
+OQMC_HOST_DEVICE constexpr std::uint16_t
+sobolPartionIndex(std::uint16_t index, int log2npartition, int partition)
+{
+	assert(log2npartition >= 0);
+	assert(partition >= 0);
+
+	// Method by Keller and Grunschlob, described in 'Parallel Quasi-Monte Carlo
+	// Integration by Partitioning Low Discrepancy Sequences'.
+
+	const auto j = partition;
+	const auto l = index;
+	const auto m = log2npartition;
+	const auto n = 1 << m;
+
+	assert(partition < n);
+
+	const auto ln = l * n;
+	const auto yl = sobolDimension5(ln);
+	const auto sum = (j << (16 - m)) ^ (yl & ~((1 << (16 - m)) - 1));
+	const auto kjl = sobolDimension5Inv(sum);
+	const auto ijl = ln + kjl;
+
+	return ijl;
+}
+
+OQMC_HOST_DEVICE constexpr std::uint32_t sobol(std::uint32_t index,
+                                               int dimension)
+{
+	index = reverseBits32(index);
+	index = sobolReversedIndex(index >> 16, dimension);
+	index = reverseBits32(index);
+
+	return index;
+}
+
+template <int Depth>
+OQMC_HOST_DEVICE inline void
+partionedScrambledSobol(std::uint32_t index, std::uint32_t seed, int partition,
+                        int log2npartition, std::uint32_t sample[Depth])
+{
+	static_assert(Depth >= 1, "Pattern depth is greater or equal to one.");
+	static_assert(Depth <= 4, "Pattern depth is less or equal to four.");
+
+	const auto mask = (1 << log2npartition) - 1;
+	partition = shuffle(partition, seed) & mask;
+
+	index = shuffle(index, seed);
+	index = sobolPartionIndex(index, log2npartition, partition);
+
+	for(int i = 0; i < Depth; ++i)
+	{
+		sample[i] = sobol(index, i);
+		sample[i] = shuffle(sample[i], rotateBytes(seed, i));
+	}
+}
+
 } // namespace oqmc

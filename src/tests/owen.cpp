@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenQMC Project.
 
 #include "hypothesis.h"
+#include <oqmc/float.h>
 #include <oqmc/owen.h>
 #include <oqmc/pcg.h>
 
@@ -139,6 +140,41 @@ TEST(OwenTest, ShirleyRemapping)
 		{
 			EXPECT_TRUE(stratum);
 		}
+	}
+}
+
+TEST(OwenTest, SobolInverse)
+{
+	for(int in = 0; in < 32; ++in)
+	{
+		const auto sample = oqmc::sobolDimension5(in);
+		const auto out = oqmc::sobolDimension5Inv(sample);
+
+		EXPECT_EQ(in, out);
+	}
+
+	for(int in = 1 << 10; in < (1 << 10) + 32; ++in)
+	{
+		const auto sample = oqmc::sobolDimension5(in);
+		const auto out = oqmc::sobolDimension5Inv(sample);
+
+		EXPECT_EQ(in, out);
+	}
+}
+
+TEST(OwenTest, SobolPartition)
+{
+	const auto log2npartions = 3;
+
+	for(int index = 0; index < 32; ++index)
+	{
+		const auto i0l = oqmc::sobolPartionIndex(index, log2npartions, 0);
+		EXPECT_GT(1.0f / (1 << log2npartions) * 1,
+		          oqmc::uintToFloat(oqmc::sobolDimension5(i0l) << 16));
+
+		const auto i4l = oqmc::sobolPartionIndex(index, log2npartions, 4);
+		EXPECT_GT(1.0f / (1 << log2npartions) * 5,
+		          oqmc::uintToFloat(oqmc::sobolDimension5(i4l) << 16));
 	}
 }
 

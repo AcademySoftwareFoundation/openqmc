@@ -94,13 +94,12 @@ inline ZorderImpl ZorderImpl::newDomainDistrib(int key, int index) const
 template <int Size>
 void ZorderImpl::drawSample(std::uint32_t sample[Size]) const
 {
-	constexpr auto sampleCount = 1;
+	constexpr auto log2npartition = 4;
 
 	const auto hilbert = cache->indexTable[state.pixelId];
-	const auto sampleId = hilbert * sampleCount + state.sampleId;
 
-	shuffledScrambledSobol<Size>(sampleId, pcg::output(state.patternId),
-	                             sample);
+	partionedScrambledSobol<Size>(state.sampleId, pcg::output(state.patternId),
+	                              hilbert, log2npartition, sample);
 }
 
 template <int Size>

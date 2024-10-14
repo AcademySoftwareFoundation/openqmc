@@ -13349,19 +13349,47 @@ constexpr std::uint32_t matrices[numDimensions][size] = {
 template <int SamplePrecision>
 void printMatrices(int dimensionSize, int indexSize)
 {
-	static_assert(SamplePrecision >= 0, "Sample precision must be positive.");
+	static_assert(SamplePrecision >= 0, "Precision must be positive.");
+	static_assert(SamplePrecision <= 32, "Precision must be in 32 bits.");
 
 	assert(dimensionSize >= 0);
+	assert(dimensionSize < numDimensions);
+
 	assert(indexSize >= 0);
+	assert(indexSize < size);
 
 	for(int i = 0; i < dimensionSize; ++i)
 	{
 		for(int j = 0; j < indexSize; ++j)
 		{
-			auto indexRev = indexSize - (j + 1);
-			auto valueRev = oqmc::reverseBits32(matrices[i][indexRev]);
+			const auto row = matrices[i][j] >> (32 - SamplePrecision);
+			const auto string = std::bitset<SamplePrecision>(row).to_string();
 
-			auto string = std::bitset<SamplePrecision>(valueRev).to_string();
+			std::printf("0b%s,\n", string.c_str());
+		}
+
+		std::printf("\n");
+	}
+}
+
+template <int SamplePrecision>
+void printMatricesRotated(int dimensionSize, int indexSize)
+{
+	static_assert(SamplePrecision >= 0, "Precision must be positive.");
+	static_assert(SamplePrecision <= 32, "Precision must be in 32 bits.");
+
+	assert(dimensionSize >= 0);
+	assert(dimensionSize < numDimensions);
+
+	assert(indexSize >= 0);
+	assert(indexSize < size);
+
+	for(int i = 0; i < dimensionSize; ++i)
+	{
+		for(int j = indexSize - 1; j >= 0; --j)
+		{
+			const auto row = oqmc::reverseBits32(matrices[i][j]);
+			const auto string = std::bitset<SamplePrecision>(row).to_string();
 
 			std::printf("0b%s,\n", string.c_str());
 		}
@@ -13376,7 +13404,11 @@ int main()
 	constexpr auto dimensionSize = 4;
 	constexpr auto indexSize = 16;
 
+#if 0
 	printMatrices<samplePrecision>(dimensionSize, indexSize);
+#else
+	printMatricesRotated<samplePrecision>(dimensionSize, indexSize);
+#endif
 
 	return 0;
 }
