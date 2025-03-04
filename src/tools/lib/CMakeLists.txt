@@ -90,7 +90,6 @@ target_link_libraries(tools PRIVATE ${PROJECT_NAME}
 	TBB::tbb
 	glm::glm)
 
-target_compile_features(tools PRIVATE cxx_std_14)
 target_compile_definitions(tools PRIVATE _USE_MATH_DEFINES)
 target_include_directories(tools INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
 

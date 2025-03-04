@@ -94,3 +94,6 @@ result/
 
 # Doxygen html output
 html/
+
+# Direnv temporary files
+.direnv/
