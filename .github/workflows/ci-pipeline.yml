@@ -104,25 +104,19 @@ jobs:
     needs: test-unit
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12, windows-2022, self-hosted]
-        arch: [Scalar, SSE, AVX, ARM, GPU]
+        os: [ubuntu-22.04, macos-14, windows-2022]
+        arch: [Scalar, SSE, AVX, ARM]
         build: [Release, Debug]
         exclude:
           - {os: ubuntu-22.04, arch: ARM}
-          - {os: ubuntu-22.04, arch: GPU}
-          - {os: macos-12, arch: AVX}
-          - {os: macos-12, arch: ARM}
-          - {os: macos-12, arch: GPU}
+          - {os: macos-14, arch: Scalar}
+          - {os: macos-14, arch: SSE}
+          - {os: macos-14, arch: AVX}
           - {os: windows-2022, arch: ARM}
-          - {os: windows-2022, arch: GPU}
-          - {os: self-hosted, arch: Scalar}
-          - {os: self-hosted, arch: SSE}
-          - {os: self-hosted, arch: AVX}
         include:
           - {os: ubuntu-22.04, preset: unix, save: true}
-          - {os: macos-12, preset: unix}
+          - {os: macos-14, preset: unix, save: true}
           - {os: windows-2022, preset: windows}
-          - {os: self-hosted, preset: unix, save: true}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -160,16 +154,15 @@ jobs:
     needs: pre-test-generate
     strategy:
       matrix:
-        os: [ubuntu-22.04, self-hosted]
-        arch: [Scalar, SSE, AVX, ARM, GPU]
+        os: [ubuntu-22.04, macos-14]
+        arch: [Scalar, SSE, AVX, ARM]
         build: [Release, Debug]
         sampler: [pmj, sobol, lattice]
         exclude:
           - {os: ubuntu-22.04, arch: ARM}
-          - {os: ubuntu-22.04, arch: GPU}
-          - {os: self-hosted, arch: Scalar}
-          - {os: self-hosted, arch: SSE}
-          - {os: self-hosted, arch: AVX}
+          - {os: macos-14, arch: Scalar}
+          - {os: macos-14, arch: SSE}
+          - {os: macos-14, arch: AVX}
     runs-on: ${{ matrix.os }}
     steps:
       # Download tools build
