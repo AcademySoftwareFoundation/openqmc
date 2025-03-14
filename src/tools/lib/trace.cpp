@@ -11,7 +11,7 @@
 #include <oqmc/unused.h>
 
 #pragma push
-#pragma diag_suppress 2977
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/common.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtx/intersect.hpp>

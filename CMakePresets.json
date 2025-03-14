@@ -15,6 +15,8 @@
 			"inherits": "base",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_CXX_STANDARD": "14",
+				"CMAKE_CXX_STANDARD_REQUIRED": "ON",
 				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
 				"OPENQMC_CXX_FLAGS": "-Werror;-Wall;-Wextra;-Wpedantic;-Wno-unknown-pragmas",
 				"OPENQMC_BUILD_TOOLS": "ON",

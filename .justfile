@@ -15,7 +15,7 @@
 
 # configure all build options via TUI
 @config:
-  ccmake --preset {{os_family()}}
+  ccmake --preset base
 
 # build target, defaults to all tools
 @build target='all':
