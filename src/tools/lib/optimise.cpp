@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
+// This file is used to compile a cli tool that will output optimised blue noise
+// numbers to then construct multiple blue noise variants of base sampler types.
+// Resulting output is inlined into a header file include/oqmc/bntables.h.
+
 #include "optimise.h"
 
 #include "../../shapes.h"

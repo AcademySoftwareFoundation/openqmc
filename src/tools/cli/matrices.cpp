@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Contributors to the OpenQMC Project.
 
+// This file is used to compile a cli tool that will transform and print a
+// subset of the matrices below into an optimal format for the main library.
+// Resulting output is inlined into a header file include/oqmc/owen.h.
+//
+// Matrices in the source code below were copied from the source code provided
+// by Leonhard Gruenschloss at https://github.com/lgruen/sobol. These were in
+// turn based on work by S. Joe and F. Y. Kuo in 'Constructing Sobol sequences
+// with better two-dimensional projections'.
+
 // Copyright (c) 2012 Leonhard Gruenschloss (leonhard@gruenschloss.org)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

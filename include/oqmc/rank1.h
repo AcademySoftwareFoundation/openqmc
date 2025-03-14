@@ -51,6 +51,9 @@ latticeReversedIndex(std::uint32_t index, int dimension)
 	assert(dimension >= 0);
 	assert(dimension <= 3);
 
+	// Following Rank1 lattice numbers were taken from the orignal publication
+	// listed at the top of this file.
+
 	// clang-format off
 	constexpr int lattice[4] = {
 		1,
