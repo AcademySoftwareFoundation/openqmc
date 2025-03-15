@@ -542,78 +542,11 @@ keysEnergySpatial(Array3d pixelFrame, FullyConnectedGraph graphFrame,
 
 template <bool SwapPixels>
 OQMC_HOST_DEVICE float
-keysEnergyTemporal(Array3d pixelFrame, FullyConnectedGraph graphFrame,
-                   int3 pCoordinate, int3 swapCoordinate, const int* indicesA,
-                   const float* distances)
-{
-	constexpr auto sigma = 1.5f;
-	constexpr auto sigmaSqr = sigma * sigma;
-	constexpr auto sigmaSqrRcp = 1 / sigmaSqr;
-	constexpr auto sigmaSqrRcpNeg = -sigmaSqrRcp;
-
-	constexpr auto width = 6;
-	constexpr auto min = -width;
-	constexpr auto max = +width;
-
-	auto sum = 0.0f;
-	for(int i = min; i < max + 1; ++i)
-	{
-		const int3 qCoordinate = {
-		    pCoordinate.x,
-		    pCoordinate.y,
-		    (pCoordinate.z + i) & bitMask(pixelFrame.shape.z),
-		};
-
-		if(pCoordinate == qCoordinate)
-		{
-			continue;
-		}
-
-		int pIndex;
-		int qIndex;
-		if(SwapPixels)
-		{
-			if(qCoordinate == swapCoordinate)
-			{
-				pIndex = indicesA[pixelFrame.index(swapCoordinate)];
-				qIndex = indicesA[pixelFrame.index(pCoordinate)];
-			}
-			else
-			{
-				pIndex = indicesA[pixelFrame.index(swapCoordinate)];
-				qIndex = indicesA[pixelFrame.index(qCoordinate)];
-			}
-		}
-		else
-		{
-			pIndex = indicesA[pixelFrame.index(pCoordinate)];
-			qIndex = indicesA[pixelFrame.index(qCoordinate)];
-		}
-
-		const FullyConnectedGraph::CoordinatePair pair = {
-		    pixelFrame.coordinate(pIndex),
-		    pixelFrame.coordinate(qIndex),
-		};
-
-		// Note that distances are already squared.
-		const auto sampleDistance = distances[graphFrame.index(pair)];
-		const auto pixelDistance = std::exp((i * i) * sigmaSqrRcpNeg);
-
-		sum += sampleDistance * pixelDistance;
-	}
-
-	return sum;
-}
-
-template <bool SwapPixels>
-OQMC_HOST_DEVICE float
 keysEnergy(Array3d pixelFrame, FullyConnectedGraph graphFrame, int3 pCoordinate,
            int3 swapCoordinate, const int* indicesA, const float* distances)
 {
 	return keysEnergySpatial<SwapPixels>(pixelFrame, graphFrame, pCoordinate,
-	                                     swapCoordinate, indicesA, distances) +
-	       keysEnergyTemporal<SwapPixels>(pixelFrame, graphFrame, pCoordinate,
-	                                      swapCoordinate, indicesA, distances);
+	                                     swapCoordinate, indicesA, distances);
 }
 
 void keysOptimise(int niterations, int& seed, Array3d pixelFrame,
@@ -768,71 +701,12 @@ ranksEnergySpatial(Array3d pixelFrame, FullyConnectedGraph graphFrame,
 
 template <bool SwapOrder>
 OQMC_HOST_DEVICE float
-ranksEnergyTemporal(Array3d pixelFrame, FullyConnectedGraph graphFrame,
-                    int3 pCoordinate, const bool* swapsA,
-                    const float* distancesHold, const float* distancesSwap)
-{
-	constexpr auto sigma = 1.5f;
-	constexpr auto sigmaSqr = sigma * sigma;
-	constexpr auto sigmaSqrRcp = 1 / sigmaSqr;
-	constexpr auto sigmaSqrRcpNeg = -sigmaSqrRcp;
-
-	constexpr auto width = 6;
-	constexpr auto min = -width;
-	constexpr auto max = +width;
-
-	auto sum = 0.0f;
-	for(int i = min; i < max + 1; ++i)
-	{
-		const int3 qCoordinate = {
-		    pCoordinate.x,
-		    pCoordinate.y,
-		    (pCoordinate.z + i) & bitMask(pixelFrame.shape.z),
-		};
-
-		if(pCoordinate == qCoordinate)
-		{
-			continue;
-		}
-
-		const bool pSwap = swapsA[pixelFrame.index(pCoordinate)];
-		const bool qSwap = swapsA[pixelFrame.index(qCoordinate)];
-
-		const float* distances;
-		if((pSwap == qSwap) != SwapOrder)
-		{
-			distances = distancesHold;
-		}
-		else
-		{
-			distances = distancesSwap;
-		}
-
-		const FullyConnectedGraph::CoordinatePair pair = {
-		    pCoordinate,
-		    qCoordinate,
-		};
-
-		// Note that distances are already squared.
-		const auto sampleDistance = distances[graphFrame.index(pair)];
-		const auto pixelDistance = std::exp((i * i) * sigmaSqrRcpNeg);
-
-		sum += sampleDistance * pixelDistance;
-	}
-
-	return sum;
-}
-
-template <bool SwapOrder>
-OQMC_HOST_DEVICE float
 ranksEnergy(Array3d pixelFrame, FullyConnectedGraph graphFrame,
             int3 pCoordinate, const bool* swapsA, const float* distancesHold,
             const float* distancesSwap)
 {
 	return ranksEnergySpatial<SwapOrder>(pixelFrame, graphFrame, pCoordinate,
-	                                     swapsA, distancesHold, distancesSwap) +
-	       ranksEnergyTemporal<SwapOrder>(pixelFrame, graphFrame, pCoordinate,
-	                                      swapsA, distancesHold, distancesSwap);
+	                                     swapsA, distancesHold, distancesSwap);
 }
 
 void ranksOptimise(int niterations, int& seed, Array3d pixelFrame,
@@ -990,12 +864,12 @@ void output(int nsamples, const void* cache, Array3d pixelFrame,
 }
 
 template <typename Sampler>
-void run(int ntests, int niterations, int nsamples, int resolution, int depth,
-         int seed, Output out)
+void run(int ntests, int niterations, int nsamples, int resolution, int seed,
+         Output out)
 {
 	const auto cache = Sampler::initialiseCache();
 
-	const auto pixelFrame = Array3d({resolution, resolution, depth});
+	const auto pixelFrame = Array3d({resolution, resolution, 1});
 	const auto errorFrame = Array3d({pixelFrame.size(), ntests, 1});
 	const auto graphFrame = FullyConnectedGraph(pixelFrame.shape);
 
@@ -1004,9 +878,9 @@ void run(int ntests, int niterations, int nsamples, int resolution, int depth,
 	const auto graphCost = graphFrame.size() * 4 * 2 / 1000000.f;
 
 	fprintf(stderr,
-	        "Using %i tests, %i iterations, %i samples, %i resolution, %i depth"
+	        "Using %i tests, %i iterations, %i samples, %i resolution"
 	        "; Memory cost is %.2fMB.\n",
-	        ntests, niterations, nsamples, resolution, depth,
+	        ntests, niterations, nsamples, resolution,
 	        pixelCost + errorCost + graphCost);
 
 	std::uint32_t* keys;
@@ -1099,21 +973,18 @@ struct Lattice
 } // namespace
 
 // This optimisation process is based on 'Lessons Learned and Improvements
-// when Building Screen-Space Samplers with Blue-Noise Error Distribution'
-// by Laurent Belcour and Eric Heitz. It goes beyond the implementation
-// example from the publication and adds support for optimising ranks
-// to allow for progressive sampling. It also extends the method to be
-// spatial temporal rather than just spatial. This is done by incorpiating
-// ideas from 'Spatiotemporal Blue Noise Masks' by Alan Wolf, et. al. The
-// implementation is also generalised, so that as long a base sample pattern
-// can be parameterised using a single 32 bit integer for randomisation, it
-// does not matter what method used for randomisation. If you would like to
+// when Building Screen-Space Samplers with Blue-Noise Error Distribution' by
+// Laurent Belcour and Eric Heitz. It goes beyond the implementation example
+// from the publication and adds support for optimising ranks to allow for
+// progressive sampling. The implementation is also general, so that as long
+// a base sample pattern can be randomised using a single 32 bit integer, it
+// does not matter what method is used for randomisation. If you would like to
 // use this optimiser for your own sampler, all you need to do is include the
 // implementation here and make sure it conforms to the interface shown above.
 // Note that not all randomisation methods optimise as well as others, for more
 // details see the original paper.
 OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
-                             int nsamples, int resolution, int depth, int seed,
+                             int nsamples, int resolution, int seed,
                              uint32_t* keys, uint32_t* ranks, float* estimates,
                              float* frequencies)
 {
@@ -1123,8 +994,6 @@ OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
 	assert(isPowerOfTwo(nsamples));
 	assert(resolution > 0);
 	assert(isPowerOfTwo(resolution));
-	assert(depth > 0);
-	assert(isPowerOfTwo(depth));
 	assert(keys);
 	assert(ranks);
 	assert(estimates);
@@ -1134,7 +1003,7 @@ OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
 
 	if(std::string(name) == "pmj")
 	{
-		run<Pmj>(ntests, niterations, nsamples, resolution, depth, seed,
+		run<Pmj>(ntests, niterations, nsamples, resolution, seed,
 		         {keys, ranks, estimates, frequencies});
 
 		return true;
@@ -1142,7 +1011,7 @@ OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
 
 	if(std::string(name) == "sobol")
 	{
-		run<Sobol>(ntests, niterations, nsamples, resolution, depth, seed,
+		run<Sobol>(ntests, niterations, nsamples, resolution, seed,
 		           {keys, ranks, estimates, frequencies});
 
 		return true;
@@ -1150,7 +1019,7 @@ OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
 
 	if(std::string(name) == "lattice")
 	{
-		run<Lattice>(ntests, niterations, nsamples, resolution, depth, seed,
+		run<Lattice>(ntests, niterations, nsamples, resolution, seed,
 		             {keys, ranks, estimates, frequencies});
 
 		return true;

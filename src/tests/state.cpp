@@ -59,22 +59,6 @@ TEST(StateTest, AlterPixelFrameLow)
 
 			lastJ = lastK;
 			lastDecorrelatedJ = lastDecorrelatedK;
-
-			for(int k = 1; k < lowValue; ++k)
-			{
-				oqmc::State64Bit lastN(i, j, k, index);
-				oqmc::State64Bit lastDecorrelatedN = lastN.pixelDecorrelate();
-
-				EXPECT_EQ(lastN.patternId, lastK.patternId);
-				EXPECT_EQ(lastN.sampleId, lastK.sampleId);
-				EXPECT_NE(lastN.pixelId, lastK.pixelId);
-
-				EXPECT_NE(lastDecorrelatedN.patternId,
-				          lastDecorrelatedK.patternId);
-
-				lastK = lastN;
-				lastDecorrelatedK = lastDecorrelatedN;
-			}
 		}
 	}
 }
@@ -111,22 +95,6 @@ TEST(StateTest, AlterPixelFrameHigh)
 
 			lastJ = lastK;
 			lastDecorrelatedJ = lastDecorrelatedK;
-
-			for(int k = highValue + 1; k < highValue + lowValue; ++k)
-			{
-				oqmc::State64Bit lastN(i, j, k, index);
-				oqmc::State64Bit lastDecorrelatedN = lastN.pixelDecorrelate();
-
-				EXPECT_EQ(lastN.patternId, lastK.patternId);
-				EXPECT_EQ(lastN.sampleId, lastK.sampleId);
-				EXPECT_NE(lastN.pixelId, lastK.pixelId);
-
-				EXPECT_NE(lastDecorrelatedN.patternId,
-				          lastDecorrelatedK.patternId);
-
-				lastK = lastN;
-				lastDecorrelatedK = lastDecorrelatedN;
-			}
 		}
 	}
 }
