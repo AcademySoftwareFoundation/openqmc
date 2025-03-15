@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-03-15
+
+### Added
+
+- Documentation and comments to track the generation and use of Sobol matrices.
+
+### Fixed
+
+- Docker developement environments now correctly forward the port for Jupyter Notebooks.
+
+### Removed
+
+- Temporal axis from blue noise variants, moving from STBN to SBN methods.
+
 ## [0.6.0] - 2024-08-04
 
 ### Added
