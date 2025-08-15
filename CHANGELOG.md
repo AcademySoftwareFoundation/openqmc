@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SVG formated version of the logo to the images folder.
 
 ### Changed
+
+- Update org name to AcademySoftwareFoundation.
+
 ### Deprecated
 ### Removed
 ### Fixed

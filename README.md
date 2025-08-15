@@ -6,10 +6,10 @@
   </picture>
 </p>
 
-[![License](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/framestore/openqmc/blob/main/LICENSE)
-[![Release](https://img.shields.io/github/v/release/framestore/openqmc?label=Release)](https://github.com/framestore/openqmc/releases/latest)
+[![License](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/AcademySoftwareFoundation/openqmc/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/AcademySoftwareFoundation/openqmc?label=Release)](https://github.com/AcademySoftwareFoundation/openqmc/releases/latest)
 ![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)
-[![CI Pipeline](https://github.com/framestore/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/framestore/openqmc/actions/workflows/ci-pipeline.yml)
+[![CI Pipeline](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml)
 
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
 and generating pseudo random numbers. Designed for graphics applications,
@@ -158,7 +158,7 @@ platforms. The flake can also be used to load a reproducible [developer
 environment](#nix-development-environment). Install the package with:
 
 ```bash
-nix profile install github:framestore/openqmc
+nix profile install github:AcademySoftwareFoundation/openqmc
 ```
 
 ### Cloning the source
@@ -167,7 +167,7 @@ Alternatively for installing from source, you can download a release from the
 site, or clone the project with:
 
 ```bash
-git clone git@github.com:framestore/openqmc.git
+git clone git@github.com:AcademySoftwareFoundation/openqmc.git
 ```
 
 ## Adding to your project
@@ -1681,7 +1681,7 @@ please see the following pages:
   as members of the larger community.
 
 If instead you want to submit an issue or a request, report it by creating a
-new GitHub [issue](https://github.com/framestore/openqmc/issues).
+new GitHub [issue](https://github.com/AcademySoftwareFoundation/openqmc/issues).
 
 [^1]: Brent Burley. 2020.  
 Practical Hash-based Owen Scrambling. JCGT.  

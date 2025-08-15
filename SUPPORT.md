@@ -5,7 +5,7 @@ There are a few ways to connect with the OpenQMC project:
 - Add yourself to the TBD mailing list.
 - Start a thread on the TBD forums.
 - Join the TBD Slack channel.
-- Create a new GitHub [issue](https://github.com/framestore/openqmc/issues).
+- Create a new GitHub [issue](https://github.com/AcademySoftwareFoundation/openqmc/issues).
 
 ## How to ask for help
 
@@ -13,7 +13,7 @@ If you have trouble installing, building, or using OpenQMC, but there's not yet 
 
 ## How to report a bug or request an enhancement
 
-OpenQMC manages bug and enhancement using its [issue](https://github.com/framestore/openqmc/issues) tracker. The issue template will guide you on making an effective report.
+OpenQMC manages bug and enhancement using its [issue](https://github.com/AcademySoftwareFoundation/openqmc/issues) tracker. The issue template will guide you on making an effective report.
 
 ## How to report a security vulnerability
 
