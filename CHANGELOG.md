@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- SVG formated version of the logo to the images folder.
+
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
 ## [0.7.0] - 2025-03-15
 
 ### Added
