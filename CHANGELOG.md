@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update org name to AcademySoftwareFoundation.
+- Add back per-frame randomization to sampler state.
 
 ### Deprecated
 ### Removed

@@ -119,9 +119,9 @@ inline State64Bit::State64Bit(int x, int y, int frame, int index)
 	constexpr auto xBits = State64Bit::spatialEncodeBitSizeX;
 	constexpr auto yBits = State64Bit::spatialEncodeBitSizeY;
 
-	const auto pixelId = encodeBits16<xBits, yBits, 0>({x, y, frame});
+	const auto pixelId = encodeBits16<xBits, yBits, 0>({x, y, 0});
 
-	this->patternId = pcg::init(indexKey);
+	this->patternId = pcg::init(frame + indexKey);
 	this->sampleId = indexId;
 	this->pixelId = pixelId;
 }
