@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## [0.7.1] - 2025-08-23
+
+### Added
 
 - SVG formated version of the logo to the images folder.
 
@@ -15,11 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update org name to AcademySoftwareFoundation.
 - Add back per-frame randomization to sampler state.
-
-### Deprecated
-### Removed
-### Fixed
-### Security
 
 ## [0.7.0] - 2025-03-15
 
