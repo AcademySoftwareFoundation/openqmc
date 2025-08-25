@@ -3,12 +3,13 @@ NVIDIA Covenant Not to Assert for the OpenQMC Project
 NVIDIA, on behalf of itself and its affiliates and their successors and
 assigns, hereby provides this perpetual, worldwide, and irrevocable
 covenant not to assert any patent claims it owns or can license that are
-necessarily infringed by the openqmc-main package of the OpenQMC
+necessarily infringed by any portion of the openqmc-main package of the OpenQMC
 repository (github.com/AcademySoftwareFoundation/openqmc) as it existed
 on June 18, 2025 (the “Covered Product”).
 
 This covenant protects any user, developer, or distributor of the
-Covered Product (each a “Beneficiary”).
+OpenQMC Project (each a “Beneficiary”), but only in connection with
+such Beneficiaries’ use, development or distribution of the OpenQMC Project.
 
 However, if any Beneficiary institutes or materially assists patent
 litigation at any time against NVIDIA or its affiliates, successors, or
