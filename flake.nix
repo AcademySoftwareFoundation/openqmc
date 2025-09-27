@@ -46,6 +46,7 @@
               numpy
               pillow
               jupyter
+              nanobind
             ]))
           ];
           inputsFrom = [

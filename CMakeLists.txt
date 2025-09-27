@@ -42,6 +42,7 @@ option(OPENQMC_FORCE_DOWNLOAD "Ignore installed dependencies.")
 option(OPENQMC_ENABLE_BINARY "Build binary to reduce memory cost.")
 option(OPENQMC_SHARED_LIB "Make a shared library, in place of static.")
 option(OPENQMC_FORCE_PIC "Force PIC for static libraries.")
+option(OPENQMC_PYTHON_BINDINGS "Build Python bindings using nanobind.")
 
 # Enable testing
 
