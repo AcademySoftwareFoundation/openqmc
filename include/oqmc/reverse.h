@@ -19,6 +19,7 @@ namespace oqmc
 /// Given a 32 bit unsigned integer value, reverse the order of bits so that the
 /// most significant bits become the least significant, and vise versa.
 ///
+/// @ingroup utilities
 /// @param [in] value Integer value to reverse.
 /// @return Reversed integer value.
 OQMC_HOST_DEVICE constexpr std::uint32_t reverseBits32(std::uint32_t value)
@@ -46,6 +47,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t reverseBits32(std::uint32_t value)
 /// Given a 16 bit unsigned integer value, reverse the order of bits so that the
 /// most significant bits become the least significant, and vise versa.
 ///
+/// @ingroup utilities
 /// @param [in] value Integer value to reverse.
 /// @return Reversed integer value.
 OQMC_HOST_DEVICE constexpr std::uint16_t reverseBits16(std::uint16_t value)

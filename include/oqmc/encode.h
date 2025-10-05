@@ -19,6 +19,8 @@ namespace oqmc
 ///
 /// This structure stores integer coordinate information for each axis of a 3
 /// dimensional array.
+///
+/// @ingroup utilities
 struct EncodeKey
 {
 	int x; ///< x axis coordinate.
@@ -33,6 +35,7 @@ struct EncodeKey
 /// The sum of all precisions must be equal to or less than 16 bits. Decode the
 /// values using the decodeBits16 function.
 ///
+/// @ingroup utilities
 /// @tparam XBits Requested precision along the X axis.
 /// @tparam YBits Requested precision along the Y axis.
 /// @tparam ZBits Requested precision along the Z axis.
@@ -61,13 +64,14 @@ OQMC_HOST_DEVICE inline std::uint16_t encodeBits16(EncodeKey key)
 	return value;
 }
 
-/// Decode a key value back into a key.
+/// Decode a value back into a key.
 ///
 /// Given a encoded 16 bit integer value and a given precision for each axis,
 /// decode the values into a coordinate key. This can be a lossy operation. The
 /// sum of all precisions must be equal to or less than 16 bits. Encode the
 /// values using the encodeBits16 function.
 ///
+/// @ingroup utilities
 /// @tparam XBits Requested precision along the X axis.
 /// @tparam YBits Requested precision along the Y axis.
 /// @tparam ZBits Requested precision along the Z axis.

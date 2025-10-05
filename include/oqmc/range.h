@@ -33,6 +33,7 @@ namespace oqmc
 /// For further information see Section 4 in https://arxiv.org/abs/1805.10941 as
 /// well as https://www.pcg-random.org/posts/bounded-rands.html from PCG.
 ///
+/// @ingroup utilities
 /// @param [in] value Full ranged 32 bit unsigned integer.
 /// @param [in] range Exclusive end of integer range. Greater than zero.
 /// @return Output value remapped within integer range.
@@ -54,6 +55,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t uintToRange(std::uint32_t value,
 /// unsigned integer into range. This function is based upon the other uint to
 /// range function and has the same properties.
 ///
+/// @ingroup utilities
 /// @param [in] value Full ranged 32 bit unsigned integer.
 /// @param [in] begin Inclusive beginning of integer range. Less than end.
 /// @param [in] end Exclusive end of integer range. Greater than begin.

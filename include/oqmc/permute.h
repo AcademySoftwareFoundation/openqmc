@@ -26,6 +26,7 @@ namespace oqmc
 /// bits before and after, this forms an efficient hash based owen scrambling
 /// scheme.
 ///
+/// @ingroup utilities
 /// @param [in] value Integer value to permute.
 /// @param [in] seed Seed value to randomise the permutation.
 /// @return Permuted output value.
@@ -46,6 +47,7 @@ laineKarrasPermutation(std::uint32_t value, std::uint32_t seed)
 /// Given an unsigned integer number, reverse the bit order and then perform a
 /// Laine and Karras style permutation.
 ///
+/// @ingroup utilities
 /// @param [in] value Integer value to reverse and permute.
 /// @param [in] seed Seed value to randomise the permutation.
 /// @return Reversed and permuted output value.
@@ -64,6 +66,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t reverseAndShuffle(std::uint32_t value,
 /// scramble. This can be used to scramble a value, or to shuffle the order of a
 /// sequence in a progressive friendly manner.
 ///
+/// @ingroup utilities
 /// @param [in] value Integer value to be scrambled.
 /// @param [in] seed Seed value to randomise the scramble.
 /// @return Scrambled output value.

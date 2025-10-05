@@ -12,6 +12,23 @@
 #include <cmath>
 #include <cstdint>
 
+/// @defgroup utilities Utilities API
+/// Simple utilities API and related functions.
+///
+/// This module captures an assortment of utility functions used in OpenQMC
+/// to build higher level components. However, they can also be used directly
+/// if needed and might be useful for other purposes, or when constructing new
+/// sampler types.
+///
+/// Utilities cover the following functions:
+///
+/// - Integer to floating point conversion.
+/// - Encoding and decoding integer values.
+/// - Reversing and rotating integer bits.
+/// - Randomising and shuffling integers.
+/// - Mapping integers to a finite range.
+/// - Randomised table access.
+
 namespace oqmc
 {
 
@@ -24,6 +41,7 @@ constexpr auto floatOneMinusEpsilon = 0.999999940395355224609375f;  ///< max flt
 /// 1) floating point representation. Note that this operation is lossy and may
 /// not be reversible.
 ///
+/// @ingroup utilities
 /// @param [in] value Input integer value within the range [0, 2^32).
 /// @return Floating point number within the range [0, 1).
 OQMC_HOST_DEVICE inline float uintToFloat(std::uint32_t value)
