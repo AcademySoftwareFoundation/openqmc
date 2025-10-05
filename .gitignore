@@ -93,7 +93,7 @@ CMakeUserPresets.json
 result/
 
 # Doxygen html output
-html/
+api-reference/
 
 # Direnv temporary files
 .direnv/
