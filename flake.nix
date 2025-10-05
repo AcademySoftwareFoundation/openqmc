@@ -46,6 +46,7 @@
               numpy
               pillow
               jupyter
+              mkdocs-material
             ]))
           ];
           inputsFrom = [
