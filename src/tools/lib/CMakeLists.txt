@@ -8,7 +8,7 @@ set(TBB_TEST OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
 	oneTBB
 	GIT_REPOSITORY https://github.com/oneapi-src/oneTBB
-	GIT_TAG        8b829ac # 2021.11.0
+	GIT_TAG        9afd759 # 2021.12.0
 	EXCLUDE_FROM_ALL
 	FIND_PACKAGE_ARGS QUIET CONFIG NAMES TBB)
 
