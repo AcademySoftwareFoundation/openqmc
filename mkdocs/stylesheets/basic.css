@@ -1,0 +1,51 @@
+.lp-container {
+  background-color: #fff;
+  height: 100vh;
+}
+
+.lp-layer {
+  background-color: #23424a;
+  display: block;
+  padding: 80px 0;
+}
+
+.hero-wrapper {
+  width: 80%;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 32px;
+  line-height: 1.2;
+  max-width: 35ch;
+}
+
+.hero p {
+  font-size: 1.3125rem;
+  color: hsla(0, 0%, 100%, 0.85);
+  margin-bottom: 64px;
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 65ch;
+}
+
+.button {
+  font-size: 1.3125rem;
+  padding: 20px 48px;
+  background: #38cfd9;
+  outline: inherit;
+  border: inherit;
+  border-radius: 1000px;
+  text-transform: uppercase;
+  color: #23424a;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.button:hover {
+  background: #136c72;
+}

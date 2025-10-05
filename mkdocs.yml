@@ -4,20 +4,24 @@ nav:
   - Home: index.md
   - Documentation:
     - introduction.md
+    - setup.md
     - Samplers:
-      - implementations.md
-      - details.md
-      - examples.md
+      - Sampler Comparison: implementations.md
+      - Technical Details: details.md
     - Developer:
-      - developer.md
+      - workflow.md
       - roadmap.md
-  - API Reference: https://academysoftwarefoundation.github.io/openqmc/api-reference
+  - Tutorials:
+    - Domain Sampling: domains.md
+    - Increasing Sampling Rate: splitting.md
+  - Releases: releases.md
+  - Go to API Reference: https://academysoftwarefoundation.github.io/openqmc/api-reference
 theme:
   name: material
+  custom_dir: mkdocs
   features:
     - navigation.tabs
     - navigation.tabs.sticky
-    - navigation.expand
     - navigation.sections
   palette:
     - media: "(prefers-color-scheme)"

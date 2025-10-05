@@ -53,8 +53,10 @@ jobs:
       # Run doxygen to build api-reference
       - run: doxygen
 
-      # Copy README file for MkDocs
-      - run: tail -n +14 README.md > docs/introduction.md
+      # Split README into MkDocs pages
+      - run: ./scripts/split-readme.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       # Install mkdocs-material
       - run: pip install --upgrade pip && pip install mkdocs-material

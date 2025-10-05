@@ -11,6 +11,7 @@
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)](https://academysoftwarefoundation.github.io/openqmc/coverage-report)
 [![CI Pipeline](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml)
 
+<!-- MKDOCS_SPLIT: introduction.md -->
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
 and generating pseudo random numbers. Designed for graphics applications,
 the library is part of Framestore's proprietary renderer [Freak](https://www.framestore.com/technology/freak)
@@ -119,9 +120,11 @@ If you would like to see a real example of a path tracer, have a look at the
 source code for the [trace](src/tools/lib/trace.cpp) tool. Or alternatively go
 to the [concepts and examples](#concepts-and-examples) section to read about
 more advanced solutions.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Requirements
 
+<!-- MKDOCS_SPLIT: setup.md -->
 The library itself has no dependencies other than C++14. Although not tested
 with older versions of GCC, this should make it compatible with CY2018 and
 newer versions of the [VFX Reference Platform](https://vfxplatform.com).
@@ -283,6 +286,7 @@ extensions to the MAJOR.MINOR.PATCH format.
 You can access details on what changed for each new version at
 [CHANGELOG.md](CHANGELOG.md). This follows the format from [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
+<!-- MKDOCS_SPLIT_END -->
 
 ## API reference
 
@@ -300,6 +304,7 @@ You can access the API reference documentation
 
 ## Implementation comparison
 
+<!-- MKDOCS_SPLIT: implementations.md -->
 The API is common to all back-end implementations. Each implementation has
 different strengths that balance performance and quality. These are all the
 implementations and their required header files:
@@ -462,9 +467,11 @@ higher rate of convergence takes effect.
   <source media="(prefers-color-scheme: dark)" srcset="./images/plots/cornell-box-1-32-dark.png">
   <img alt="Cornell box many samples comparison." src="./images/plots/cornell-box-1-32-light.png">
 </picture>
+<!-- MKDOCS_SPLIT_END -->
 
 ## Concepts and examples
 
+<!-- MKDOCS_SPLIT: domains.md -->
 OpenQMC aims to provide an API that makes using high quality samples easy and
 bias-free when writing software with numerical integration. You have already
 seen a very basic example of this in the [Usage](#usage) section. This section
@@ -713,7 +720,9 @@ produce bias. Branching can be used to make domains independent of one another.
 This independence prevents such bias. Finally, domain trees should match the
 call graph of the code to guarantee bias-free results. For a more complete
 example, see the [trace](src/tools/lib/trace.cpp) tool.
+<!-- MKDOCS_SPLIT_END -->
 
+<!-- MKDOCS_SPLIT: splitting.md -->
 ### Domain splitting
 
 Whereas domain branching lets you sample different dimensions within each sample
@@ -923,9 +932,11 @@ the distribution strategy is optimal as it is locally correlated.
 However, when an adaptive sample rate multiplier is expected to be lower than
 the original pixel sample rate, as demonstrated here, the chaining strategy is
 optimal as it is globally correlated.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Implementation details
 
+<!-- MKDOCS_SPLIT: details.md -->
 This section will go into detail about each back-end implementation, as well as
 the blue noise variants. Here you can find out about practical trade-offs for
 each option, so you can decide which is best for your use case.
@@ -1059,16 +1070,20 @@ When deriving domains the sampler will use an LCG state transition, and only
 perform a permutation prior to drawing samples analogous to PCG. This provides
 high quality bits when drawing samples, but keeps the cost low when deriving
 domains, which might not be used.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Development roadmap
 
+<!-- MKDOCS_SPLIT: roadmap.md -->
 Roadmap for version 1.0.0 of the library:
 
 - Gather feedback and iterate on API.
 - Add support for package managers.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Developer workflow
 
+<!-- MKDOCS_SPLIT: workflow.md -->
 Beyond the library itself there are a range of tools and tests that make up the
 project as a whole. These are there to aid development and to provide an element
 of analysis. These extra components also have more requirements and dependencies
@@ -1397,6 +1412,7 @@ directory. Building the documentation site can be done using:
 ```bash
 just docs
 ```
+<!-- MKDOCS_SPLIT_END -->
 
 ## Related projects
 

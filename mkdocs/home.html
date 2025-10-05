@@ -1,0 +1,132 @@
+{% extends "main.html" %}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ 'stylesheets/home.css' | url }}">
+{% endblock %}
+{% block tabs %}
+{{ super() }}
+<style>
+  .md-header {
+    position: initial;
+  }
+  .md-main__inner {
+    margin: 0;
+  }
+  .md-content {
+    display: none;
+  }
+  @media screen and (min-width: 60em) {
+    .md-sidebar--secondary {
+      display: none;
+    }
+  }
+  @media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+      display: none;
+    }
+  }
+</style>
+
+<!-- Hero Section -->
+<section class="mdx-container">
+  <div class="md-grid md-typeset">
+    <div class="mdx-hero">
+      <div class="mdx-hero__image">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="images/diagrams/high-level-overview-dark.png">
+          <source media="(prefers-color-scheme: light)" srcset="images/diagrams/high-level-overview-light.png">
+          <img
+            src="images/diagrams/high-level-overview-light.png"
+            alt="OpenQMC architecture overview"
+            draggable="false"
+          >
+        </picture>
+      </div>
+      <div class="mdx-hero__content">
+        <h1>Production-ready QMC sampling for graphics applications</h1>
+        <p>OpenQMC is a high-quality Quasi-Monte Carlo sampling library for feature film VFX production.</p>
+        <a
+          href="{{ 'introduction/' | url }}"
+          title="Get Started"
+          class="md-button md-button--primary"
+        >
+          Get Started
+        </a>
+        <a
+          href="{{ config.repo_url }}"
+          title="View on GitHub"
+          class="md-button"
+        >
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why OpenQMC Section -->
+<section class="oqmc-benefits">
+  <div class="md-grid md-typeset">
+    <h2 class="oqmc-section-title">Why OpenQMC</h2>
+    <div class="oqmc-card-grid">
+      <div class="oqmc-card">
+        <div class="oqmc-card__icon">⚡</div>
+        <h3>Battle-Tested</h3>
+        <p>Used in production VFX rendering at Framestore's proprietary Freak renderer. Proven reliability in demanding feature film workflows.</p>
+      </div>
+      <div class="oqmc-card">
+        <div class="oqmc-card__icon">🚀</div>
+        <h3>High Performance</h3>
+        <p>Zero-cost abstraction with multi-architecture support including x86-64, AArch64, and NVIDIA GPUs. Optimized for production workloads.</p>
+      </div>
+      <div class="oqmc-card">
+        <div class="oqmc-card__icon">🔧</div>
+        <h3>Easy Integration</h3>
+        <p>Header-only C++14 library with no dependencies. Compatible with VFX Reference Platform CY2018 and newer. Drop in and start sampling.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quote Section -->
+<section class="oqmc-quote">
+  <div class="md-grid md-typeset">
+    <div class="oqmc-quote__content">
+      <p>"OpenQMC gets us better pixels faster; whether that is selecting from thousands of physical lights or sampling advanced volumetric effects. An index of samplers and techniques, OpenQMC gets the most out of the maths that underpin the library to improve the quality of the rendered image for less compute cost."</p>
+      <p class="oqmc-quote__attribution">— Josh Bainbridge, Head of Rendering Technology, Framestore</p>
+    </div>
+  </div>
+</section>
+
+<!-- Community Section -->
+<section class="oqmc-community">
+  <div class="md-grid md-typeset">
+    <h2 class="oqmc-section-title">Get Involved</h2>
+    <div class="oqmc-card-grid">
+      <a href="https://academysoftwarefdn.slack.com/archives/C09BXDAMFTP" class="oqmc-card">
+        <div class="oqmc-card__icon">💬</div>
+        <h3>Join Slack</h3>
+        <p>Connect with the community on the ASWF Slack workspace</p>
+      </a>
+      <a href="https://lists.aswf.io/g/openqmc-discussion" class="oqmc-card">
+        <div class="oqmc-card__icon">📧</div>
+        <h3>Mailing List</h3>
+        <p>Subscribe to stay updated on releases and discussions</p>
+      </a>
+      <a href="{{ config.repo_url }}/issues/new" class="oqmc-card">
+        <div class="oqmc-card__icon">💡</div>
+        <h3>Feature Requests</h3>
+        <p>Share your ideas and help shape the future of OpenQMC</p>
+      </a>
+      <a href="{{ config.repo_url }}/pulls" class="oqmc-card">
+        <div class="oqmc-card__icon">🔀</div>
+        <h3>Pull Requests</h3>
+        <p>Contribute code and improvements to the project</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block content %}{% endblock %}
+{% block footer %}{% endblock %}
