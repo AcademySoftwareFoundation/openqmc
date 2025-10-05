@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="./images/openqmc-logo-light.png">
-    <source media="(prefers-color-scheme: dark)" srcset="./images/openqmc-logo-dark.png">
-    <img alt="OpenQMC" src="./images/openqmc-logo-light.png" height="200">
+    <source media="(prefers-color-scheme: light)" srcset="./images/logo-light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./images/logo-dark.png">
+    <img alt="OpenQMC" src="./images/logo-light.png" height="200">
   </picture>
 </p>
 
