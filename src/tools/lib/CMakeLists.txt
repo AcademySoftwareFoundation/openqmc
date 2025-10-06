@@ -15,7 +15,7 @@ FetchContent_Declare(
 FetchContent_Declare(
 	glm
 	GIT_REPOSITORY https://github.com/g-truc/glm
-	GIT_TAG        bf71a83 # 0.9.9.8
+	GIT_TAG        0af55cc # 1.0.1
 	EXCLUDE_FROM_ALL
 	FIND_PACKAGE_ARGS QUIET CONFIG)
 
