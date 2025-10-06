@@ -1,0 +1,80 @@
+name: Deploy static site
+
+on:
+  push:
+    branches: main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # Install and set LLVM and Clang respectively
+      - run: sudo apt-get update && sudo apt-get install llvm
+      - run: sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 50
+
+      # Configure and build test binary
+      - run: cmake --preset unix -D CMAKE_CXX_FLAGS='-fprofile-instr-generate -fcoverage-mapping'
+      - run: cmake --build --preset unix --target tests
+
+      # Run instrumented test binary and build coverage-report
+      - run: LLVM_PROFILE_FILE='build/coverage.profraw' build/src/tests/tests
+      - run: llvm-profdata merge --sparse --output build/coverage.profdata build/coverage.profraw
+      - run: llvm-cov show --instr-profile build/coverage.profdata --format html --output-dir coverage-report build/src/tests/tests include
+
+      # Install doxygen and graphviz
+      - run: sudo apt-get update && sudo apt-get install doxygen graphviz
+
+      # Download Doxygen Awesome theme for doxygen
+      - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome.css
+      - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome-sidebar-only.css
+
+      # Run doxygen to build api-reference
+      - run: doxygen
+
+      # Split README into MkDocs pages
+      - run: ./scripts/split-readme.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # Install mkdocs-material
+      - run: pip install --upgrade pip && pip install mkdocs-material
+
+      # Run MkDocs to build site
+      - run: mkdocs build
+
+      # Setup html directory
+      - run: mv ./site ./html && mv ./api-reference ./html && mv ./coverage-report ./html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './html'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

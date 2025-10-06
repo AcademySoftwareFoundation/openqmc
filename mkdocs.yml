@@ -1,0 +1,45 @@
+site_name: OpenQMC
+site_url: https://academysoftwarefoundation.github.io/openqmc
+nav:
+  - Home: index.md
+  - Documentation:
+    - introduction.md
+    - setup.md
+    - Samplers:
+      - Sampler Comparison: implementations.md
+      - Technical Details: details.md
+    - Developer:
+      - workflow.md
+      - roadmap.md
+  - Tutorials:
+    - Domain Sampling: domains.md
+    - Increasing Sampling Rate: splitting.md
+  - Releases: releases.md
+  - Go to API Reference: https://academysoftwarefoundation.github.io/openqmc/api-reference
+theme:
+  name: material
+  custom_dir: mkdocs
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+  palette:
+    - media: "(prefers-color-scheme)"
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+repo_url: https://github.com/AcademySoftwareFoundation/openqmc
+markdown_extensions:
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css

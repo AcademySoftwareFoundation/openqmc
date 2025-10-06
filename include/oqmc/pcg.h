@@ -19,6 +19,47 @@
 #include <cassert>
 #include <cstdint>
 
+/// @defgroup rngs Rng API
+/// Simple rng API and related functions.
+///
+/// This module outlines the RNG API which is used extensively as a building
+/// block in sampler implementations. PCG is used as both a classic sequential
+/// PRNG as-well-as a parallel hash function.
+///
+/// Here is a typical RNG example:
+///
+/// @code
+/// auto state = oqmc::pcg::init(seed);
+///
+/// const auto rand0 = oqmc::pcg::rng(state);
+/// const auto rand1 = oqmc::pcg::rng(state);
+/// const auto rand2 = oqmc::pcg::rng(state);
+/// const auto rand3 = oqmc::pcg::rng(state);
+/// @endcode
+///
+/// Here is a typical hash example:
+///
+/// @code
+/// const auto rand0 = oqmc::pcg::hash(0);
+/// const auto rand1 = oqmc::pcg::hash(1);
+/// const auto rand2 = oqmc::pcg::hash(2);
+/// const auto rand3 = oqmc::pcg::hash(3);
+/// @endcode
+///
+/// Notice how one is statefull while the other is stateless. For best results
+/// use the RNG when possible. In both of these examples the rand values are
+/// integers. Use the oqmc::uintToFloat() function to convert the integers to
+/// floats.
+///
+/// When hashing, if you need to convert N inputs to 1 output, this can be
+/// done by nesting the hash function. However, nesting just the result from
+/// oqmc::pcg::stateTransition() is more optimal. If you do this make sure to
+/// call oqmc::pcg::output() prior to using the hash value.
+///
+/// This for example can be done to create the hash values for nodes and leaves
+/// in a tree. Which is especially fast if the intermediate values are re-used
+/// for subtrees. This is how domains are computed in OpenQMC.
+
 namespace oqmc
 {
 
@@ -31,6 +72,7 @@ namespace pcg
 /// sequence. Incrementing the input state can be used to select a new sequence
 /// stream. Note that you may want to use the higher level functionality below.
 ///
+/// @ingroup rngs
 /// @param [in] state Internal state of the PRNG.
 /// @return State after incrementation of index.
 /// @pre State must have been initialised using an init function.
@@ -47,6 +89,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t stateTransition(std::uint32_t state)
 /// operations used in PCG-RXS-M-32. Note you may want to use the higher level
 /// functionality below.
 ///
+/// @ingroup rngs
 /// @param [in] state Internal state of the PRNG.
 /// @return Output PRNG number from sequence.
 /// @pre State must have been initialised using an init function.
@@ -69,6 +112,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t output(std::uint32_t state)
 /// If given no seed, initialise the PRNG state using a zero value. This must be
 /// done prior to passing the state to other functionality within this file.
 ///
+/// @ingroup rngs
 /// @return Initialised internal state of the PRNG.
 OQMC_HOST_DEVICE constexpr std::uint32_t init()
 {
@@ -80,6 +124,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t init()
 /// If given a seed, initialise the PRNG state using said seed value. This must
 /// be done prior to passing the state to other functionality within this file.
 ///
+/// @ingroup rngs
 /// @param [in] seed Seed value for PRNG sequence.
 /// @return Initialised internal state of the PRNG.
 OQMC_HOST_DEVICE constexpr std::uint32_t init(std::uint32_t seed)
@@ -92,6 +137,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t init(std::uint32_t seed)
 /// Given an input key, compute a random hash value. This can be used to
 /// initialise a system or to compute an array of random values in parallel.
 ///
+/// @ingroup rngs
 /// @param [in] key Hash key value.
 /// @return Output hash value.
 OQMC_HOST_DEVICE constexpr std::uint32_t hash(std::uint32_t key)
@@ -109,6 +155,7 @@ OQMC_HOST_DEVICE constexpr std::uint32_t hash(std::uint32_t key)
 /// integer value needs to be converted into a floating point representation by
 /// the calling code.
 ///
+/// @ingroup rngs
 /// @param [in, out] state State value of the PRNG. Will be mutated.
 /// @return Output PRNG value from the sequence.
 /// @pre State must have been initialised using an init function.

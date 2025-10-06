@@ -1,16 +1,17 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="./images/openqmc-logo-light.png">
-    <source media="(prefers-color-scheme: dark)" srcset="./images/openqmc-logo-dark.png">
-    <img alt="OpenQMC" src="./images/openqmc-logo-light.png" height="200">
+    <source media="(prefers-color-scheme: light)" srcset="./images/logo-light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="./images/logo-dark.png">
+    <img alt="OpenQMC" src="./images/logo-light.png" height="200">
   </picture>
 </p>
 
 [![License](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/AcademySoftwareFoundation/openqmc/blob/main/LICENSE)
 [![Release](https://img.shields.io/github/v/release/AcademySoftwareFoundation/openqmc?label=Release)](https://github.com/AcademySoftwareFoundation/openqmc/releases/latest)
-![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)](https://academysoftwarefoundation.github.io/openqmc/coverage-report)
 [![CI Pipeline](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml)
 
+<!-- MKDOCS_SPLIT: introduction.md -->
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
 and generating pseudo random numbers. Designed for graphics applications,
 the library is part of Framestore's proprietary renderer [Freak](https://www.framestore.com/technology/freak)
@@ -119,9 +120,11 @@ If you would like to see a real example of a path tracer, have a look at the
 source code for the [trace](src/tools/lib/trace.cpp) tool. Or alternatively go
 to the [concepts and examples](#concepts-and-examples) section to read about
 more advanced solutions.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Requirements
 
+<!-- MKDOCS_SPLIT: setup.md -->
 The library itself has no dependencies other than C++14. Although not tested
 with older versions of GCC, this should make it compatible with CY2018 and
 newer versions of the [VFX Reference Platform](https://vfxplatform.com).
@@ -283,6 +286,7 @@ extensions to the MAJOR.MINOR.PATCH format.
 You can access details on what changed for each new version at
 [CHANGELOG.md](CHANGELOG.md). This follows the format from [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
+<!-- MKDOCS_SPLIT_END -->
 
 ## API reference
 
@@ -295,266 +299,12 @@ The API is a static (compile-time polymorphic) interface. This is an important
 detail, as it allows for implementations to be passed-by-value without dynamic
 memory allocation, while also allowing inlining for zero-cost abstraction.
 
-```cpp
-/// Required allocation size of the cache.
-///
-/// Prior to construction of a sampler object, a cache needs to be allocated
-/// and initialised for any given sampler type. This variable is the minimum
-/// required size in bytes of that allocation. The allocation itself is
-/// performed and owned by the caller. Responsibility for the de-allocation
-/// is also that of the caller.
-static std::size_t oqmc::Sampler::cacheSize;
-```
-
-```cpp
-/// Initialise the cache allocation.
-///
-/// Prior to construction of a sampler object, a cache needs to be allocated
-/// and initialised for any given sampler type. This function will
-/// initialise that allocation. Once the cache is initialised it may be used
-/// to construct a sampler object, or copied to a new address.
-///
-/// Care must be taken to make sure the memory address is accessible at the
-/// point of construction. On the CPU this is trivial. But when constructing
-/// a sampler object on the GPU, the caller is expected to either use
-/// unified memory for the allocation, or manually copy the memory from the
-/// host to the device after the cache has been initialised.
-///
-/// A single cache (for each sampler type) is expected to be constructed
-/// only once for the duration of a calling process. This single cache can
-/// be used to construct many sampler objects.
-///
-/// @param [in, out] cache Memory address of the cache allocation.
-/// @pre Memory for the cache must be allocated prior. The minimum size of
-/// the allocation can be retrieved using the `cacheSize` variable above.
-/// @post Memory for the cache must be de-allocated after all instances of
-/// the sampler object have been destroyed.
-static void oqmc::Sampler::initialiseCache(void* cache);
-```
-
-```cpp
-/// Parametrised pixel constructor.
-///
-/// Create an object based on the pixel, frame and sample indices. This also
-/// requires a pre-allocated and initialised cache. Once constructed the
-/// object is valid and ready for use.
-///
-/// For each pixel this constructor is expected to be called multiple times,
-/// once for each index. Pixels might have a varying number of indicies when
-/// adaptive sampling.
-///
-/// @param [in] x Pixel coordinate on the x axis.
-/// @param [in] y Pixel coordinate on the y axis.
-/// @param [in] frame Time index value.
-/// @param [in] index Sample index. Must be positive.
-/// @param [in] cache Allocated and initialised cache.
-/// @pre Cache has been allocated in memory accessible to the device calling
-/// this constructor, and has also been initialised.
-oqmc::Sampler::Sampler(int x, int y, int frame, int index, const void* cache);
-```
-
-```cpp
-/// Derive a sampler object as a new domain.
-///
-/// The function derives a mutated copy of the current sampler object. This
-/// new object is called a domain. Each domain produces an independent 4
-/// dimensional pattern. Calling the draw* member functions below on the new
-/// child domain will produce a different value to that of the current
-/// parent domain.
-///
-/// N child domains can be derived from a single parent domain with the use
-/// of the key argument. Keys must have at least one bit difference, but can
-/// be a simple incrementing sequence. A single child domain can itself
-/// derive N child domains. This process results in a domain tree.
-///
-/// The calling code can use up to 4 dimensions from each domain (these are
-/// typically of the highest quality), joining them together to form an N
-/// dimensional pattern. This technique is called padding.
-///
-/// @param [in] key Index key of next domain.
-/// @return Child domain based on the current object state and key.
-oqmc::Sampler oqmc::Sampler::newDomain(int key) const;
-```
-
-```cpp
-/// Derive a split sampler object with a local and a global distribution.
-///
-/// Like newDomain, this function derives a mutated copy of the current
-/// sampler object. However, using a technique called splitting, this
-/// domain can have a higher sample rate based on a fixed multiplier.
-///
-/// The result from taking N indexed domains with this function will be both
-/// a locally and a gloablly well distributed sub-pattern. This sub-pattern
-/// will of the highest quality due to being globally correlated with the
-/// sub-patterns of other samples.
-///
-/// If a mutliplier is adaptive (non-constant or unknown) then either the
-/// newDomainDistrib or newDomainChain functions should be used instead.
-/// These methods relax the constraint for a fixed multiplier, allowing for
-/// adaptive multilpiers in excahnge for a reduction in the quality
-///
-/// Calling code should use a constant key for any given domain while then
-/// incrementing the index value N times to increase the sampling rate by N
-/// for that given domain. The function will be called N times, once for
-/// each unique index. N must be passed as 'size' and remain constant.
-///
-/// @param [in] key Index key of next domain.
-/// @param [in] size Sample index multiplier. Must greater than zero.
-/// @param [in] index Sample index of next domain. Must be positive.
-/// @return Child domain based on the current object state, key and size.
-oqmc::Sampler oqmc::Sampler::newDomainSplit(int key, int size, int index) const;
-```
-
-```cpp
-/// Derive a split sampler object with a local distribution.
-///
-/// Like newDomain, this function derives a mutated copy of the current
-/// sampler object. However, using a technique called splitting, this
-/// domain can have a higher sample rate based on an adaptive multiplier.
-///
-/// The result from taking N indexed domains with this function will be a
-/// locally well distributed sub-pattern. This sub-pattern will be of lower
-/// quality when combined with the sub-patterns of other samples. That is
-/// because the correlation between the sub-patterns globally is lost.
-///
-/// If a mutliplier is fixed (constant and known) then the newDomainSplit
-/// function will produce better quality sample points and should be used
-/// instead. This is because newDomainSplit will preserved correlation
-/// between sub-patterns from other samples.
-///
-/// Calling code should use a constant key for any given domain while then
-/// incrementing the index value N times to increase the sampling rate by N
-/// for that given domain. The function will be called N times, once for
-/// each unique index.
-///
-/// @param [in] key Index key of next domain.
-/// @param [in] index Sample index of next domain. Must be positive.
-/// @return Child domain based on the current object state and key.
-oqmc::Sampler oqmc::Sampler::newDomainDistrib(int key, int index) const;
-```
-
-```cpp
-/// Derive a split sampler object with a global distribution.
-///
-/// Like newDomain, this function derives a mutated copy of the current
-/// sampler object. However, using a technique called splitting, this
-/// domain can have a higher sample rate based on an adaptive multiplier.
-///
-/// The result from taking N indexed domains with this function will be a
-/// globally well distributed sub-pattern. This sub-pattern will be of lower
-/// quality when looking at the local correlation between different index
-/// values. But, each index will be correlated globally.
-///
-/// If a mutliplier is fixed (constant and known) then the newDomainSplit
-/// function will produce better quality sample points and should be used
-/// instead. This is because newDomainSplit will preserved correlation
-/// between local points from different index values.
-///
-/// Calling code should use a constant key for any given domain while then
-/// incrementing the index value N times to increase the sampling rate by N
-/// for that given domain. The function will be called N times, once for
-/// each unique index.
-///
-/// @param [in] key Index key of next domain.
-/// @param [in] index Sample index of next domain. Must be positive.
-/// @return Child domain based on the current object state and key.
-oqmc::Sampler oqmc::Sampler::newDomainChain(int key, int index) const;
-```
-
-```cpp
-/// Draw integer sample values from domain.
-///
-/// This can compute sample values with up to 4 dimensions for the given
-/// domain. The operation does not change the state of the object, and for a
-/// single domain and index, the result of this function will always be the
-/// same. Output values are uniformly distributed integers within the range
-/// of [0, 2^32).
-///
-/// These values are of high quality and should be handled with care as to
-/// not introduce bias into an estimate. For low quality, but fast and safe
-/// random numbers, use the drawRnd member functions below.
-///
-/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
-/// @param [out] sample Output array to store sample values.
-template <int Size>
-void oqmc::Sampler::drawSample(std::uint32_t sample[Size]) const;
-```
-
-```cpp
-/// Draw ranged integer sample values from domain.
-///
-/// This function wraps the integer variant of drawSample above. But
-/// transforms the output values into uniformly distributed integers within
-/// the range of [0, range).
-///
-/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
-/// @param [in] range Exclusive end of range. Greater than zero.
-/// @param [out] sample Output array to store sample values.
-template <int Size>
-void oqmc::Sampler::drawSample(std::uint32_t range, std::uint32_t sample[Size]) const;
-```
-
-```cpp
-/// Draw floating point sample values from domain.
-///
-/// This function wraps the integer variant of drawSample above. But
-/// transforms the output values into uniformly distributed floats within
-/// the range of [0, 1).
-///
-/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
-/// @param [out] sample Output array to store sample values.
-template <int Size>
-void oqmc::Sampler::drawSample(float sample[Size]) const;
-```
-
-```cpp
-/// Draw integer pseudo random values from domain.
-///
-/// This can compute rnd values with up to 4 dimensions for the given
-/// domain. The operation does not change the state of the object, and for a
-/// single domain and index, the result of this function will always be the
-/// same. Output values are uniformly distributed integers within the range
-/// of [0, 2^32).
-///
-/// These values are of low quality but are fast to compute and have little
-/// risk of biasing an estimate. For higher quality samples, use the
-/// drawSample member functions above.
-///
-/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
-/// @param [out] rnd Output array to store rnd values.
-template <int Size>
-void oqmc::Sampler::drawRnd(std::uint32_t rnd[Size]) const;
-```
-
-```cpp
-/// Draw ranged integer pseudo random values from domain.
-///
-/// This function wraps the integer variant of drawRnd above. But transforms
-/// the output values into uniformly distributed integers within the range
-/// of [0, range).
-///
-/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
-/// @param [in] range Exclusive end of range. Greater than zero.
-/// @param [out] rnd Output array to store rnd values.
-template <int Size>
-void oqmc::Sampler::drawRnd(std::uint32_t range, std::uint32_t rnd[Size]) const;
-```
-
-```cpp
-/// Draw floating point pseudo random values from domain.
-///
-/// This function wraps the integer variant of drawRnd above. But transforms
-/// the output values into uniformly distributed floats within the range of
-/// [0, 1).
-///
-/// @tparam Size Number of dimensions to draw. Must be within [1, 4].
-/// @param [out] rnd Output array to store rnd values.
-template <int Size>
-void oqmc::Sampler::drawRnd(float rnd[Size]) const;
-```
+You can access the API reference documentation
+[here](https://academysoftwarefoundation.github.io/openqmc/api-reference).
 
 ## Implementation comparison
 
+<!-- MKDOCS_SPLIT: implementations.md -->
 The API is common to all back-end implementations. Each implementation has
 different strengths that balance performance and quality. These are all the
 implementations and their required header files:
@@ -717,9 +467,11 @@ higher rate of convergence takes effect.
   <source media="(prefers-color-scheme: dark)" srcset="./images/plots/cornell-box-1-32-dark.png">
   <img alt="Cornell box many samples comparison." src="./images/plots/cornell-box-1-32-light.png">
 </picture>
+<!-- MKDOCS_SPLIT_END -->
 
 ## Concepts and examples
 
+<!-- MKDOCS_SPLIT: domains.md -->
 OpenQMC aims to provide an API that makes using high quality samples easy and
 bias-free when writing software with numerical integration. You have already
 seen a very basic example of this in the [Usage](#usage) section. This section
@@ -968,7 +720,9 @@ produce bias. Branching can be used to make domains independent of one another.
 This independence prevents such bias. Finally, domain trees should match the
 call graph of the code to guarantee bias-free results. For a more complete
 example, see the [trace](src/tools/lib/trace.cpp) tool.
+<!-- MKDOCS_SPLIT_END -->
 
+<!-- MKDOCS_SPLIT: splitting.md -->
 ### Domain splitting
 
 Whereas domain branching lets you sample different dimensions within each sample
@@ -1178,9 +932,11 @@ the distribution strategy is optimal as it is locally correlated.
 However, when an adaptive sample rate multiplier is expected to be lower than
 the original pixel sample rate, as demonstrated here, the chaining strategy is
 optimal as it is globally correlated.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Implementation details
 
+<!-- MKDOCS_SPLIT: details.md -->
 This section will go into detail about each back-end implementation, as well as
 the blue noise variants. Here you can find out about practical trade-offs for
 each option, so you can decide which is best for your use case.
@@ -1314,16 +1070,20 @@ When deriving domains the sampler will use an LCG state transition, and only
 perform a permutation prior to drawing samples analogous to PCG. This provides
 high quality bits when drawing samples, but keeps the cost low when deriving
 domains, which might not be used.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Development roadmap
 
+<!-- MKDOCS_SPLIT: roadmap.md -->
 Roadmap for version 1.0.0 of the library:
 
 - Gather feedback and iterate on API.
 - Add support for package managers.
+<!-- MKDOCS_SPLIT_END -->
 
 ## Developer workflow
 
+<!-- MKDOCS_SPLIT: workflow.md -->
 Beyond the library itself there are a range of tools and tests that make up the
 project as a whole. These are there to aid development and to provide an element
 of analysis. These extra components also have more requirements and dependencies
@@ -1652,6 +1412,7 @@ directory. Building the documentation site can be done using:
 ```bash
 just docs
 ```
+<!-- MKDOCS_SPLIT_END -->
 
 ## Related projects
 

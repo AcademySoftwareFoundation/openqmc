@@ -27,6 +27,7 @@ namespace oqmc
 /// operation, which although fast will not remove any pre-existing structure
 /// present in a sequence. The seed input must be constant for a given sequence.
 ///
+/// @ingroup utilities
 /// @param [in] value Sequence element.
 /// @param [in] hash Random number.
 /// @return Randomised element.
@@ -44,6 +45,7 @@ randomDigitScramble(std::uint32_t value, std::uint32_t hash)
 /// Table element size must be equal to or greater than 2^16. An index greater
 /// than 2^16 will reuse table samples.
 ///
+/// @ingroup utilities
 /// @tparam Table Dimensional size of input table.
 /// @tparam Depth Dimensional space of output, up to 4 dimensions.
 /// @param [in] index Input index of sequence value.
