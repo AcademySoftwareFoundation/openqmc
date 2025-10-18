@@ -3,7 +3,6 @@
 
 #include "hypothesis.h"
 #include <oqmc/state.h>
-#include <oqmc/unused.h>
 
 #include <gtest/gtest.h>
 

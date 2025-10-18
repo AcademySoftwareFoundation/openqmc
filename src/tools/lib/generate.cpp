@@ -3,9 +3,12 @@
 
 #include "generate.h"
 
+#include "abi.h"
 #include "parallel.h"
 #include <oqmc/gpu.h>
-#include <oqmc/oqmc.h>
+#include <oqmc/lattice.h>
+#include <oqmc/pmj.h>
+#include <oqmc/sobol.h>
 
 #include <cassert>
 #include <string>

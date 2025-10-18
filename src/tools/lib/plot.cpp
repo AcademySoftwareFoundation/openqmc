@@ -4,14 +4,20 @@
 #include "plot.h"
 
 #include "../../shapes.h"
+#include "abi.h"
 #include "parallel.h"
 #include "rng.h"
 #include <oqmc/float.h>
-#include <oqmc/oqmc.h>
+#include <oqmc/lattice.h>
+#include <oqmc/latticebn.h>
 #include <oqmc/pcg.h>
+#include <oqmc/pmj.h>
+#include <oqmc/pmjbn.h>
+#include <oqmc/sobol.h>
+#include <oqmc/sobolbn.h>
 
+#include <cassert>
 #include <cmath>
-#include <cstdint>
 #include <string>
 
 namespace

@@ -3,20 +3,26 @@
 
 #include "trace.h"
 
+#include "abi.h"
 #include "parallel.h"
 #include "progress.h"
 #include "rng.h"
+#include "vector.h"
 #include <oqmc/gpu.h>
-#include <oqmc/oqmc.h>
+#include <oqmc/lattice.h>
+#include <oqmc/latticebn.h>
+#include <oqmc/pmj.h>
+#include <oqmc/pmjbn.h>
+#include <oqmc/sobol.h>
+#include <oqmc/sobolbn.h>
 #include <oqmc/unused.h>
 
 #pragma push
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/common.hpp>
+#include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 #pragma pop
 
 #include <cassert>
@@ -27,6 +33,8 @@
 
 namespace
 {
+
+constexpr double pi = 3.14159265358979323846;
 
 template <typename T>
 OQMC_HOST_DEVICE void swap(T& a, T& b)
@@ -228,12 +236,12 @@ Ray Camera::generateRay(int x, int y, int xSize, int ySize,
 		if(a * a > b * b)
 		{
 			r = radius * a;
-			phi = (M_PI / 4) * (b / a);
+			phi = (pi / 4) * (b / a);
 		}
 		else
 		{
 			r = radius * b;
-			phi = (M_PI / 2) - (M_PI / 4) * (a / b);
+			phi = (pi / 2) - (pi / 4) * (a / b);
 		}
 
 		return glm::vec3{r * std::cos(phi), r * std::sin(phi), 0};
@@ -362,7 +370,7 @@ diffuseSample(const Interaction& event, const Ray& ray, Sampler materialDomain)
 	branchlessONB(w, u, v);
 
 	const auto sampleCosineWeightedHemisphere = [u, v, w](const float rnd[2]) {
-		const float r1 = 2 * M_PI * rnd[0];
+		const float r1 = 2 * pi * rnd[0];
 		const float r2 = rnd[1];
 		const float sqrtR2 = std::sqrt(r2);
 
@@ -925,7 +933,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, Method method,
 			// Moved to within if block, no need to compute if not needed.
 			const auto directDomain = traceDomain.newDomain(DomainKey::Direct);
 
-			const auto bsdf = glm::vec3(M_1_PI) * material.colour;
+			const auto bsdf = glm::vec3(1 / pi) * material.colour;
 			const auto light =
 			    directLighting(session, method, numLightSamples, maxOpacity,
 			                   ray, event, directDomain);

@@ -5,7 +5,7 @@
   description = "Quasi-Monte Carlo sampling library for rendering and graphics applications";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     hypothesis.url = "github:joshbainbridge/hypothesis";
     hypothesis.inputs.nixpkgs.follows = "nixpkgs";
@@ -22,32 +22,29 @@
           ];
         };
         devShells.default = pkgs.mkShell.override {
-          stdenv = pkgs.stdenvNoCC;
+          stdenv = pkgs.clangStdenv;
         } {
           name = "devshell";
           packages = [
-            pkgs.git
+            pkgs.llvmPackages_18.clang-tools # matching version on GitHub runner
             pkgs.cmakeCurses
-            pkgs.llvm
-            pkgs.clang-tools
-            pkgs.clang
             pkgs.ninja
             pkgs.just
+            pkgs.git
+            pkgs.ty
             pkgs.ruff
-            pkgs.glm
             pkgs.doxygen
             pkgs.graphviz
-            pkgs.tbb_2021_11
-            # pkgs.gtest // Not compatible with C++ 14; falling back to FetchContent.
+            pkgs.glm
+            pkgs.tbb
+            pkgs.gtest
+            pkgs.python313
+            pkgs.python313Packages.mkdocs-material
+            pkgs.python313Packages.matplotlib
+            pkgs.python313Packages.numpy
+            pkgs.python313Packages.pillow
+            pkgs.python313Packages.notebook
             hypothesis.packages.${system}.default
-            (pkgs.python311.withPackages(ps: with ps; [
-              python-lsp-server
-              matplotlib
-              numpy
-              pillow
-              jupyter
-              mkdocs-material
-            ]))
           ];
           inputsFrom = [
             self.packages.${system}.default

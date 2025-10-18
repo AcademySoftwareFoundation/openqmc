@@ -4,8 +4,6 @@
 #include "hypothesis.h"
 #include <oqmc/latticebn.h>
 
-#include <gtest/gtest.h>
-
 #include <cstdint>
 
 namespace

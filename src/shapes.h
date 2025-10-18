@@ -10,6 +10,8 @@
 
 #include <cmath>
 
+constexpr double pi = 3.14159265358979323846;
+
 // These 2D test functions (shapes) were inspired by the Per Christensen's
 // funcsamp2D (https://github.com/perchristensen/funcsamp2D) repo. They are
 // used to measure the error of estimates against a known value when testing,
@@ -19,7 +21,7 @@ struct QuarterDisk
 {
 	OQMC_HOST_DEVICE static float evaluate(float x, float y)
 	{
-		return x * x + y * y < 2 / M_PI ? 1 : 0;
+		return x * x + y * y < 2 / pi ? 1 : 0;
 	}
 
 	OQMC_HOST_DEVICE static float integral()
@@ -35,7 +37,7 @@ struct FullDisk
 		x = x - 0.5f;
 		y = y - 0.5f;
 
-		return x * x + y * y < 1 / (2 * M_PI) ? 1 : 0;
+		return x * x + y * y < 1 / (2 * pi) ? 1 : 0;
 	}
 
 	OQMC_HOST_DEVICE static float integral()
@@ -53,7 +55,7 @@ struct QuarterGaussian
 
 	OQMC_HOST_DEVICE static float integral()
 	{
-		return M_PI_4 * std::pow(std::erf(1.0f), 2.0f);
+		return (pi / 4) * std::pow(std::erf(1.0f), 2.0f);
 	}
 };
 
@@ -69,7 +71,7 @@ struct FullGaussian
 
 	OQMC_HOST_DEVICE static float integral()
 	{
-		return M_PI * std::pow(std::erff(0.5f), 2.0f);
+		return pi * std::pow(std::erff(0.5f), 2.0f);
 	}
 };
 
@@ -128,7 +130,7 @@ struct OrientedHeaviside
 	/*AUTO_DEFINED*/ OrientedHeaviside() = default;
 	OQMC_HOST_DEVICE OrientedHeaviside(float orientation, float x, float y)
 	{
-		const float theta = 2 * M_PI * orientation;
+		const float theta = 2 * pi * orientation;
 
 		pos.x = x;
 		pos.y = y;

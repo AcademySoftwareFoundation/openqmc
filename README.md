@@ -144,8 +144,8 @@ Supported architectures:
 Tested compilers:
 
 - Clang 6
+- Clang 21
 - GCC 7.5
-- Apple Clang 13
 - NVCC 10
 
 ## Installation

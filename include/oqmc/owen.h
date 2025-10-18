@@ -11,7 +11,6 @@
 
 #include "arch.h"
 #include "gpu.h"
-#include "pcg.h"
 #include "permute.h"
 #include "reverse.h"
 #include "rotate.h"

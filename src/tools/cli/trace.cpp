@@ -4,6 +4,7 @@
 #include "write.h"
 
 #include <trace.h>
+#include <vector.h>
 
 #include <cstdio>
 #include <cstdlib>

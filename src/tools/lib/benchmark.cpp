@@ -3,15 +3,19 @@
 
 #include "benchmark.h"
 
+#include "abi.h"
 #include "parallel.h"
 #include <oqmc/gpu.h>
-#include <oqmc/oqmc.h>
+#include <oqmc/lattice.h>
+#include <oqmc/latticebn.h>
+#include <oqmc/pmj.h>
+#include <oqmc/pmjbn.h>
+#include <oqmc/sobol.h>
+#include <oqmc/sobolbn.h>
 #include <oqmc/unused.h>
 
 #include <cassert>
 #include <chrono>
-#include <cstddef>
-#include <cstdint>
 #include <string>
 
 namespace

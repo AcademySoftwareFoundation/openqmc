@@ -3,15 +3,21 @@
 
 #include "frequency.h"
 
+#include "abi.h"
+
 #if !defined(__CUDACC__)
-#include <oneapi/tbb.h>
+#include <oneapi/tbb/blocked_range.h>
+#include <oneapi/tbb/parallel_for.h>
 #endif
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
 namespace
 {
+
+constexpr double pi = 3.14159265358979323846;
 
 float mean(const float x[], int size)
 {
@@ -37,15 +43,8 @@ void normalise(float x[], int size)
 	float max = x[0];
 	for(int i = 1; i < size; ++i)
 	{
-		if(x[i] < min)
-		{
-			min = x[i];
-		}
-
-		if(x[i] > max)
-		{
-			max = x[i];
-		}
+		min = std::min(x[i], min);
+		max = std::max(x[i], max);
 	}
 
 	for(int i = 0; i < size; ++i)
@@ -100,7 +99,7 @@ OQMC_CABI bool oqmc_frequency_continuous(int nsequences, int nsamples,
 						const float x = in[index + depthA];
 						const float y = in[index + depthB];
 
-						const float exp = -M_PI * 2 * (dx * x + dy * y);
+						const float exp = -pi * 2 * (dx * x + dy * y);
 
 						fx += std::cos(exp);
 						fy += std::sin(exp);
@@ -141,7 +140,7 @@ OQMC_CABI bool oqmc_frequency_discrete_1d(int resolution, const float* inReal,
 
 	for(int i = 0; i < resolution; ++i)
 	{
-		const auto constant = 2 * M_PI * i * invResolution;
+		const auto constant = 2 * pi * i * invResolution;
 
 		float sumReal = 0.0f;
 		float sumImaginary = 0.0f;

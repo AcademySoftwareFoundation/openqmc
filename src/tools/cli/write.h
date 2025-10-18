@@ -15,6 +15,11 @@ inline void greyscales(const char* name, int xres, int yres, const float* image)
 {
 	auto file = std::fopen(name, "w");
 
+	if(file == nullptr)
+	{
+		return;
+	}
+
 	std::fprintf(file, "Pf\n");
 	std::fprintf(file, "%i %i\n", xres, yres);
 	std::fprintf(file, "-1\n");
@@ -27,6 +32,11 @@ inline void colours(const char* name, int xres, int yres, const float3* image)
 {
 	auto file = std::fopen(name, "w");
 
+	if(file == nullptr)
+	{
+		return;
+	}
+
 	std::fprintf(file, "PF\n");
 	std::fprintf(file, "%i %i\n", xres, yres);
 	std::fprintf(file, "-1\n");
@@ -38,6 +48,11 @@ inline void colours(const char* name, int xres, int yres, const float3* image)
 inline void integers(const char* name, int size, const std::uint32_t* integers)
 {
 	auto file = std::fopen(name, "w");
+
+	if(file == nullptr)
+	{
+		return;
+	}
 
 	for(int i = 0; i < size; ++i)
 	{

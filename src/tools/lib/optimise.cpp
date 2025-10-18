@@ -8,6 +8,7 @@
 #include "optimise.h"
 
 #include "../../shapes.h"
+#include "abi.h"
 #include "frequency.h"
 #include "parallel.h"
 #include "progress.h"
