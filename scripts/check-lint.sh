@@ -9,3 +9,7 @@ git ls-files | grep -E '\.(cpp)$' | grep -v -E '^cmake/examples/' | xargs clang-
 
 ruff --version
 git ls-files | grep -E '\.(py)$' | xargs ruff check --quiet
+
+# TODO: enable ty Python checks once Python dependencies can be resolved on CI.
+# ty --version
+# git ls-files | grep -E '\.(py)$' | xargs ty check --quiet

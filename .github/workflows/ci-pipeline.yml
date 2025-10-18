@@ -9,26 +9,36 @@ on:
 jobs:
   check-formatting:
     name: Check formatting
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: pip install ruff==0.1.6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install ruff==0.14.1
+      - run: pip install ty==0.0.1a23
       - run: scripts/check-format.sh
 
   check-static-analyzer:
     name: Check static analysis
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: pip install ruff==0.1.6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install ruff==0.14.1
+      - run: pip install ty==0.0.1a23
       - run: cmake --preset unix
       - run: scripts/check-lint.sh
 
   check-documentation:
     name: Check documentation
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome.css
+      - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome-sidebar-only.css
       - run: sudo apt-get update && sudo apt-get install doxygen graphviz
       - run: scripts/check-documentation.sh
 
@@ -38,7 +48,7 @@ jobs:
       - check-formatting
       - check-static-analyzer
       - check-documentation
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: cmake --preset base -D CMAKE_INSTALL_PREFIX=install
@@ -51,7 +61,7 @@ jobs:
   example-config:
     name: Check config
     needs: install
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -66,7 +76,7 @@ jobs:
   example-submodule:
     name: Check submodule
     needs: install
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: cmake -S cmake/examples/submodule -B build
@@ -76,7 +86,7 @@ jobs:
   example-include:
     name: Check include
     needs: install
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: cmake -S cmake/examples/include -B build
@@ -92,7 +102,7 @@ jobs:
     strategy:
       matrix:
         build: [Release, Debug]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: cmake --preset unix -D CMAKE_BUILD_TYPE=${{ matrix.build }}
@@ -104,17 +114,17 @@ jobs:
     needs: test-unit
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        os: [ubuntu-24.04, macos-14, windows-2022]
         arch: [Scalar, SSE, AVX, ARM]
         build: [Release, Debug]
         exclude:
-          - {os: ubuntu-22.04, arch: ARM}
+          - {os: ubuntu-24.04, arch: ARM}
           - {os: macos-14, arch: Scalar}
           - {os: macos-14, arch: SSE}
           - {os: macos-14, arch: AVX}
           - {os: windows-2022, arch: ARM}
         include:
-          - {os: ubuntu-22.04, preset: unix, save: true}
+          - {os: ubuntu-24.04, preset: unix, save: true}
           - {os: macos-14, preset: unix, save: true}
           - {os: windows-2022, preset: windows}
     runs-on: ${{ matrix.os }}
@@ -136,7 +146,7 @@ jobs:
     strategy:
       matrix:
         sampler: [pmj, sobol, lattice]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       # Download tools build
       - uses: actions/download-artifact@v4
@@ -154,12 +164,12 @@ jobs:
     needs: pre-test-generate
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14]
+        os: [ubuntu-24.04, macos-14]
         arch: [Scalar, SSE, AVX, ARM]
         build: [Release, Debug]
         sampler: [pmj, sobol, lattice]
         exclude:
-          - {os: ubuntu-22.04, arch: ARM}
+          - {os: ubuntu-24.04, arch: ARM}
           - {os: macos-14, arch: Scalar}
           - {os: macos-14, arch: SSE}
           - {os: macos-14, arch: AVX}

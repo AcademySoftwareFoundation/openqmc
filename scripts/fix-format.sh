@@ -3,7 +3,7 @@
 
 #!/bin/bash
 
-clang-tidy --version
+clang-format --version
 git ls-files | grep -E '\.(cpp|h)$' | xargs clang-format -i
 
 ruff --version

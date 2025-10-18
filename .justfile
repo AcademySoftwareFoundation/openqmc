@@ -27,7 +27,7 @@
 
 # open up a jupyter notebook
 @notebook: build
-  jupyter notebook --ip 0.0.0.0 --allow-root python/notebooks
+  jupyter lab --ip 0.0.0.0 --allow-root python/notebooks
 
 # run notebook and save readme images
 @readme-images: build

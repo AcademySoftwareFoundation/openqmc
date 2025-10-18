@@ -4,7 +4,7 @@
 #!/bin/bash
 set -e
 
-clang-tidy --version
+clang-format --version
 git ls-files | grep -E '\.(cpp|h)$' | xargs clang-format --dry-run -Werror
 
 ruff --version
