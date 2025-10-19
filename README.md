@@ -1,10 +1,11 @@
-<p align="center">
+<div align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="./images/logo-light.png">
     <source media="(prefers-color-scheme: dark)" srcset="./images/logo-dark.png">
-    <img alt="OpenQMC" src="./images/logo-light.png" height="200">
+    <img alt="OpenQMC" src="./images/logo-light.png"
+         style="max-width: 100%; height: auto; padding:100px;">
   </picture>
-</p>
+</div>
 
 [![License](https://img.shields.io/badge/License-Apache--2.0-informational)](https://github.com/AcademySoftwareFoundation/openqmc/blob/main/LICENSE)
 [![Release](https://img.shields.io/github/v/release/AcademySoftwareFoundation/openqmc?label=Release)](https://github.com/AcademySoftwareFoundation/openqmc/releases/latest)
