@@ -12,17 +12,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
+      - uses: cachix/install-nix-action@v25
+      - uses: cachix/cachix-action@v14
         with:
-          python-version: '3.13'
-      - run: pip install ruff==0.14.1
-      - run: pip install ty==0.0.1a23
-      - run: scripts/check-format.sh
+          name: openqmc
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - run: nix develop -c scripts/check-format.sh
 
   check-static-analyzer:
     name: Check static analysis
     runs-on: ubuntu-24.04
     steps:
+      - run: false
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v6
         with:
@@ -36,6 +37,7 @@ jobs:
     name: Check documentation
     runs-on: ubuntu-24.04
     steps:
+      - run: false
       - uses: actions/checkout@v4
       - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome.css
       - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome-sidebar-only.css
