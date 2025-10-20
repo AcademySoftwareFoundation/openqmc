@@ -4,8 +4,6 @@
 #include "hypothesis.h"
 #include <oqmc/sobolbn.h>
 
-#include <gtest/gtest.h>
-
 #include <cstdint>
 
 namespace

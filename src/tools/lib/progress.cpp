@@ -3,6 +3,8 @@
 
 #include "progress.h"
 
+#include "abi.h"
+
 #include <cassert>
 #include <cstdio>
 #include <ctime>

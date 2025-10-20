@@ -6,6 +6,9 @@
 #include <oqmc/pcg.h>
 #include <oqmc/rank1.h>
 
+#include <gtest/gtest.h>
+
+#include <array>
 #include <cstdint>
 
 namespace
