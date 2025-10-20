@@ -23,6 +23,7 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
+    - navigation.footer
   palette:
     - media: "(prefers-color-scheme)"
     - media: "(prefers-color-scheme: light)"
