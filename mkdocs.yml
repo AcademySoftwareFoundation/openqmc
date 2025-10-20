@@ -10,6 +10,7 @@ nav:
       - Technical Details: details.md
     - Developer:
       - workflow.md
+      - contributing.md
       - roadmap.md
   - Tutorials:
     - Domain Sampling: domains.md
