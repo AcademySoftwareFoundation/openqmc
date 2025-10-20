@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="./images/logo-light.png">
     <source media="(prefers-color-scheme: dark)" srcset="./images/logo-dark.png">
-    <img alt="OpenQMC" src="./images/logo-light.png" height="200">
+    <img alt="OpenQMC" src="./images/logo-light.png" width="70%">
   </picture>
 </p>
 

@@ -13,9 +13,10 @@ If you just need help or have a question, refer to [SUPPORT.md](SUPPORT.md).
 
 ## How to contribute a bug fix or change
 
+<!-- MKDOCS_SPLIT: contributing.md -->
 To contribute code to the project, first read over the [governance policies](GOVERNANCE.md) page to understand the roles involved.
 
-Each contribution must meet the [coding style](#coding-style) and include..
+Each contribution must meet the [coding style](#coding-style) and include...
 
 * Tests and documentation to explain the functionality.
 * Any new files have [copyright and license headers](https://github.com/AcademySoftwareFoundation/tac/blob/main/process/contributing.md#license-specification).
@@ -119,3 +120,4 @@ Some simple guidelines to follow are:
 - Put conditional clauses before instructions. This lets the reader skip the instruction.
 - Use abbreviations as they're harder to miss. Use 'wouldn't' over 'would not'.
 - Be inclusive. Make use of gender-neutral pronouns.
+<!-- MKDOCS_SPLIT_END -->

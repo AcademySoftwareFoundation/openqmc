@@ -13,6 +13,10 @@
   color: #00acee;
 }
 
+.md-typeset h2 {
+  margin: 0 0 .64em;
+}
+
 .md-typeset .mastodon {
   color: #897ff8;
 }
@@ -704,7 +708,7 @@
 .oqmc-quote__attribution {
   font-size: 0.95rem;
   font-style: normal !important;
-  margin-top: 0.5rem;
+  margin: 0 !important;
 }
 
 /* Mobile adjustments */

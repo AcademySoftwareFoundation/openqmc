@@ -2,21 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the OpenQMC Project.
 
-# Split README.md into multiple markdown files for MkDocs based on markers
-# and fetch GitHub releases
-# Usage: ./scripts/split-readme.sh
-#
-# This script extracts sections from README.md marked with HTML comment markers
-# and generates separate markdown files in the docs/ directory for MkDocs.
-# It also fetches GitHub releases and generates a releases.md page.
-# Generated files are gitignored and created fresh on each CI build.
-# Image paths are rewritten from ./images/ to ../images/ during extraction.
-#
-# Credit: Solution designed with assistance from Claude (Anthropic).
-
 set -e
 
+# Split README.md and CONTRIBUTING.md into multiple markdown files for MkDocs
+# based on markers and fetch GitHub releases Usage: ./scripts/split-readme.sh
+#
+# This script extracts sections from README.md and CONTRIBUTING.md marked
+# with HTML comment markers and generates separate markdown files in the
+# docs/ directory for MkDocs. It also fetches GitHub releases and generates a
+# releases.md page. Generated files are gitignored and created fresh on each
+# CI build. Image paths are rewritten from ./images/ to ../images/ during
+# extraction.
+
 readonly README_FILE="README.md"
+readonly CONTRIBUTING_FILE="CONTRIBUTING.md"
 readonly DOCS_DIR="docs"
 readonly RELEASES_LIMIT=20
 
@@ -129,8 +128,10 @@ fix_source_links() {
             line=$(echo "$line" | sed -E "s|\]\((python/[^)]+)\)|](${github_base}/\1)|g")
             line=$(echo "$line" | sed -E "s|\]\((cmake/[^)]+)\)|](${github_base}/\1)|g")
             line=$(echo "$line" | sed -E "s|\]\((doxygen/[^)]+)\)|](${github_base}/\1)|g")
-            # Handle CHANGELOG.md at root
+            # Handle CHANGELOG.md and other markdown files at root
             line=$(echo "$line" | sed -E "s|\]\(CHANGELOG\.md\)|](${github_base}/CHANGELOG.md)|g")
+            line=$(echo "$line" | sed -E "s|\]\(SUPPORT\.md\)|](${github_base}/SUPPORT.md)|g")
+            line=$(echo "$line" | sed -E "s|\]\(GOVERNANCE\.md\)|](${github_base}/GOVERNANCE.md)|g")
             echo "$line"
         done < "$file" > "$temp_file"
 
@@ -199,7 +200,54 @@ rm -rf "$DOCS_DIR"
 # Ensure docs directory exists
 mkdir -p "$DOCS_DIR"
 
-echo "Splitting README.md into MkDocs files..."
+# Process a markdown file with MKDOCS_SPLIT markers
+process_markdown_file() {
+    local source_file="$1"
+    local file_display_name="$2"
+
+    if [ ! -f "$source_file" ]; then
+        echo "Warning: $source_file not found, skipping"
+        return 0
+    fi
+
+    echo "Processing $file_display_name..."
+
+    # Use awk to parse markers and split content
+    awk -v docs_dir="$DOCS_DIR" '
+    BEGIN {
+        current_file = ""
+    }
+
+    # Handle regular split markers
+    /<!-- MKDOCS_SPLIT: / {
+        # Close previous file if open
+        if (current_file) close(current_file)
+
+        # Extract filename from marker
+        match($0, /<!-- MKDOCS_SPLIT: ([^ ]+) -->/, arr)
+        current_file = docs_dir "/" arr[1]
+        next
+    }
+
+    # Handle end marker
+    /<!-- MKDOCS_SPLIT_END -->/ {
+        if (current_file) close(current_file)
+        current_file = ""
+        next
+    }
+
+    # Write content to current file, rewriting image paths for MkDocs
+    current_file {
+        line = $0
+        gsub(/\(\.\/images\//, "(../images/", line)
+        gsub(/srcset="\.\/images\//, "srcset=\"../images/", line)
+        gsub(/src="\.\/images\//, "src=\"../images/", line)
+        print line >> current_file
+    }
+    ' "$source_file"
+}
+
+echo "Splitting README.md and CONTRIBUTING.md into MkDocs files..."
 
 # Create index.md with front matter for custom homepage
 cat > "$DOCS_DIR/index.md" << 'EOF'
@@ -220,41 +268,11 @@ if [ ! -e "$DOCS_DIR/javascripts" ]; then
     echo "Created symlink: docs/javascripts -> ../mkdocs/javascripts"
 fi
 
-# Use awk to parse markers and split content
-awk -v docs_dir="$DOCS_DIR" '
-BEGIN {
-    current_file = ""
-}
+# Process both README.md and CONTRIBUTING.md
+process_markdown_file "$README_FILE" "README.md"
+process_markdown_file "$CONTRIBUTING_FILE" "CONTRIBUTING.md"
 
-# Handle regular split markers
-/<!-- MKDOCS_SPLIT: / {
-    # Close previous file if open
-    if (current_file) close(current_file)
-
-    # Extract filename from marker
-    match($0, /<!-- MKDOCS_SPLIT: ([^ ]+) -->/, arr)
-    current_file = docs_dir "/" arr[1]
-    next
-}
-
-# Handle end marker
-/<!-- MKDOCS_SPLIT_END -->/ {
-    if (current_file) close(current_file)
-    current_file = ""
-    next
-}
-
-# Write content to current file, rewriting image paths for MkDocs
-current_file {
-    line = $0
-    gsub(/\(\.\/images\//, "(../images/", line)
-    gsub(/srcset="\.\/images\//, "srcset=\"../images/", line)
-    gsub(/src="\.\/images\//, "src=\"../images/", line)
-    print line >> current_file
-}
-' "$README_FILE"
-
-echo "Successfully split README.md into docs/"
+echo "Successfully processed markdown files into docs/"
 
 # Fetch GitHub releases
 fetch_releases

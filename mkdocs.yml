@@ -10,6 +10,7 @@ nav:
       - Technical Details: details.md
     - Developer:
       - workflow.md
+      - contributing.md
       - roadmap.md
   - Tutorials:
     - Domain Sampling: domains.md
@@ -23,6 +24,7 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
+    - navigation.footer
   palette:
     - media: "(prefers-color-scheme)"
     - media: "(prefers-color-scheme: light)"
