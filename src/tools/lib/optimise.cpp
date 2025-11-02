@@ -908,7 +908,7 @@ struct Pmj
 {
 	OQMC_HOST_DEVICE static void* initialiseCache()
 	{
-		std::uint32_t(*samples)[4];
+		std::uint32_t (*samples)[4];
 		OQMC_ALLOCATE(&samples, oqmc::State64Bit::maxIndexSize);
 
 		oqmc::stochasticPmjInit(oqmc::State64Bit::maxIndexSize, samples);
@@ -924,7 +924,7 @@ struct Pmj
 	OQMC_HOST_DEVICE static void sample(int index, std::uint32_t hash,
 	                                    const void* cache, std::uint32_t out[2])
 	{
-		auto samples = static_cast<const std::uint32_t(*)[4]>(cache);
+		auto samples = static_cast<const std::uint32_t (*)[4]>(cache);
 		oqmc::shuffledScrambledLookup<4, 2>(index, hash, samples, out);
 	}
 };
