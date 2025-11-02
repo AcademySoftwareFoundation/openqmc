@@ -26,7 +26,7 @@
         } {
           name = "devshell";
           packages = [
-            pkgs.llvmPackages_18.clang-tools # matching version on GitHub runner
+            pkgs.clang-tools
             pkgs.cmakeCurses
             pkgs.ninja
             pkgs.just

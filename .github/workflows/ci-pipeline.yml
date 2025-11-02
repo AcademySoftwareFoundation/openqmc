@@ -12,35 +12,27 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-      - run: pip install ruff==0.14.1
-      - run: pip install ty==0.0.1a23
-      - run: scripts/check-format.sh
+      - uses: cachix/install-nix-action@v25
+      - run: nix develop -ic scripts/check-format.sh
 
   check-static-analyzer:
     name: Check static analysis
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-      - run: pip install ruff==0.14.1
-      - run: pip install ty==0.0.1a23
-      - run: cmake --preset unix
-      - run: scripts/check-lint.sh
+      - uses: cachix/install-nix-action@v25
+      - run: nix develop -ic cmake --preset unix
+      - run: nix develop -ic scripts/check-lint.sh
 
   check-documentation:
     name: Check documentation
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v25
       - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome.css
       - run: curl -L -O https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.4.0/doxygen-awesome-sidebar-only.css
-      - run: sudo apt-get update && sudo apt-get install doxygen graphviz
-      - run: scripts/check-documentation.sh
+      - run: nix develop -ic scripts/check-documentation.sh
 
   install:
     name: Install library
