@@ -26,10 +26,12 @@
         } {
           name = "devshell";
           packages = [
-            pkgs.clang-tools
+            pkgs.libllvm # For llvm-cov, etc
+            pkgs.clang-tools # For clang-tidy, etc
             pkgs.cmakeCurses
             pkgs.ninja
             pkgs.just
+            pkgs.curl
             pkgs.git
             pkgs.ty
             pkgs.ruff
