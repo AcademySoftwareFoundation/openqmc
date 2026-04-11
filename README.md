@@ -1123,6 +1123,16 @@ nix profile install nixpkgs#helix
 Alternatively you can build the project without using a provided development
 environment using a local compiler. This should work just fine on most systems.
 
+### GitHub Codespaces
+
+You can also use [GitHub Codespaces](https://github.com/features/codespaces) to
+develop the project. Once a Codespace is running, use the same Docker Compose
+command from the integrated terminal to enter the development environment:
+
+```bash
+docker compose run --rm --service-ports develop
+```
+
 ### Navigation
 
 The project has a simple layout. As the library is header only the library
