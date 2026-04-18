@@ -2,9 +2,8 @@
 
 There are a few ways to connect with the OpenQMC project:
 
-- Add yourself to the TBD mailing list.
-- Start a thread on the TBD forums.
-- Join the TBD Slack channel.
+- Add yourself to the OpenQMC [mailing list](https://lists.aswf.io/g/openqmc-discussion).
+- Join the OpenQMC [Slack channel](https://academysoftwarefdn.slack.com/archives/C09BXDAMFTP).
 - Create a new GitHub [issue](https://github.com/AcademySoftwareFoundation/openqmc/issues).
 
 ## How to ask for help
