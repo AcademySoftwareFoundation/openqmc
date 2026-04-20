@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+
+- Improve quality of uniform float distribution in `oqmc::uintToFloat`.
+
 ### Security
 
 ## [0.7.1] - 2025-08-23
