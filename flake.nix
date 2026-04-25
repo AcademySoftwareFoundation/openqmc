@@ -33,6 +33,7 @@
             pkgs.just
             pkgs.curl
             pkgs.git
+            pkgs.git-lfs
             pkgs.ty
             pkgs.ruff
             pkgs.doxygen
@@ -54,6 +55,7 @@
           shellHook = ''
             export TOOLSPATH=$PWD/build/src/tools/lib
             export PYTHONPATH=$PYTHONPATH:$PWD/python
+            git lfs install > /dev/null
           '';
         };
       }
