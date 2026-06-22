@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 ### Changed
+
+- Sped up scalar paths of `oqmc::sobolReversedIndex` using the construction method from Ahmed 2024.
+
 ### Deprecated
 ### Removed
 ### Fixed

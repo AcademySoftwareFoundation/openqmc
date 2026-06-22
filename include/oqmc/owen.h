@@ -48,6 +48,53 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 	assert(dimension >= 0);
 	assert(dimension <= 3);
 
+#if defined(OQMC_ARCH_SCALAR)
+
+	// Each matrix factors into shift-mask-xor steps (Ahmed 2024, eq. 18),
+	// dimension 1 being the Pascal matrix (Listing 19). Steps emitted by the
+	// matrices cli tool in src/tools/cli/matrices.cpp.
+	switch(dimension)
+	{
+	case 1:
+		index ^= static_cast<std::uint16_t>((index & 0x00ff) << 8);
+		index ^= static_cast<std::uint16_t>((index & 0x0f0f) << 4);
+		index ^= static_cast<std::uint16_t>((index & 0x3333) << 2);
+		index ^= static_cast<std::uint16_t>((index & 0x5555) << 1);
+		break;
+	case 2:
+		index ^= static_cast<std::uint16_t>((index & 0x0003) << 14);
+		index ^= static_cast<std::uint16_t>((index & 0x0004) << 13);
+		index ^= static_cast<std::uint16_t>((index & 0x000f) << 12);
+		index ^= static_cast<std::uint16_t>((index & 0x0033) << 10);
+		index ^= static_cast<std::uint16_t>((index & 0x0055) << 9);
+		index ^= static_cast<std::uint16_t>((index & 0x0030) << 8);
+		index ^= static_cast<std::uint16_t>((index & 0x0303) << 6);
+		index ^= static_cast<std::uint16_t>((index & 0x0505) << 5);
+		index ^= static_cast<std::uint16_t>((index & 0x0cf3) << 4);
+		index ^= static_cast<std::uint16_t>((index & 0x1111) << 3);
+		index ^= static_cast<std::uint16_t>((index & 0x0f0f) << 2);
+		index ^= static_cast<std::uint16_t>((index & 0x6666) << 1);
+		break;
+	case 3:
+		index ^= static_cast<std::uint16_t>((index & 0x000f) << 12);
+		index ^= static_cast<std::uint16_t>((index & 0x0030) << 10);
+		index ^= static_cast<std::uint16_t>((index & 0x0050) << 9);
+		index ^= static_cast<std::uint16_t>((index & 0x007f) << 8);
+		index ^= static_cast<std::uint16_t>((index & 0x03f0) << 6);
+		index ^= static_cast<std::uint16_t>((index & 0x0410) << 5);
+		index ^= static_cast<std::uint16_t>((index & 0x07e0) << 4);
+		index ^= static_cast<std::uint16_t>((index & 0x1c71) << 3);
+		index ^= static_cast<std::uint16_t>((index & 0x1c71) << 2);
+		index ^= static_cast<std::uint16_t>((index & 0x4924) << 1);
+		break;
+	default:
+		break;
+	}
+
+	return reverseBits16(index);
+
+#else
+
 	if(dimension == 0)
 	{
 		return reverseBits16(index);
@@ -242,17 +289,6 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 	return vgetq_lane_u16(bits, 0);
 #endif
 
-#if defined(OQMC_ARCH_SCALAR)
-	std::uint16_t sample = 0;
-	for(int i = 0; i < 16; ++i)
-	{
-		if((index & masks[i]) != 0)
-		{
-			sample ^= matrix[i];
-		}
-	}
-
-	return sample;
 #endif
 }
 

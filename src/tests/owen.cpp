@@ -4,6 +4,7 @@
 #include "hypothesis.h"
 #include <oqmc/owen.h>
 #include <oqmc/pcg.h>
+#include <oqmc/reverse.h>
 
 #include <gtest/gtest.h>
 
@@ -138,6 +139,74 @@ TEST(OwenTest, ShirleyRemapping)
 		for(auto stratum : strata)
 		{
 			EXPECT_TRUE(stratum);
+		}
+	}
+}
+
+TEST(OwenTest, SobolReversedIndex)
+{
+	// clang-format off
+	constexpr std::uint16_t masks[16] = {
+		0b0000000000000001,
+		0b0000000000000010,
+		0b0000000000000100,
+		0b0000000000001000,
+		0b0000000000010000,
+		0b0000000000100000,
+		0b0000000001000000,
+		0b0000000010000000,
+		0b0000000100000000,
+		0b0000001000000000,
+		0b0000010000000000,
+		0b0000100000000000,
+		0b0001000000000000,
+		0b0010000000000000,
+		0b0100000000000000,
+		0b1000000000000000,
+	};
+
+	constexpr std::uint16_t directions[4][16] = {
+		{0x8000, 0x4000, 0x2000, 0x1000, 0x0800, 0x0400, 0x0200, 0x0100,
+		 0x0080, 0x0040, 0x0020, 0x0010, 0x0008, 0x0004, 0x0002, 0x0001},
+		{0xffff, 0x5555, 0x3333, 0x1111, 0x0f0f, 0x0505, 0x0303, 0x0101,
+		 0x00ff, 0x0055, 0x0033, 0x0011, 0x000f, 0x0005, 0x0003, 0x0001},
+		{0xaa09, 0x7706, 0x3903, 0x1601, 0x09aa, 0x0677, 0x0339, 0x0116,
+		 0x00a3, 0x0071, 0x003a, 0x0017, 0x0009, 0x0006, 0x0003, 0x0001},
+		{0xa0c3, 0x4041, 0x302d, 0x101e, 0x0b67, 0x079a, 0x02a4, 0x011b,
+		 0x00c9, 0x0045, 0x002e, 0x001f, 0x000a, 0x0004, 0x0003, 0x0001},
+	};
+	// clang-format on
+
+	// Reference code from the classic scalar implementation. Verifies that
+	// Ahmed 2024 closed form output matches (PR #97).
+	const auto reference = [&](std::uint16_t index, int dimension) {
+		if(dimension == 0)
+		{
+			return oqmc::reverseBits16(index);
+		}
+
+		const auto matrix = directions[dimension];
+
+		std::uint16_t sample = 0;
+		for(int i = 0; i < 16; ++i)
+		{
+			if((index & masks[i]) != 0)
+			{
+				sample ^= matrix[i];
+			}
+		}
+
+		return sample;
+	};
+
+	for(int dimension = 0; dimension < 4; ++dimension)
+	{
+		for(std::uint32_t index = 0; index < (1u << 16); ++index)
+		{
+			const auto value = static_cast<std::uint16_t>(index);
+
+			EXPECT_EQ(oqmc::sobolReversedIndex(value, dimension),
+			          reference(value, dimension));
 		}
 	}
 }
