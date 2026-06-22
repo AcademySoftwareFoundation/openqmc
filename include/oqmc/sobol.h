@@ -99,7 +99,9 @@ void SobolImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// includes performance improvements such as limiting the index to 16 bits,
 /// pre-inverting the input and output matrices, and making use of CPU vector
 /// intrinsics. You need to select an `OPENQMC_ARCH_TYPE` to make use of the
-/// performance from vector intrinsics for a given architecture.
+/// performance from vector intrinsics for a given architecture. The scalar path
+/// uses the construction method by Abdalla G. M. Ahmed in 'An Implementation
+/// Algorithm of 2D Sobol Sequence Fast, Elegant, and Compact' (EGSR 2024).
 ///
 /// This sampler has no cache initialisation cost, it generates all samples on
 /// the fly without touching memory. However the cost per draw sample call is

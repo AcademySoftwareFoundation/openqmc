@@ -975,7 +975,8 @@ The implementation uses an elegant construction by Burley [^1] for an Owen
 scrambled Sobol sequence. This also includes performance improvements such as
 limiting the index to 16 bits, pre-inverting the input and output matrices, and
 making use of CPU vector intrinsics. You need to select a `OPENQMC_ARCH_TYPE` to
-make use of the performance from vector intrinsics for a given architecture.
+make use of the performance from vector intrinsics for a given architecture. The
+scalar path uses the closed-form 2D Sobol construction by Ahmed [^5].
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/sobol-design-light.png">
@@ -1469,6 +1470,10 @@ https://dx.doi.org/10.1007/s11075-011-9482-5
 [^4]: Laurent Belcour and Eric Heitz. 2021.  
 Lessons Learned and Improvements when Building Screen-Space Samplers with Blue-Noise Error Distribution. ACM SIGGRAPH 2021 Talks.  
 https://dx.doi.org/10.1145/3450623.3464645
+
+[^5]: Abdalla G. M. Ahmed. 2024.  
+An Implementation Algorithm of 2D Sobol Sequence: Fast, Elegant, and Compact. EGSR.  
+https://dx.doi.org/10.2312/sr.20241147
 
 [^6]: Melissa E. O'Neill. 2014.  
 PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation.  
