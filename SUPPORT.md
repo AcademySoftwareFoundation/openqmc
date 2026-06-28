@@ -16,7 +16,7 @@ OpenQMC manages bug and enhancement using its [issue](https://github.com/Academy
 
 ## How to report a security vulnerability
 
-If you think you've found a potential vulnerability in OpenQMC, please email josh.bainbridge@gmail.com to responsibly disclose it.
+If you think you've found a potential vulnerability in OpenQMC, please email openqmc-tsc-private@lists.aswf.io to responsibly disclose it.
 
 ## Contributing a fix
 
