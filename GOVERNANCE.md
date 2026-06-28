@@ -21,7 +21,7 @@ The committer role enables the contributor to commit code directly to the reposi
 ### Process for becoming a committer
 
 * Show your experience with the codebase through contributions and engagement on the community channels.
-* Request to become a committer. To do this, create a new pull request that adds your name and details to the COMMITTERS.csv file and request existing committers to approve.
+* Request to become a committer. To do this, create a new pull request that adds your name and details to the [committers list](CONTRIBUTING.md#project-committers) and request existing committers to approve.
 * After the majority of committers approve you, merge in the PR. Be sure to tag the whomever is managing the GitHub permissions to update the committers team in GitHub.
 
 ### Committer responsibilities
@@ -36,9 +36,20 @@ The committer role enables the contributor to commit code directly to the reposi
 
 If a committer is no longer interested or cannot perform the committer duties listed above, they should volunteer to be moved to emeritus status. In extreme cases this can also occur by a vote of the committers per the voting process below.
 
-## Lead
+## Technical Steering Committee (TSC)
 
-The project committers will elect a lead (and optionally a co-lead) which will be the primary point of contact for the project and representative to the TAC upon becoming an Active stage project. The lead(s) will be responsible for the overall project health and direction, coordination of activities, and working with other projects and committees as needed for the continued growth of the project.
+The Technical Steering Committee (TSC) is responsible for all technical oversight of the project. The full responsibilities and procedures of the TSC are defined in the project's [Technical Charter](tsc/charter.md), which is the binding governing document for the project.
+
+The current TSC members are:
+
+* Josh Bainbridge (Chair)
+* Lorna Dumba
+* Nathan Walster
+* Mark Hills
+
+### TSC Chair
+
+The TSC may elect a TSC Chair (and optionally a co-chair) who will be the primary point of contact for the project and its representative to the Academy Software Foundation's Technical Advisory Council (TAC). The TSC Chair is responsible for the overall project health and direction, coordination of activities, presiding over TSC meetings, and working with other projects and committees as needed for the continued growth of the project.
 
 # Release process
 
@@ -46,12 +57,11 @@ Project releases will occur on a scheduled basis as agreed to by the committers.
 
 # Conflict resolution and voting
 
-In general, we prefer that technical issues and committer membership are amicably worked out between the persons involved. If a dispute cannot be decided independently, the committers can be called in to decide an issue. If the committers themselves cannot decide an issue, the issue will be resolved by voting. The voting process is a simple majority in which each committer receives one vote.
+In general, we prefer that technical issues and committer membership are amicably worked out between the persons involved. If a dispute cannot be decided independently, the TSC can be called in to decide an issue. If the TSC itself cannot decide an issue, the issue will be resolved by voting. The voting process is a simple majority in which each TSC voting member receives one vote, as described in the [Technical Charter](tsc/charter.md).
 
 # Communication
 
-This project, just like all of open source, is a global community. In addition
-to the [Code of Conduct](CODE_OF_CONDUCT.md), this project will:
+This project, just like all of open source, is a global community. In addition to the [Code of Conduct](CODE_OF_CONDUCT.md), this project will:
 
 * Keep all communication on open channels (mailing list, forums, chat).
 * Be respectful of time and language differences between community members (such as scheduling meetings, email/issue responsiveness, etc).

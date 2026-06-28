@@ -12,16 +12,15 @@ The Technical Steering Committee have write-access to the OpenQMC repository and
 * No direct commits to the main (or any other protected) branch, every code change should be a pull request
 * Any member of the community can provide feedback on any pull request (and is encouraged to do so)
 * A CODEOWNERS file introduced to the root of the repo to configure ownership (global, per-directory and/or per-file) - this will automatically request pull request reviews from the relevant maintainers (https://help.github.com/articles/about-codeowners/)
-* Minimum of one non-author TSC member approval on every pull request before merging
+* Minimum of one TSC member or committer approval on every pull request before merging
 * Non fast-forward merges must be used (ie the merge must not be rebased onto main)
-* Azure Pipelines CI and DCO status checks must strictly pass before merging, other (TBD) checks should loosely pass (https://help.github.com/articles/types-of-required-status-checks)
+* CI and DCO status checks must strictly pass before merging (https://help.github.com/articles/types-of-required-status-checks)
 
 ## Best Practices
 
 * Prefer all requested reviewers to approve before merging
 * Merging a pull request should be the responsibility of the author if they are a TSC member
 * Any TSC member can merge a pull request authored by a non-TSC member, but with a preferred minimum of two approvals from TSC members (including themself)
-* Re-writing the branch history by rebasing a pull request branch just before a merge is discouraged, unless it significantly improves the overall history (such as any broken commits on the review branch that might make reverting or bisecting more difficult)
 * Prefer pull requests to be open for a minimum of 72 hours before merging in order to gather any feedback
 * Aim for all pull requests to be responded to by one of the TSC members within a minimum of two weeks with either explanation of non-acceptance, request for changes or merge
 * TSC meetings should regularly review and discuss any outstanding pull requests
