@@ -17,6 +17,7 @@ nav:
     - Increasing Sampling Rate: splitting.md
   - Releases: releases.md
   - Go to API Reference: https://academysoftwarefoundation.github.io/openqmc/api-reference
+  - Go to Confluence: https://lf-aswf.atlassian.net/wiki/spaces/OpenQMC/overview
 theme:
   name: material
   custom_dir: mkdocs

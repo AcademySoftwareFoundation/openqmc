@@ -1149,7 +1149,7 @@ The directories are:
 - `scripts`: Utility scripts for command line and CI usage.
 - `src/tests`: Unit and statistical hypothesis testing.
 - `src/tools`: Project tooling for analysis and offline optimisation.
-- `tsc`: Meeting notes and project process documentation.
+- `tsc`: Project charter and process documentation.
 
 ### Dependencies
 
@@ -1435,6 +1435,17 @@ OpenQMC doesn't solve your problem, one of these might be a better option:
   a great example implementation of their sampler, but no general interface.
 - [Pbrt](https://github.com/mmp/pbrt-v4) is a seminal resource on all things
   rendering, but is written for educational purposes.
+
+## Leadership
+
+OpenQMC is an Academy Software Foundation project, governed by a Technical
+Steering Committee (TSC). The leadership roster, project roles, and decision
+making process are described in [GOVERNANCE.md](GOVERNANCE.md), with the binding
+details set out in the project's [Technical Charter](tsc/charter.md).
+
+TSC meetings are open to the community. Meeting notes, minutes and the schedule
+are maintained on the project's Confluence space: [OpenQMC on
+Confluence](https://lf-aswf.atlassian.net/wiki/spaces/OpenQMC/overview).
 
 ## Contributing
 
