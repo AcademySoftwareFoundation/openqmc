@@ -32,10 +32,13 @@
 
 #include <oqmc/reverse.h>
 
+#include <array>
 #include <bitset>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include <utility>
+#include <vector>
 
 constexpr auto numDimensions = 1024;
 constexpr auto size = 52;
@@ -13379,6 +13382,88 @@ void printMatrices(int dimensionSize, int indexSize)
 	}
 }
 
+// In the bit reversed basis, the generator matrix is unit lower-triangular, so
+// GF(2) elimination factors it into shift-mask-xor steps (Ahmed 2024, eq. 18),
+// one per sub-diagonal. Reversed, the steps form the program for that
+// dimension.
+
+constexpr int wordBits = 16;
+
+std::uint16_t reversedRow(int dimension, int row)
+{
+	assert(dimension >= 0 && dimension < numDimensions);
+	assert(row >= 0 && row < wordBits);
+
+	std::uint16_t bits = 0;
+	for(int column = 0; column < wordBits; ++column)
+	{
+		const auto reversedColumn = wordBits - 1 - column;
+		const auto reversedRowIndex = wordBits - 1 - row;
+
+		const auto value =
+		    oqmc::reverseBits32(matrices[dimension][reversedColumn]);
+		const auto reversed = std::bitset<wordBits>(value);
+		if(reversed[reversedRowIndex])
+		{
+			bits |= static_cast<std::uint16_t>(1u << column);
+		}
+	}
+	return bits;
+}
+
+void printPrograms(int dimensionSize)
+{
+	assert(dimensionSize >= 0);
+
+	for(int dimension = 0; dimension < dimensionSize; ++dimension)
+	{
+		std::array<std::uint16_t, wordBits> rows;
+		for(int row = 0; row < wordBits; ++row)
+		{
+			rows[row] = reversedRow(dimension, row);
+		}
+
+		std::vector<std::pair<std::uint16_t, int>> program;
+		for(int shift = 1; shift < wordBits; ++shift)
+		{
+			std::uint16_t mask = 0;
+			for(int row = 0; row + shift < wordBits; ++row)
+			{
+				if(((rows[row + shift] >> row) & 1) != 0)
+				{
+					mask |= static_cast<std::uint16_t>(1u << row);
+				}
+			}
+			if(mask == 0)
+			{
+				continue;
+			}
+			for(int row = 0; row + shift < wordBits; ++row)
+			{
+				if(((mask >> row) & 1) != 0)
+				{
+					rows[row + shift] ^= rows[row];
+				}
+			}
+			program.emplace_back(mask, shift);
+		}
+
+		for(int row = 0; row < wordBits; ++row)
+		{
+			assert(rows[row] == static_cast<std::uint16_t>(1u << row));
+		}
+
+		std::printf("// dimension %d\n", dimension);
+		for(auto step = program.rbegin(); step != program.rend(); ++step)
+		{
+			std::printf("index ^= static_cast<std::uint16_t>((index & 0x%04x) "
+			            "<< %d);\n",
+			            step->first, step->second);
+		}
+		std::printf("\n");
+	}
+}
+
 int main()
 {
 	constexpr auto samplePrecision = 16;
@@ -13386,6 +13471,7 @@ int main()
 	constexpr auto indexSize = 16;
 
 	printMatrices<samplePrecision>(dimensionSize, indexSize);
+	printPrograms(dimensionSize);
 
 	return 0;
 }
