@@ -11,6 +11,16 @@ For a description of the roles and responsibilities of the various members of th
 
 If you just need help or have a question, refer to [SUPPORT.md](SUPPORT.md).
 
+## Project committers
+
+The current committers of the project are listed below. Committers review and approve contributions, and form the initial voting membership of the Technical Steering Committee as described in the [Technical Charter](tsc/charter.md). To request committer status, follow the process in [GOVERNANCE.md](GOVERNANCE.md#committer).
+
+| Name | GitHub | Email |
+| --- | --- | --- |
+| Josh Bainbridge | [@joshbainbridge](https://github.com/joshbainbridge) | josh.bainbridge@gmail.com |
+| Jose Esteve | [@joesfer](https://github.com/joesfer) | jose.esteve@framestore.com |
+| Chris Haldane | [@chaldane](https://github.com/chaldane) | chris.haldane@framestore.com |
+
 ## How to contribute a bug fix or change
 
 <!-- MKDOCS_SPLIT: contributing.md -->
