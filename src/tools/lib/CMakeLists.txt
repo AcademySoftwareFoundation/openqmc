@@ -71,7 +71,7 @@ function(target_architecture_gpu TARGET)
 	get_target_property(TARGET_SOURCES ${TARGET} SOURCES)
 	set_source_files_properties(${TARGET_SOURCES} PROPERTIES LANGUAGE CUDA)
 	target_compile_options(${TARGET} PRIVATE --extended-lambda)
-	set_target_properties(${TARGET} PROPERTIES CUDA_STANDARD 14)
+	set_target_properties(${TARGET} PROPERTIES CUDA_STANDARD 17)
 	set_target_properties(${TARGET} PROPERTIES CUDA_STANDARD_REQUIRED ON)
 endfunction()
 

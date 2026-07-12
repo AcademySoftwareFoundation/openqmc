@@ -888,7 +888,7 @@ OQMC_HOST_DEVICE glm::vec3 trace(const Session& session, Method method,
                                  int maxOpacity, Ray ray, Sampler traceDomain)
 {
 	bool computeEmission = true;
-	glm::vec3 throughput = glm::vec3(1);
+	auto throughput = glm::vec3(1);
 
 	glm::vec3 radiance = glm::vec3();
 	for(int depth = 0; depth <= maxDepth; ++depth)

@@ -13,10 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Migrated the project from C++14 to C++17, moving the minimum supported VFX Reference Platform from CY2018 to CY2021, and the minimum NVCC version from 10 to 11. Blue noise tables are now `inline constexpr`, so header-only installs no longer duplicate table data across compilation units.
 - Sped up scalar paths of `oqmc::sobolReversedIndex` using the construction method from Ahmed 2024.
 
 ### Deprecated
 ### Removed
+
+- Removed the binary library variant and its `OPENQMC_ENABLE_BINARY`, `OPENQMC_SHARED_LIB` and `OPENQMC_FORCE_PIC` CMake options. C++17 `inline` variables make the header-only install equivalent, so downstream projects using these options should simply remove them.
+
 ### Fixed
 
 - Improve quality of uniform float distribution in `oqmc::uintToFloat`.

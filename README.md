@@ -25,7 +25,7 @@ and is actively used in VFX production.
 
 ## Description
 
-This C++14 (CPU, GPU) header only library provides an API to deliver high
+This C++17 (CPU, GPU) header only library provides an API to deliver high
 quality QMC sample points. The API aims to be compatible with a variety of
 common use cases found in production codebases. The library also provides
 multiple state of the art back-end implementations to minimise noise.
@@ -52,7 +52,7 @@ Project features are:
 - Clear and extendable code base.
 - Unit and statistical testing.
 - Modern [CMake](https://cmake.org/) based build system.
-- Header only and binary configurations.
+- Header only implementation.
 - No library or STL dependencies.
 - Includes tools, docs and examples.
 
@@ -125,8 +125,8 @@ more advanced solutions.
 ## Requirements
 
 <!-- MKDOCS_SPLIT: setup.md -->
-The library itself has no dependencies other than C++14. Although not tested
-with older versions of GCC, this should make it compatible with CY2018 and
+The library itself has no dependencies other than C++17. Although not tested
+with older versions of GCC, this should make it compatible with CY2021 and
 newer versions of the [VFX Reference Platform](https://vfxplatform.com).
 
 Supported operating systems:
@@ -146,7 +146,7 @@ Tested compilers:
 - Clang 6
 - Clang 21
 - GCC 7.5
-- NVCC 10
+- NVCC 11
 
 ## Installation
 
@@ -188,8 +188,6 @@ fastest and simplest approach.
 ```cmake
 # Optionally set options (they are OFF by default)
 set(OPENQMC_ARCH_TYPE AVX CACHE STRING "" FORCE)
-set(OPENQMC_ENABLE_BINARY ON CACHE BOOL "" FORCE)
-set(OPENQMC_SHARED_LIB ON CACHE BOOL "" FORCE)
 
 # Load external dependencies
 add_subdirectory(path/to/submodule EXCLUDE_FROM_ALL)
@@ -199,9 +197,6 @@ mark_as_advanced(FORCE OPENQMC_ARCH_TYPE)
 mark_as_advanced(FORCE OPENQMC_BUILD_TOOLS)
 mark_as_advanced(FORCE OPENQMC_BUILD_TESTING)
 mark_as_advanced(FORCE OPENQMC_FORCE_DOWNLOAD)
-mark_as_advanced(FORCE OPENQMC_ENABLE_BINARY)
-mark_as_advanced(FORCE OPENQMC_SHARED_LIB)
-mark_as_advanced(FORCE OPENQMC_FORCE_PIC)
 
 # Add dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenQMC::OpenQMC)
@@ -219,7 +214,7 @@ installation process will follow an idiomatic approach that provides you the
 opportunity to set library build options. An example:
 
 ```bash
-cmake -B build -D CMAKE_INSTALL_PREFIX=/install/path -D OPENQMC_ENABLE_BINARY=ON
+cmake -B build -D CMAKE_INSTALL_PREFIX=/install/path
 cmake --build build --target install
 ```
 
@@ -245,8 +240,8 @@ method isn't recommended, as it can be error-prone and prevents using build
 options otherwise available via CMake.
 
 ```cmake
-# Enable C++14 support
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_14)
+# Enable C++17 support
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 # Add dependencies
 target_include_directories(${PROJECT_NAME} PRIVATE path/to/library/include)
@@ -260,15 +255,6 @@ which apply to downstream projects. The options are:
 - `OPENQMC_ARCH_TYPE`: Sets the architecture to optimise for on the CPU, or to
   target NVIDIA GPUs. Option values can be `Scalar`, `SSE`, `AVX`, `ARM` or
   `GPU`. Default value is `Scalar`.
-- `OPENQMC_ENABLE_BINARY`: You can reduce binary size of downstream projects by
-  opting for a binary variant of the library. Option values can be `ON` or
-  `OFF`. Default value is `OFF`.
-- `OPENQMC_SHARED_LIB`: You can request a shared library instead of the default
-  static. This also automatically enables PIC. Option values can be `ON` or
-  `OFF`. Default value is `OFF`.
-- `OPENQMC_FORCE_PIC`: When compiling a static library and the downstream
-  project is a shared library, you can force enable PIC. Option values can be
-  `ON` or `OFF`. Default value is `OFF`.
 
 ## Versioning
 

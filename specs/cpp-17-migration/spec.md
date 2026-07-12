@@ -140,6 +140,15 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_14)
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 ```
 
+### `src/tools/lib/CMakeLists.txt`
+
+`target_architecture_gpu()` sets `CUDA_STANDARD 14`. Update to `17`. This is
+required, not cosmetic: four of the tools sources include a blue noise
+sampler header, and NVCC rejects an `inline` variable when compiling at
+`-std=c++14`. The line dates from the Jetson and NVCC 10 era, and is the
+device-side half of this migration, which is why the minimum NVCC version
+moves with it.
+
 ### `CMakePresets.json`
 
 The `unix` preset sets `CMAKE_CXX_STANDARD` to `"14"` (line 18). Update to
@@ -164,7 +173,9 @@ Update minimum tested compiler versions:
 - **GCC**: GCC 7 is the minimum requirement for C++17. No change needed.
 - **Clang**: Clang 5 is the minimum requirement for C++17. No change needed.
 - **NVCC**: Minimum version moves from NVCC 10 to NVCC 11. Update tested
-  compiler documentation and CI matrix accordingly.
+  compiler documentation accordingly. Note that CI pins an image rather than
+  an NVCC version, so this minimum is documented rather than tested (see
+  Validation).
 
 ### `mkdocs/home.html`
 
@@ -184,30 +195,51 @@ Update minimum tested compiler versions:
   one translation unit had to parse the ~393K lines of integer literals in
   `include/oqmc/data/`. Moving to header-only `inline constexpr` fixes the
   duplication but reintroduces the parse cost in *every* translation unit that
-  includes `bntables.h`. This is the headline trade-off of the migration and
-  needs to be measured before it is accepted (see Validation).
+  includes `bntables.h`. This is the headline trade-off of the migration. It
+  was measured and accepted (see Validation).
 
 ## Validation
 
-The following must be carried out before the migration is accepted. They are
-not yet done.
+CI had no GPU coverage when this spec was written, so there was no way to
+check the device side of the migration. Restoring it on the ASWF hosted T4
+runners (issue #69) is a prerequisite of this work, and landed first.
 
-- **NVCC device-linkage**: The blue noise tables are consumed from
-  `OQMC_HOST_DEVICE` code (`bntables.h` `tableValue`), so they must be usable
-  on the device. The current internal-linkage `constexpr` arrays produce a
-  per-TU copy, which is what makes them trivially available in device code
-  today. `inline constexpr` changes this to a single external-linkage
-  definition, and NVCC's handling of inline-variable device-side definitions
-  has historically had caveats. Confirm on the minimum supported toolchain
-  (NVCC 11) that the tables compile, link, and produce correct results in
-  device code with no duplicate-definition or missing-symbol errors.
+- **NVCC device-linkage** (validated): Verified on CI against an NVIDIA T4
+  (SM 7.5) using NVCC 12.6.85 and GCC 11.2.1, from the `aswf/ci-base:2023`
+  image. The tools library builds as CUDA C++17 with no duplicate-definition
+  or missing-symbol errors, and GPU `generate` output is bit-identical to
+  the CPU reference data for all three samplers in both Release and Debug.
+  The three blue noise `trace` renders also complete on device.
 
-- **Compile-time trade-off**: A test/benchmark must be created to measure the
-  per-TU parse cost described under Migration risks on a representative
-  consumer (several translation units each including `bntables.h`). Compare
-  the C++14 binary variant, C++14 header-only, and the proposed C++17
-  `inline constexpr` builds for total compile time and final binary size, and
-  record the results here so the trade-off can be accepted explicitly.
+  One premise of this item was wrong and is worth correcting. An `inline
+  constexpr` table is not readable from device code at all, as NVCC treats
+  it as a host variable. That is not a regression, because nothing reads the
+  tables from device code: each blue noise sampler copies them into its
+  cache in `initialiseCache`, which is host-only, and the tools allocate
+  that cache with `cudaMallocManaged`.
+
+  Note that the minimum supported version is documented as NVCC 11, but CI
+  exercises 12.6.85. The `2023` image tag does not pin a CUDA version, so
+  the stated minimum is not covered by automated testing.
+
+- **Compile-time trade-off** (measured): A benchmark harness compiled 8
+  representative consumer translation units (each using all three blue noise
+  sampler variants, so all six tables are referenced) plus a main, with
+  `-O2`, best of 3 runs. Apple Silicon M-series, Clang 21.1.1:
+
+  | Configuration               | Build time | Binary size |
+  | --------------------------- | ---------- | ----------- |
+  | C++14 header-only           | 3.83 s     | 12.73 MB    |
+  | C++14 binary variant        | 2.30 s     | 1.64 MB     |
+  | C++17 `inline constexpr`    | 3.83 s     | 1.64 MB     |
+
+  The C++17 build matches the binary variant's final size exactly (the
+  linker deduplicates the single external-linkage definition) while staying
+  header-only, and all three builds produce bit-identical sample output. The
+  per-TU parse cost relative to the binary variant is ~170 ms per table
+  consuming TU on this machine, the same as the C++14 header-only build. In
+  real projects only TUs that include a blue noise sampler header pay this
+  cost. This trade-off is accepted.
 
 ## Candidate C++17 improvements
 
