@@ -22,7 +22,7 @@ The committer role enables the contributor to commit code directly to the reposi
 
 * Show your experience with the codebase through contributions and engagement on the community channels.
 * Request to become a committer. To do this, create a new pull request that adds your name and details to the [committers list](CONTRIBUTING.md#project-committers) and request existing committers to approve.
-* After the majority of committers approve you, merge in the PR. Be sure to tag the whomever is managing the GitHub permissions to update the committers team in GitHub.
+* After either a majority of the existing committers or the TSC approves you, merge in the PR. Be sure to tag the whomever is managing the GitHub permissions to update the committers team in GitHub.
 
 ### Committer responsibilities
 
@@ -34,18 +34,21 @@ The committer role enables the contributor to commit code directly to the reposi
 
 ### When does a committer lose committer status
 
-If a committer is no longer interested or cannot perform the committer duties listed above, they should volunteer to be moved to emeritus status. In extreme cases this can also occur by a vote of the committers per the voting process below.
+If a committer is no longer interested or cannot perform the committer duties listed above, they should volunteer to be moved to emeritus status. In extreme cases this can also occur by a vote of the committers per the voting process below, or at the discretion of the TSC.
 
 ## Technical Steering Committee (TSC)
 
-The Technical Steering Committee (TSC) is responsible for all technical oversight of the project. The full responsibilities and procedures of the TSC are defined in the project's [Technical Charter](tsc/charter.md), which is the binding governing document for the project.
+The Technical Steering Committee (TSC) is responsible for all technical oversight of the project. The full responsibilities and procedures of the TSC are defined in the project's [Technical Charter](https://github.com/AcademySoftwareFoundation/foundation/blob/main/project_charters/openqmc_charter.pdf), which is the binding governing document for the project.
+
+TSC voting membership is not restricted to the project's [Committers](CONTRIBUTING.md#project-committers): TSC members need not be Committers, and not all Committers necessarily sit on the TSC.
 
 The current TSC members are:
 
-* Josh Bainbridge (Chair)
-* Lorna Dumba
-* Nathan Walster
-* Mark Hills
+* Josh Bainbridge (Chair, Framestore)
+* Lorna Dumba (Framestore)
+* Nathan Walster (Framestore)
+* Mark Hills (Cleanfeed)
+* Chris Kulla (Epic Games)
 
 ### TSC Chair
 
@@ -57,7 +60,7 @@ Project releases will occur on a scheduled basis as agreed to by the committers.
 
 # Conflict resolution and voting
 
-In general, we prefer that technical issues and committer membership are amicably worked out between the persons involved. If a dispute cannot be decided independently, the TSC can be called in to decide an issue. If the TSC itself cannot decide an issue, the issue will be resolved by voting. The voting process is a simple majority in which each TSC voting member receives one vote, as described in the [Technical Charter](tsc/charter.md).
+In general, we prefer that technical issues and committer membership are amicably worked out between the persons involved. If a dispute cannot be decided independently, the TSC can be called in to decide an issue. If the TSC itself cannot decide an issue, the issue will be resolved by voting. The voting process is a simple majority in which each TSC voting member receives one vote, as described in the [Technical Charter](https://github.com/AcademySoftwareFoundation/foundation/blob/main/project_charters/openqmc_charter.pdf).
 
 # Communication
 

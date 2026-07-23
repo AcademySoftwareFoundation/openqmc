@@ -8,8 +8,6 @@ If you think you've found a potential vulnerability in OpenQMC, please report it
 
 ## Known Vulnerabilities
 
-These vulnerabilities are present in the given versions:
-
-* ...
+There are no known vulnerabilities at this time.
 
 See the [release notes](CHANGELOG.md) for more information.

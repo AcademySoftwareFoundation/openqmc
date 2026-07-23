@@ -19,7 +19,7 @@ This is a checklist for TSC's to review as part of the intake process. The TSC s
   - [x] Issue/feature tracker established (JIRA, GitHub issues)
   - [x] Mailing lists ( one of )
     - [x] Setup new lists ( -discuss@ and -tsc@ ) on [ASWF groups.io](https://lists.aswf.io) ( create [issue on foundation repo](https://github.com/AcademySoftwareFoundation/foundation/issues/new) to setup )
-    - [ ] Move to [ASWF groups.io](https://lists.aswf.io) ( create [issue on foundation repo](https://github.com/AcademySoftwareFoundation/foundation/issues/new) to transfer )
+    - [x] Move to [ASWF groups.io](https://lists.aswf.io) ( create [issue on foundation repo](https://github.com/AcademySoftwareFoundation/foundation/issues/new) to transfer )
   - [x] Slack ( create [issue on foundation repo](https://github.com/AcademySoftwareFoundation/foundation/issues/new) to setup project channel on [ASWF Slack](https://slack.aswf.io)
   - [x] Website
   - [x] CI/build environment
@@ -33,9 +33,9 @@ This is a checklist for TSC's to review as part of the intake process. The TSC s
   - [x] First TSC meeting held
   - [x] TSC meeting cadence set and added to project calendar
   - [x] CLA Approved ( if used ) ( [CCLA](ccla.md) and [ICLA](icla.md) )
-  - Project charter	( [charter.md](charter.md) )
+  - Project charter	( [openqmc_charter.pdf](https://github.com/AcademySoftwareFoundation/foundation/blob/main/project_charters/openqmc_charter.pdf) )
     - [x] Approved by TSC
-    - [ ] Filed ( create pull request against [foundation repo](https://github.com/AcademySoftwareFoundation/foundation) )
+    - [x] Filed ( create pull request against [foundation repo](https://github.com/AcademySoftwareFoundation/foundation) )
   - [ ] [Core Infrastructure Initiative Best Practices Badge](https://bestpractices.coreinfrastructure.org/) achieved as the 'Passing' level.
   - [x] TAC representative appointed
 - Outreach
