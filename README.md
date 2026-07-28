@@ -10,6 +10,7 @@
 [![Release](https://img.shields.io/github/v/release/AcademySoftwareFoundation/openqmc?label=Release)](https://github.com/AcademySoftwareFoundation/openqmc/releases/latest)
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/joshbainbridge/c64d4efeaa4f0760255cc54cdadce85c/raw/test.json)](https://academysoftwarefoundation.github.io/openqmc/coverage-report)
 [![CI Pipeline](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/AcademySoftwareFoundation/openqmc/actions/workflows/ci-pipeline.yml)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11292/badge)](https://www.bestpractices.dev/projects/11292)
 
 <!-- MKDOCS_SPLIT: introduction.md -->
 OpenQMC is a library for sampling high quality Quasi-Monte Carlo (QMC) points
