@@ -13,7 +13,6 @@
 
 #include "lookup.h"
 #include "pcg.h"
-#include "unused.h"
 
 #include <cassert>
 #include <cstdint>
@@ -32,8 +31,8 @@ namespace oqmc
 /// @param [out] table Output array of 4 dimensional samples.
 inline void stochasticPmjInit(int nsamples, std::uint32_t table[][4])
 {
-	constexpr auto maxIndexSize = 0x10000; // 2^16 index upper limit.
-	OQMC_MAYBE_UNUSED(maxIndexSize);
+	[[maybe_unused]] constexpr auto maxIndexSize =
+	    0x10000; // 2^16 index upper limit.
 
 	assert(nsamples >= 1);
 	assert(nsamples <= maxIndexSize);

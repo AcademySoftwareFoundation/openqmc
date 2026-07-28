@@ -10,7 +10,6 @@
 #include "owen.h"
 #include "sampler.h"
 #include "state.h"
-#include "unused.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -46,9 +45,8 @@ class SobolImpl
 	State64Bit state;
 };
 
-inline void SobolImpl::initialiseCache(void* cache)
+inline void SobolImpl::initialiseCache([[maybe_unused]] void* cache)
 {
-	OQMC_MAYBE_UNUSED(cache);
 }
 
 inline SobolImpl::SobolImpl(State64Bit state) : state(state)
@@ -56,10 +54,9 @@ inline SobolImpl::SobolImpl(State64Bit state) : state(state)
 }
 
 inline SobolImpl::SobolImpl(int x, int y, int frame, int index,
-                            const void* cache)
+                            [[maybe_unused]] const void* cache)
     : state(x, y, frame, index)
 {
-	OQMC_MAYBE_UNUSED(cache);
 	state = state.pixelDecorrelate();
 }
 

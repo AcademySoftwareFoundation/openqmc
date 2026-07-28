@@ -6,7 +6,6 @@
 #include <oqmc/gpu.h>
 #include <oqmc/sampler.h>
 #include <oqmc/state.h>
-#include <oqmc/unused.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -36,19 +35,18 @@ class RngImpl
 	oqmc::State64Bit state;
 };
 
-inline void RngImpl::initialiseCache(void* cache)
+inline void RngImpl::initialiseCache([[maybe_unused]] void* cache)
 {
-	OQMC_MAYBE_UNUSED(cache);
 }
 
 inline RngImpl::RngImpl(oqmc::State64Bit state) : state(state)
 {
 }
 
-inline RngImpl::RngImpl(int x, int y, int frame, int index, const void* cache)
+inline RngImpl::RngImpl(int x, int y, int frame, int index,
+                        [[maybe_unused]] const void* cache)
     : state(x, y, frame, index)
 {
-	OQMC_MAYBE_UNUSED(cache);
 	state = state.pixelDecorrelate();
 }
 

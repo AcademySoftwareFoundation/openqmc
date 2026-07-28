@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed the binary library variant and its `OPENQMC_ENABLE_BINARY`, `OPENQMC_SHARED_LIB` and `OPENQMC_FORCE_PIC` CMake options. C++17 `inline` variables make the header-only install equivalent, so downstream projects using these options should simply remove them.
+- Removed the `oqmc/unused.h` header and its `OQMC_MAYBE_UNUSED` macro, which existed only because C++14 had no standard way to mark a symbol as possibly unused. Downstream projects using it should switch to the C++17 `[[maybe_unused]]` attribute.
 
 ### Fixed
 

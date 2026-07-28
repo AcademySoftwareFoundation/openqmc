@@ -6,7 +6,6 @@
 #include <oqmc/float.h>
 #include <oqmc/gpu.h>
 #include <oqmc/pcg.h>
-#include <oqmc/unused.h>
 
 #include <cmath>
 
@@ -90,10 +89,8 @@ struct Bilinear
 
 struct LinearX
 {
-	OQMC_HOST_DEVICE static float evaluate(float x, float y)
+	OQMC_HOST_DEVICE static float evaluate(float x, [[maybe_unused]] float y)
 	{
-		OQMC_MAYBE_UNUSED(y);
-
 		return x;
 	}
 
@@ -105,10 +102,8 @@ struct LinearX
 
 struct LinearY
 {
-	OQMC_HOST_DEVICE static float evaluate(float x, float y)
+	OQMC_HOST_DEVICE static float evaluate([[maybe_unused]] float x, float y)
 	{
-		OQMC_MAYBE_UNUSED(x);
-
 		return y;
 	}
 
