@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+- GPU coverage on the CI pipeline is restored using ASWF hosted T4 runners, building the tools as CUDA and validating device results against CPU reference data.
+
 ### Changed
 
 - Sped up scalar paths of `oqmc::sobolReversedIndex` using the construction method from Ahmed 2024.

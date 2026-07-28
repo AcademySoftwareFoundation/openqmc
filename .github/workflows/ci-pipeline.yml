@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: main
 
+  # Allows a run to be started by hand against any branch, which is how the
+  # GPU jobs are requested for a pull request
+  workflow_dispatch:
+
 jobs:
   check-formatting:
     name: Check formatting
@@ -127,10 +131,51 @@ jobs:
       - run: tar -czvf build.tar.gz build
         if: ${{ matrix.save }}
 
+      # Run trace with each blue noise sampler to validate table linkage
+      - run: ./build/src/tools/cli/trace pmjbn box
+        if: ${{ matrix.save }}
+      - run: ./build/src/tools/cli/trace sobolbn box
+        if: ${{ matrix.save }}
+      - run: ./build/src/tools/cli/trace latticebn box
+        if: ${{ matrix.save }}
+
       # Upload tools build for test-generate
       - uses: actions/upload-artifact@v4
         with: {name: "${{ matrix.build }}-${{ matrix.arch }}", path: build.tar.gz}
         if: ${{ matrix.save }}
+
+  build-tools-gpu:
+    name: Build tools library GPU
+    needs: test-unit
+    # Runners with a GPU are for pay, so limit these to a merge into main or
+    # a run started by hand, rather than every push. Jobs downstream of this
+    # one skip along with it
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    strategy:
+      matrix:
+        build: [Release, Debug]
+    runs-on: ubuntu-20.04-gpu-t4-4c-16g-176h
+    container:
+      image: aswf/ci-base:2023
+      options: --gpus all
+    env:
+      # Image PATH omits the CUDA toolkit, so point CMake at nvcc directly
+      CUDACXX: /usr/local/cuda/bin/nvcc
+    steps:
+      - uses: actions/checkout@v4
+      - run: nvidia-smi
+      - run: cmake --preset unix -D OPENQMC_ARCH_TYPE=GPU -D CMAKE_CUDA_ARCHITECTURES=75 -D CMAKE_BUILD_TYPE=${{ matrix.build }}
+      - run: cmake --build --preset unix
+      - run: tar -czvf build.tar.gz build
+
+      # Run trace with each blue noise sampler to validate table linkage
+      - run: ./build/src/tools/cli/trace pmjbn box
+      - run: ./build/src/tools/cli/trace sobolbn box
+      - run: ./build/src/tools/cli/trace latticebn box
+
+      # Upload tools build for test-generate-gpu
+      - uses: actions/upload-artifact@v4
+        with: {name: "${{ matrix.build }}-GPU", path: build.tar.gz}
 
   pre-test-generate:
     name: Pre generate reference data
@@ -170,6 +215,32 @@ jobs:
       # Download tools build
       - uses: actions/download-artifact@v4
         with: {name: "${{ matrix.build }}-${{ matrix.arch }}"}
+
+      # Download sample data
+      - uses: actions/download-artifact@v4
+        with: {name: "${{ matrix.sampler }}"}
+
+      - run: tar -xzvf build.tar.gz
+      - run: ./build/src/tools/cli/generate ${{ matrix.sampler }} > output
+      - run: diff output data
+
+  test-generate-gpu:
+    name: Run generate GPU
+    needs:
+      - pre-test-generate
+      - build-tools-gpu
+    strategy:
+      matrix:
+        build: [Release, Debug]
+        sampler: [pmj, sobol, lattice]
+    runs-on: ubuntu-20.04-gpu-t4-4c-16g-176h
+    container:
+      image: aswf/ci-base:2023
+      options: --gpus all
+    steps:
+      # Download tools build
+      - uses: actions/download-artifact@v4
+        with: {name: "${{ matrix.build }}-GPU"}
 
       # Download sample data
       - uses: actions/download-artifact@v4
