@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenQMC Project.
 
 #include <oqmc/sampler.h>
-#include <oqmc/unused.h>
 
 #include <gtest/gtest.h>
 
@@ -27,15 +26,13 @@ TEST(SamplerTest, CacheSize)
 
 TEST(SamplerTest, DefaultConstructor)
 {
-	const MockSampler sampler;
-	OQMC_MAYBE_UNUSED(sampler);
+	[[maybe_unused]] const MockSampler sampler;
 }
 
 TEST(SamplerTest, Copyable)
 {
 	const MockSampler samplerA;
-	const MockSampler samplerB = samplerA;
-	OQMC_MAYBE_UNUSED(samplerB);
+	[[maybe_unused]] const MockSampler samplerB = samplerA;
 }
 
 } // namespace

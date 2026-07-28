@@ -3,7 +3,6 @@
 
 #include "hypothesis.h"
 #include <oqmc/pcg.h>
-#include <oqmc/unused.h>
 
 #include <gtest/gtest.h>
 
@@ -20,10 +19,8 @@ struct SamplerV1
 		state = oqmc::pcg::init(seed);
 	}
 
-	void sample(int index, std::uint32_t out[2])
+	void sample([[maybe_unused]] int index, std::uint32_t out[2])
 	{
-		OQMC_MAYBE_UNUSED(index);
-
 		out[0] = oqmc::pcg::rng(state);
 		out[1] = oqmc::pcg::rng(state);
 	}

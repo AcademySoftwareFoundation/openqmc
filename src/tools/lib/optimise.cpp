@@ -23,7 +23,6 @@
 #include <oqmc/rank1.h>
 #include <oqmc/state.h>
 #include <oqmc/stochastic.h>
-#include <oqmc/unused.h>
 
 #include <algorithm>
 #include <cassert>
@@ -39,7 +38,7 @@ namespace
 
 constexpr auto transactionSize = 262144; // found to be good for an A6000 GPU.
 
-OQMC_HOST_DEVICE bool isPowerOfTwo(int x)
+[[maybe_unused]] OQMC_HOST_DEVICE bool isPowerOfTwo(int x)
 {
 	assert(x >= 0);
 
@@ -936,16 +935,14 @@ struct Sobol
 		return nullptr;
 	}
 
-	OQMC_HOST_DEVICE static void deinitialiseCache(void* cache)
+	OQMC_HOST_DEVICE static void deinitialiseCache([[maybe_unused]] void* cache)
 	{
-		OQMC_MAYBE_UNUSED(cache);
 	}
 
 	OQMC_HOST_DEVICE static void sample(int index, std::uint32_t hash,
-	                                    const void* cache, std::uint32_t out[2])
+	                                    [[maybe_unused]] const void* cache,
+	                                    std::uint32_t out[2])
 	{
-		OQMC_MAYBE_UNUSED(cache);
-
 		oqmc::shuffledScrambledSobol<2>(index, hash, out);
 	}
 };
@@ -957,16 +954,14 @@ struct Lattice
 		return nullptr;
 	}
 
-	OQMC_HOST_DEVICE static void deinitialiseCache(void* cache)
+	OQMC_HOST_DEVICE static void deinitialiseCache([[maybe_unused]] void* cache)
 	{
-		OQMC_MAYBE_UNUSED(cache);
 	}
 
 	OQMC_HOST_DEVICE static void sample(int index, std::uint32_t hash,
-	                                    const void* cache, std::uint32_t out[2])
+	                                    [[maybe_unused]] const void* cache,
+	                                    std::uint32_t out[2])
 	{
-		OQMC_MAYBE_UNUSED(cache);
-
 		oqmc::shuffledRotatedLattice<2>(index, hash, out);
 	}
 };
@@ -999,8 +994,6 @@ OQMC_CABI bool oqmc_optimise(const char* name, int ntests, int niterations,
 	assert(ranks);
 	assert(estimates);
 	assert(frequencies);
-
-	OQMC_MAYBE_UNUSED(isPowerOfTwo);
 
 	if(std::string(name) == "pmj")
 	{

@@ -12,7 +12,6 @@
 #include <oqmc/pmjbn.h>
 #include <oqmc/sobol.h>
 #include <oqmc/sobolbn.h>
-#include <oqmc/unused.h>
 
 #include <cassert>
 #include <chrono>
@@ -36,13 +35,11 @@ OQMC_HOST_DEVICE void loop(int nsamples, int ndims, int index, int stride,
 			float sample[4];
 			domain.template drawSample<4>(sample);
 
-			volatile float save[4];
+			[[maybe_unused]] volatile float save[4];
 			save[0] = sample[0];
 			save[1] = sample[1];
 			save[2] = sample[2];
 			save[3] = sample[3];
-
-			OQMC_MAYBE_UNUSED(save);
 		}
 	}
 }

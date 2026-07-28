@@ -31,7 +31,7 @@
 namespace oqmc
 {
 
-constexpr auto floatOneOverTwoPower32 = 1.0f / (1ull << 32); ///< 0x1p-32
+constexpr auto floatOneOverTwoPower32 = 0x1p-32f; ///< 1 / 2^32
 
 /// Convert an integer into a [0, 1) float.
 ///

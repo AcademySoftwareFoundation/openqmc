@@ -15,7 +15,6 @@
 #include <oqmc/pmjbn.h>
 #include <oqmc/sobol.h>
 #include <oqmc/sobolbn.h>
-#include <oqmc/unused.h>
 
 #pragma push
 #define GLM_ENABLE_EXPERIMENTAL
@@ -349,11 +348,10 @@ struct Material
 // an orthonormal basis. The hemisphere sampling is based on 'Sampling
 // Transformations Zoo' by Peter Shirley, et. al.
 template <typename Sampler>
-OQMC_HOST_DEVICE Material::Sample
-diffuseSample(const Interaction& event, const Ray& ray, Sampler materialDomain)
+OQMC_HOST_DEVICE Material::Sample diffuseSample(const Interaction& event,
+                                                [[maybe_unused]] const Ray& ray,
+                                                Sampler materialDomain)
 {
-	OQMC_MAYBE_UNUSED(ray);
-
 	const auto branchlessONB = [](const glm::vec3& n, glm::vec3& b1,
 	                              glm::vec3& b2) {
 		const float sign = std::copysign(1.0f, n.z);
@@ -389,12 +387,10 @@ diffuseSample(const Interaction& event, const Ray& ray, Sampler materialDomain)
 }
 
 template <typename Sampler>
-OQMC_HOST_DEVICE Material::Sample conductorSample(const Interaction& event,
-                                                  const Ray& ray,
-                                                  Sampler materialDomain)
+OQMC_HOST_DEVICE Material::Sample
+conductorSample(const Interaction& event, const Ray& ray,
+                [[maybe_unused]] Sampler materialDomain)
 {
-	OQMC_MAYBE_UNUSED(materialDomain);
-
 	return {glm::vec3(1), glm::reflect(ray.dir, event.normal), true};
 }
 

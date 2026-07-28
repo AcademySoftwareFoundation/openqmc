@@ -4,7 +4,6 @@
 #include "hypothesis.h"
 #include <oqmc/pcg.h>
 #include <oqmc/range.h>
-#include <oqmc/unused.h>
 
 #include <gtest/gtest.h>
 
@@ -21,10 +20,8 @@ struct SamplerV1
 		state = oqmc::pcg::init(seed);
 	}
 
-	void sample(int index, std::uint32_t out[2])
+	void sample([[maybe_unused]] int index, std::uint32_t out[2])
 	{
-		OQMC_MAYBE_UNUSED(index);
-
 		// Does not divide into UINT32_MAX to test debiasing.
 		constexpr auto range = UINT32_MAX / 4 * 3;
 		constexpr auto scalar = UINT64_MAX / range;
