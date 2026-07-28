@@ -3,23 +3,7 @@
 
 # Create project target
 
-if(OPENQMC_ENABLE_BINARY)
-	if(OPENQMC_SHARED_LIB)
-		add_library(${PROJECT_NAME} SHARED)
-	else()
-		add_library(${PROJECT_NAME} STATIC)
-	endif()
-
-	if(OPENQMC_FORCE_PIC)
-		set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-	endif()
-
-	target_sources(${PROJECT_NAME} PRIVATE bntables.cpp)
-	target_compile_options(${PROJECT_NAME} PRIVATE ${OPENQMC_CXX_FLAGS})
-	target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
-else()
-	add_library(${PROJECT_NAME} INTERFACE)
-endif()
+add_library(${PROJECT_NAME} INTERFACE)
 
 if(${OPENQMC_ARCH_TYPE} STREQUAL Scalar)
 	target_compile_definitions(${PROJECT_NAME} INTERFACE OQMC_FORCE_SCALAR)
@@ -29,11 +13,7 @@ if(${OPENQMC_ARCH_TYPE} STREQUAL GPU)
 	target_compile_definitions(${PROJECT_NAME} INTERFACE OQMC_FORCE_SCALAR)
 endif()
 
-if(OPENQMC_ENABLE_BINARY)
-	target_compile_definitions(${PROJECT_NAME} INTERFACE OQMC_ENABLE_BINARY)
-endif()
-
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_14)
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
 # Add include directories
 
