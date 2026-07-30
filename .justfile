@@ -45,4 +45,4 @@
 
 # remove build and reset
 @clean:
-  rm -rf build html result
+  rm -rf build result api-reference site docs coverage-report html doxygen-awesome* keys.txt ranks.txt
