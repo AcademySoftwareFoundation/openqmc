@@ -77,7 +77,7 @@ samplers, the API, and techniques for writing more advanced algorithms.
 // 1. Include the sampler implementation.
 #include <oqmc/pmjbn.h>
 
-// 2. Initialise the sampler cache.
+// 2. Initialise the sampler cache once. It is thread safe.
 auto cache = new char[oqmc::PmjBnSampler::cacheSize];
 oqmc::PmjBnSampler::initialiseCache(cache);
 
