@@ -133,10 +133,8 @@ void nullHypothesisChiSquareImpl(int numTests, int numSamples,
 		const auto x = oqmc::uintToFloat(out[0]) * Resolution;
 		const auto y = oqmc::uintToFloat(out[1]) * Resolution;
 
-		const auto xInt =
-		    std::min(std::max(static_cast<int>(x), 0), Resolution - 1);
-		const auto yInt =
-		    std::min(std::max(static_cast<int>(y), 0), Resolution - 1);
+		const auto xInt = std::clamp(static_cast<int>(x), 0, Resolution - 1);
+		const auto yInt = std::clamp(static_cast<int>(y), 0, Resolution - 1);
 
 		const auto coordinate = xInt + yInt * Resolution;
 		auto& strata = observations[coordinate];
