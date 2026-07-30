@@ -4,6 +4,7 @@
 #include "hypothesis.h"
 #include <oqmc/pmjbn.h>
 
+#include <cstddef>
 #include <cstdint>
 
 namespace
@@ -17,13 +18,13 @@ struct SamplerV1
 {
 	SamplerV1() : seed(0)
 	{
-		cache = new char[oqmc::PmjBnSampler::cacheSize];
+		cache = new std::byte[oqmc::PmjBnSampler::cacheSize];
 		oqmc::PmjBnSampler::initialiseCache(cache);
 	}
 
 	~SamplerV1()
 	{
-		delete[] static_cast<char*>(cache);
+		delete[] static_cast<std::byte*>(cache);
 	}
 
 	void initialise(int seed)
