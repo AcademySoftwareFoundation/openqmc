@@ -15,10 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Migrated the project from C++14 to C++17, moving the minimum supported VFX Reference Platform from CY2018 to CY2021, and the minimum NVCC version from 10 to 11. Blue noise tables are now `inline constexpr`, so header-only installs no longer duplicate table data across compilation units.
 - Sped up scalar paths of `oqmc::sobolReversedIndex` using the construction method from Ahmed 2024.
+- Replaced the classic Sobol direction matrices behind `oqmc::SobolSampler` and `oqmc::SobolBnSampler` with the SZ sequence construction from Ahmed et al. 2025. Dimensions 0 and 1 are unchanged and the blue noise tables still apply, but dimensions 2 and 3 produce different values.
 
 ### Deprecated
 ### Removed
 
+- Removed the SSE, AVX and Neon implementations of `oqmc::sobolReversedIndex`, leaving a single closed form evaluation on the CPU alongside the dedicated GPU variant. The `OPENQMC_ARCH_TYPE` build option and `oqmc/arch.h` remain for now.
 - Removed the binary library variant and its `OPENQMC_ENABLE_BINARY`, `OPENQMC_SHARED_LIB` and `OPENQMC_FORCE_PIC` CMake options. C++17 `inline` variables make the header-only install equivalent, so downstream projects using these options should simply remove them.
 - Removed the `oqmc/unused.h` header and its `OQMC_MAYBE_UNUSED` macro, which existed only because C++14 had no standard way to mark a symbol as possibly unused. Downstream projects using it should switch to the C++17 `[[maybe_unused]]` attribute.
 

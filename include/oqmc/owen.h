@@ -2,14 +2,13 @@
 // Copyright Contributors to the OpenQMC Project.
 
 /// @file
-/// @details An efficient implementation of Owen scrambled sobol sequences. This
+/// @details An efficient implementation of Owen scrambled SZ sequences. This
 /// can be used to construct higher level sampler types. The method uses Brent
 /// Burley's hash based 'Practical Hash-based Owen Scrambling' construction with
 /// added optimisations.
 
 #pragma once
 
-#include "arch.h"
 #include "gpu.h"
 #include "permute.h"
 #include "reverse.h"
@@ -18,41 +17,77 @@
 #include <cassert>
 #include <cstdint>
 
-#if defined(OQMC_ARCH_AVX)
-#include <immintrin.h>
-#endif
-
-#if defined(OQMC_ARCH_SSE)
-#include <emmintrin.h>
-#endif
-
-#if defined(OQMC_ARCH_ARM)
-#include <arm_neon.h>
-#endif
-
 namespace oqmc
 {
 
-/// Compute sobol sequence value at an index with reversed bits.
+#if !defined(__CUDA_ARCH__)
+
+/// Compute SZ sequence value at an index with pre-reversed bits.
+///
+/// As oqmc::sobolReversedIndex, but the leading bit reversal has already been
+/// applied to the index. Splitting the reversal out lets a draw call reverse
+/// the shared index once instead of once per dimension (Chris Kulla, PR #97).
+///
+/// @param [in] index Pre-reversed, bit reversed index of element.
+/// @param [in] dimension Dimension of sequence.
+/// @return SZ sequence value.
+inline std::uint16_t sobolReversedIndexShared(std::uint16_t index,
+                                              int dimension)
+{
+	assert(dimension >= 0);
+	assert(dimension <= 3);
+
+	// Each matrix factors into shift-mask-xor steps (Ahmed 2024, eq. 18),
+	// conjugated with reversed masks and right shifts to consume the
+	// pre-reversed index. Steps emitted by the matrices cli tool in
+	// src/tools/cli/matrices.cpp.
+	switch(dimension)
+	{
+	case 1:
+		index ^= static_cast<std::uint16_t>((index & 0xff00) >> 8);
+		index ^= static_cast<std::uint16_t>((index & 0xf0f0) >> 4);
+		index ^= static_cast<std::uint16_t>((index & 0xcccc) >> 2);
+		index ^= static_cast<std::uint16_t>((index & 0xaaaa) >> 1);
+		break;
+	case 2:
+		index ^= static_cast<std::uint16_t>((index & 0xaa00) >> 9);
+		index ^= static_cast<std::uint16_t>((index & 0xaa00) >> 8);
+		index ^= static_cast<std::uint16_t>((index & 0x5500) >> 7);
+		index ^= static_cast<std::uint16_t>((index & 0x4040) >> 6);
+		index ^= static_cast<std::uint16_t>((index & 0xa0a0) >> 5);
+		index ^= static_cast<std::uint16_t>((index & 0x5050) >> 4);
+		index ^= static_cast<std::uint16_t>((index & 0xd8d8) >> 3);
+		index ^= static_cast<std::uint16_t>((index & 0xcccc) >> 2);
+		index ^= static_cast<std::uint16_t>((index & 0xeeee) >> 1);
+		break;
+	case 3:
+		// Dimension 3 is the dimension 1 program applied to dimension 2
+		// (Ahmed et al. 2025, eq. 13), which is five steps cheaper than its
+		// own program. A draw reuses the dimension 2 value it already has.
+		return sobolReversedIndexShared(sobolReversedIndexShared(index, 2), 1);
+	default:
+		break;
+	}
+
+	return index;
+}
+
+#endif
+
+/// Compute SZ sequence value at an index with reversed bits.
 ///
 /// Given a 16 bit index, where the order of bits in the index have been
-/// reversed, compute a sobol sequence value to 16 bits of precision for a given
+/// reversed, compute an SZ sequence value to 16 bits of precision for a given
 /// dimension. Dimensions must be within the range [0, 4).
 ///
 /// @param [in] index Bit reversed index of element.
-/// @param [in] dimension Dimension of sobol sequence.
-/// @return Sobol sequence value.
+/// @param [in] dimension Dimension of sequence.
+/// @return SZ sequence value.
 OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
                                                          int dimension)
 {
 	assert(dimension >= 0);
 	assert(dimension <= 3);
-
-#if defined(OQMC_ARCH_SCALAR)
-
-	// Each matrix factors into shift-mask-xor steps (Ahmed 2024, eq. 18),
-	// dimension 1 being the Pascal matrix (Listing 19). Steps emitted by the
-	// matrices cli tool in src/tools/cli/matrices.cpp.
 
 #if defined(__CUDA_ARCH__)
 
@@ -67,30 +102,26 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 		index ^= static_cast<std::uint16_t>((index & 0x5555) << 1);
 		break;
 	case 2:
-		index ^= static_cast<std::uint16_t>((index & 0x0003) << 14);
-		index ^= static_cast<std::uint16_t>((index & 0x0004) << 13);
-		index ^= static_cast<std::uint16_t>((index & 0x000f) << 12);
-		index ^= static_cast<std::uint16_t>((index & 0x0033) << 10);
 		index ^= static_cast<std::uint16_t>((index & 0x0055) << 9);
-		index ^= static_cast<std::uint16_t>((index & 0x0030) << 8);
-		index ^= static_cast<std::uint16_t>((index & 0x0303) << 6);
+		index ^= static_cast<std::uint16_t>((index & 0x0055) << 8);
+		index ^= static_cast<std::uint16_t>((index & 0x00aa) << 7);
+		index ^= static_cast<std::uint16_t>((index & 0x0202) << 6);
 		index ^= static_cast<std::uint16_t>((index & 0x0505) << 5);
-		index ^= static_cast<std::uint16_t>((index & 0x0cf3) << 4);
-		index ^= static_cast<std::uint16_t>((index & 0x1111) << 3);
-		index ^= static_cast<std::uint16_t>((index & 0x0f0f) << 2);
-		index ^= static_cast<std::uint16_t>((index & 0x6666) << 1);
+		index ^= static_cast<std::uint16_t>((index & 0x0a0a) << 4);
+		index ^= static_cast<std::uint16_t>((index & 0x1b1b) << 3);
+		index ^= static_cast<std::uint16_t>((index & 0x3333) << 2);
+		index ^= static_cast<std::uint16_t>((index & 0x7777) << 1);
 		break;
 	case 3:
-		index ^= static_cast<std::uint16_t>((index & 0x000f) << 12);
-		index ^= static_cast<std::uint16_t>((index & 0x0030) << 10);
-		index ^= static_cast<std::uint16_t>((index & 0x0050) << 9);
-		index ^= static_cast<std::uint16_t>((index & 0x007f) << 8);
-		index ^= static_cast<std::uint16_t>((index & 0x03f0) << 6);
-		index ^= static_cast<std::uint16_t>((index & 0x0410) << 5);
-		index ^= static_cast<std::uint16_t>((index & 0x07e0) << 4);
-		index ^= static_cast<std::uint16_t>((index & 0x1c71) << 3);
-		index ^= static_cast<std::uint16_t>((index & 0x1c71) << 2);
-		index ^= static_cast<std::uint16_t>((index & 0x4924) << 1);
+		index ^= static_cast<std::uint16_t>((index & 0x0055) << 9);
+		index ^= static_cast<std::uint16_t>((index & 0x00aa) << 8);
+		index ^= static_cast<std::uint16_t>((index & 0x00aa) << 7);
+		index ^= static_cast<std::uint16_t>((index & 0x0202) << 6);
+		index ^= static_cast<std::uint16_t>((index & 0x0505) << 5);
+		index ^= static_cast<std::uint16_t>((index & 0x0505) << 4);
+		index ^= static_cast<std::uint16_t>((index & 0x1b1b) << 3);
+		index ^= static_cast<std::uint16_t>((index & 0x2222) << 2);
+		index ^= static_cast<std::uint16_t>((index & 0x2222) << 1);
 		break;
 	default:
 		break;
@@ -103,245 +134,7 @@ OQMC_HOST_DEVICE inline std::uint16_t sobolReversedIndex(std::uint16_t index,
 	// Reversed masks and right shifts put the reversal on the shared input.
 	// This optimization hoists the reversal out of a draw
 	// (Chris Kulla, PR #97).
-	index = reverseBits16(index);
-
-	switch(dimension)
-	{
-	case 1:
-		index ^= static_cast<std::uint16_t>((index & 0xff00) >> 8);
-		index ^= static_cast<std::uint16_t>((index & 0xf0f0) >> 4);
-		index ^= static_cast<std::uint16_t>((index & 0xcccc) >> 2);
-		index ^= static_cast<std::uint16_t>((index & 0xaaaa) >> 1);
-		break;
-	case 2:
-		index ^= static_cast<std::uint16_t>((index & 0xc000) >> 14);
-		index ^= static_cast<std::uint16_t>((index & 0x2000) >> 13);
-		index ^= static_cast<std::uint16_t>((index & 0xf000) >> 12);
-		index ^= static_cast<std::uint16_t>((index & 0xcc00) >> 10);
-		index ^= static_cast<std::uint16_t>((index & 0xaa00) >> 9);
-		index ^= static_cast<std::uint16_t>((index & 0x0c00) >> 8);
-		index ^= static_cast<std::uint16_t>((index & 0xc0c0) >> 6);
-		index ^= static_cast<std::uint16_t>((index & 0xa0a0) >> 5);
-		index ^= static_cast<std::uint16_t>((index & 0xcf30) >> 4);
-		index ^= static_cast<std::uint16_t>((index & 0x8888) >> 3);
-		index ^= static_cast<std::uint16_t>((index & 0xf0f0) >> 2);
-		index ^= static_cast<std::uint16_t>((index & 0x6666) >> 1);
-		break;
-	case 3:
-		index ^= static_cast<std::uint16_t>((index & 0xf000) >> 12);
-		index ^= static_cast<std::uint16_t>((index & 0x0c00) >> 10);
-		index ^= static_cast<std::uint16_t>((index & 0x0a00) >> 9);
-		index ^= static_cast<std::uint16_t>((index & 0xfe00) >> 8);
-		index ^= static_cast<std::uint16_t>((index & 0x0fc0) >> 6);
-		index ^= static_cast<std::uint16_t>((index & 0x0820) >> 5);
-		index ^= static_cast<std::uint16_t>((index & 0x07e0) >> 4);
-		index ^= static_cast<std::uint16_t>((index & 0x8e38) >> 3);
-		index ^= static_cast<std::uint16_t>((index & 0x8e38) >> 2);
-		index ^= static_cast<std::uint16_t>((index & 0x2492) >> 1);
-		break;
-	default:
-		break;
-	}
-
-	return index;
-
-#endif
-
-#else
-
-	if(dimension == 0)
-	{
-		return reverseBits16(index);
-	}
-
-	// Following matrices were produced using the matrices cli tool found in the
-	// source file src/tools/cli/matrices.cpp. This in turn uses matrices that
-	// were copied from MIT licensed code written by Leonhard Gruenschloss.
-
-	// clang-format off
-	constexpr std::uint16_t masks[16] = {
-		0b0000000000000001,
-		0b0000000000000010,
-		0b0000000000000100,
-		0b0000000000001000,
-		0b0000000000010000,
-		0b0000000000100000,
-		0b0000000001000000,
-		0b0000000010000000,
-		0b0000000100000000,
-		0b0000001000000000,
-		0b0000010000000000,
-		0b0000100000000000,
-		0b0001000000000000,
-		0b0010000000000000,
-		0b0100000000000000,
-		0b1000000000000000,
-	};
-
-	constexpr std::uint16_t directions[4][16] = {
-		{
-		0b1000000000000000,
-		0b0100000000000000,
-		0b0010000000000000,
-		0b0001000000000000,
-		0b0000100000000000,
-		0b0000010000000000,
-		0b0000001000000000,
-		0b0000000100000000,
-		0b0000000010000000,
-		0b0000000001000000,
-		0b0000000000100000,
-		0b0000000000010000,
-		0b0000000000001000,
-		0b0000000000000100,
-		0b0000000000000010,
-		0b0000000000000001,
-		},
-
-		{
-		0b1111111111111111,
-		0b0101010101010101,
-		0b0011001100110011,
-		0b0001000100010001,
-		0b0000111100001111,
-		0b0000010100000101,
-		0b0000001100000011,
-		0b0000000100000001,
-		0b0000000011111111,
-		0b0000000001010101,
-		0b0000000000110011,
-		0b0000000000010001,
-		0b0000000000001111,
-		0b0000000000000101,
-		0b0000000000000011,
-		0b0000000000000001,
-		},
-
-		{
-		0b1010101000001001,
-		0b0111011100000110,
-		0b0011100100000011,
-		0b0001011000000001,
-		0b0000100110101010,
-		0b0000011001110111,
-		0b0000001100111001,
-		0b0000000100010110,
-		0b0000000010100011,
-		0b0000000001110001,
-		0b0000000000111010,
-		0b0000000000010111,
-		0b0000000000001001,
-		0b0000000000000110,
-		0b0000000000000011,
-		0b0000000000000001,
-		},
-
-		{
-		0b1010000011000011,
-		0b0100000001000001,
-		0b0011000000101101,
-		0b0001000000011110,
-		0b0000101101100111,
-		0b0000011110011010,
-		0b0000001010100100,
-		0b0000000100011011,
-		0b0000000011001001,
-		0b0000000001000101,
-		0b0000000000101110,
-		0b0000000000011111,
-		0b0000000000001010,
-		0b0000000000000100,
-		0b0000000000000011,
-		0b0000000000000001,
-		},
-	};
-	// clang-format on
-
-	const auto matrix = directions[dimension];
-
-#if defined(OQMC_ARCH_AVX)
-	constexpr auto stride = 16;
-	const __m256i zero = _mm256_setzero_si256();
-
-	__m256i bits = zero;
-	for(int i = 0; i < 16; i += stride)
-	{
-		const auto maskPtr = reinterpret_cast<const __m256i*>(masks + i);
-		const __m256i mask = _mm256_loadu_si256(maskPtr);
-
-		const auto matrixPtr = reinterpret_cast<const __m256i*>(matrix + i);
-		const __m256i column = _mm256_loadu_si256(matrixPtr);
-
-		const __m256i masked = _mm256_and_si256(_mm256_set1_epi16(index), mask);
-		const __m256i cond = _mm256_cmpeq_epi16(masked, zero);
-
-		const __m256i xored = _mm256_xor_si256(bits, column);
-
-		bits = _mm256_or_si256(_mm256_and_si256(cond, bits),
-		                       _mm256_andnot_si256(cond, xored));
-	}
-
-	bits = _mm256_xor_si256(bits, _mm256_srli_si256(bits, 2));
-	bits = _mm256_xor_si256(bits, _mm256_srli_si256(bits, 4));
-	bits = _mm256_xor_si256(bits, _mm256_srli_si256(bits, 8));
-
-	return _mm256_extract_epi16(bits, 0) ^ _mm256_extract_epi16(bits, 8);
-#endif
-
-#if defined(OQMC_ARCH_SSE)
-	constexpr auto stride = 8;
-	const __m128i zero = _mm_setzero_si128();
-
-	__m128i bits = zero;
-	for(int i = 0; i < 16; i += stride)
-	{
-		const auto maskPtr = reinterpret_cast<const __m128i*>(masks + i);
-		const __m128i mask = _mm_loadu_si128(maskPtr);
-
-		const auto matrixPtr = reinterpret_cast<const __m128i*>(matrix + i);
-		const __m128i column = _mm_loadu_si128(matrixPtr);
-
-		const __m128i masked = _mm_and_si128(_mm_set1_epi16(index), mask);
-		const __m128i cond = _mm_cmpeq_epi16(masked, zero);
-
-		const __m128i xored = _mm_xor_si128(bits, column);
-
-		bits = _mm_or_si128(_mm_and_si128(cond, bits),
-		                    _mm_andnot_si128(cond, xored));
-	}
-
-	bits = _mm_xor_si128(bits, _mm_srli_si128(bits, 2));
-	bits = _mm_xor_si128(bits, _mm_srli_si128(bits, 4));
-	bits = _mm_xor_si128(bits, _mm_srli_si128(bits, 8));
-
-	return _mm_extract_epi16(bits, 0);
-#endif
-
-#if defined(OQMC_ARCH_ARM)
-	constexpr auto stride = 8;
-	const uint16x8_t zero = vdupq_n_u16(0);
-
-	uint16x8_t bits = zero;
-	for(int i = 0; i < 16; i += stride)
-	{
-		const uint16x8_t mask = vld1q_u16(masks + i);
-		const uint16x8_t column = vld1q_u16(matrix + i);
-
-		const uint16x8_t masked = vandq_u16(vdupq_n_u16(index), mask);
-		const uint16x8_t cond = vceqq_u16(masked, zero);
-
-		const uint16x8_t xored = veorq_u16(bits, column);
-
-		bits =
-		    vorrq_u16(vandq_u16(cond, bits), vandq_u16(vmvnq_u16(cond), xored));
-	}
-
-	bits = veorq_u16(bits, vextq_u16(bits, zero, 1));
-	bits = veorq_u16(bits, vextq_u16(bits, zero, 2));
-	bits = veorq_u16(bits, vextq_u16(bits, zero, 4));
-
-	return vgetq_lane_u16(bits, 0);
-#endif
+	return sobolReversedIndexShared(reverseBits16(index), dimension);
 
 #endif
 }
@@ -365,9 +158,9 @@ OQMC_HOST_DEVICE constexpr std::uint32_t scrambleAndReverse(std::uint32_t value,
 	return value;
 }
 
-/// Compute a randomised sobol sequence value.
+/// Compute a randomised SZ sequence value.
 ///
-/// Given an index and a seed, compute an Owen scrambled sobol sequence value.
+/// Given an index and a seed, compute an Owen scrambled SZ sequence value.
 /// The index will be shuffled in a manner that is progressive friendly. The
 /// value can be multi-dimensional. For a given sequence, the seed value must be
 /// constant. An index greater than 2^16 will repeat values.
@@ -386,11 +179,29 @@ OQMC_HOST_DEVICE inline void shuffledScrambledSobol(std::uint32_t index,
 
 	index = reverseAndShuffle(index, seed);
 
+#if defined(__CUDA_ARCH__)
+
 	for(int i = 0; i < Depth; ++i)
 	{
 		sample[i] = sobolReversedIndex(index >> 16, i);
 		sample[i] = scrambleAndReverse(sample[i], rotateBytes(seed, i));
 	}
+
+#else
+
+	// Reverse the shared index once for all dimensions (Kulla, PR #97), and
+	// evaluate dimension 3 from dimension 2 (Ahmed et al. 2025, eq. 13).
+	const auto reversed = reverseBits16(index >> 16);
+
+	std::uint16_t value[4];
+	for(int i = 0; i < Depth; ++i)
+	{
+		value[i] = i == 3 ? sobolReversedIndexShared(value[2], 1)
+		                  : sobolReversedIndexShared(reversed, i);
+		sample[i] = scrambleAndReverse(value[i], rotateBytes(seed, i));
+	}
+
+#endif
 }
 
 } // namespace oqmc
