@@ -959,11 +959,14 @@ space or access is a concern.
 ### Sobol sequences
 
 The implementation uses an elegant construction by Burley [^1] for an Owen
-scrambled Sobol sequence. This also includes performance improvements such as
-limiting the index to 16 bits, pre-inverting the input and output matrices, and
-making use of CPU vector intrinsics. You need to select a `OPENQMC_ARCH_TYPE` to
-make use of the performance from vector intrinsics for a given architecture. The
-scalar path uses the closed-form 2D Sobol construction by Ahmed [^5].
+scrambled sequence, with the SZ generator matrices by Ahmed et al. [^7] in
+place of the classic Sobol direction numbers. Dimensions 0 and 1 are the same
+as Sobol, while every pair of the four dimensions forms a (0, 2)-sequence in
+base 4, and the four together a (0, 4)-sequence, so all 2D projections are
+well stratified. This also includes performance improvements such as limiting
+the index to 16 bits, pre-inverting the input and output matrices, and
+reversing the index once per draw. Each matrix is factored into a closed-form
+program using the construction by Ahmed [^5].
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./images/diagrams/sobol-design-light.png">
@@ -1476,3 +1479,7 @@ https://dx.doi.org/10.2312/sr.20241147
 [^6]: Melissa E. O'Neill. 2014.  
 PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation.  
 https://www.pcg-random.org
+
+[^7]: Abdalla G. M. Ahmed, Matt Pharr, Victor Ostromoukhov, and Hui Huang. 2025.  
+SZ Sequences: Binary-Constructed (0, 2^q)-Sequences. ACM Transactions on Graphics (SIGGRAPH Asia).  
+https://dx.doi.org/10.1145/3763272

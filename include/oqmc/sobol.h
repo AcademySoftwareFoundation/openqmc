@@ -92,13 +92,18 @@ void SobolImpl::drawRnd(std::uint32_t rnd[Size]) const
 /// Owen scrambled sobol sampler.
 ///
 /// The implementation uses an elegant construction by Burley in 'Practical
-/// Hash-based Owen Scrambling' for an Owen scrambled Sobol sequence. This also
-/// includes performance improvements such as limiting the index to 16 bits,
-/// pre-inverting the input and output matrices, and making use of CPU vector
-/// intrinsics. You need to select an `OPENQMC_ARCH_TYPE` to make use of the
-/// performance from vector intrinsics for a given architecture. The scalar path
-/// uses the construction method by Abdalla G. M. Ahmed in 'An Implementation
-/// Algorithm of 2D Sobol Sequence Fast, Elegant, and Compact' (EGSR 2024).
+/// Hash-based Owen Scrambling' for an Owen scrambled sequence, with the SZ
+/// generator matrices by Ahmed et al. in 'SZ Sequences: Binary-Constructed
+/// (0, 2^q)-Sequences' (SIGGRAPH Asia 2025) in place of the classic Sobol
+/// direction numbers. Dimensions 0 and 1 are the same as Sobol, while every
+/// pair of the four dimensions forms a (0, 2)-sequence in base 4, and the
+/// four together a (0, 4)-sequence, so all 2D projections are well
+/// stratified. This also includes performance improvements such as limiting
+/// the index to 16 bits, pre-inverting the input and output matrices, and
+/// reversing the index once per draw. Each matrix is factored into a closed
+/// form program using the construction method by Abdalla G. M. Ahmed in 'An
+/// Implementation Algorithm of 2D Sobol Sequence Fast, Elegant, and Compact'
+/// (EGSR 2024).
 ///
 /// This sampler has no cache initialisation cost, it generates all samples on
 /// the fly without touching memory. However the cost per draw sample call is
