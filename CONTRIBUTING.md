@@ -7,19 +7,17 @@ Thank you for your interest in contributing to OpenQMC. This document explains t
 * [Coding style](#coding-style)
 * [Documentation style](#documentation-style)
 
-For a description of the roles and responsibilities of the various members of the OpenQMC community, see the [governance policies](GOVERNANCE.md), and for further details, see the project's [Technical Charter](tsc/charter.md). Briefly, Contributors are anyone who submits content to the project, Committers review and approve such submissions, and the Technical Steering Committee provides general project oversight.
+For a description of the roles and responsibilities of the various members of the OpenQMC community, see the [governance policies](GOVERNANCE.md), which document the project's roles as the [Technical Charter](https://github.com/AcademySoftwareFoundation/foundation/blob/main/project_charters/openqmc_charter.pdf) permits. Briefly, Contributors are anyone who submits content to the project, Committers review and approve such submissions, and the Technical Steering Committee provides general project oversight.
 
 If you just need help or have a question, refer to [SUPPORT.md](SUPPORT.md).
 
 ## Project committers
 
-The current committers of the project are listed below. Committers review and approve contributions, and form the initial voting membership of the Technical Steering Committee as described in the [Technical Charter](tsc/charter.md). To request committer status, follow the process in [GOVERNANCE.md](GOVERNANCE.md#committer).
+The current committers of the project are listed below. Committers review and approve contributions. To request committer status, follow the process in [GOVERNANCE.md](GOVERNANCE.md#committer).
 
-| Name | GitHub | Email |
-| --- | --- | --- |
-| Josh Bainbridge | [@joshbainbridge](https://github.com/joshbainbridge) | josh.bainbridge@gmail.com |
-| Jose Esteve | [@joesfer](https://github.com/joesfer) | jose.esteve@framestore.com |
-| Chris Haldane | [@chaldane](https://github.com/chaldane) | chris.haldane@framestore.com |
+* Josh Bainbridge ([@joshbainbridge](https://github.com/joshbainbridge))
+* Jose Esteve ([@joesfer](https://github.com/joesfer))
+* Chris Haldane ([@chaldane](https://github.com/chaldane))
 
 ## How to contribute a bug fix or change
 
