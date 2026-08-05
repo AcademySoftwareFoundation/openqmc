@@ -1063,10 +1063,11 @@ domains, which might not be used.
 ## Development roadmap
 
 <!-- MKDOCS_SPLIT: roadmap.md -->
-Roadmap for version 1.0.0 of the library:
+Roadmap for the project:
 
-- Gather feedback and iterate on API.
-- Add support for package managers.
+- Grow contributors, adopters and industry representation on the TSC.
+- Provide broader access via C-ABI and Python bindings.
+- Achieve the OpenSSF Passing badge.
 <!-- MKDOCS_SPLIT_END -->
 
 ## Developer workflow
