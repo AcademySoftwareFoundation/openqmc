@@ -156,7 +156,7 @@ jobs:
         build: [Release, Debug]
     runs-on: ubuntu-20.04-gpu-t4-4c-16g-176h
     container:
-      image: aswf/ci-base:2023
+      image: aswf/ci-common:6
       options: --gpus all
     env:
       # Image PATH omits the CUDA toolkit, so point CMake at nvcc directly
@@ -235,7 +235,7 @@ jobs:
         sampler: [pmj, sobol, lattice]
     runs-on: ubuntu-20.04-gpu-t4-4c-16g-176h
     container:
-      image: aswf/ci-base:2023
+      image: aswf/ci-common:6
       options: --gpus all
     steps:
       # Download tools build
