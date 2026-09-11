@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 
 namespace
@@ -57,6 +58,19 @@ struct SamplerV2
 	std::uint32_t hash;
 };
 
+// Index of the stratum a sample falls in, for a given number of strata. The
+// width is computed in 64 bits so that a resolution of one, and the largest
+// representable sample value, both stay within range.
+int stratumIndex(std::uint32_t value, int resolution)
+{
+	assert(resolution > 0);
+
+	constexpr auto twoPow32 = 1ull << 32; // 2^32
+	const auto width = twoPow32 / resolution;
+
+	return static_cast<int>(value / width);
+}
+
 ALL_HYPOTHESIS_TESTS(OwenTest, SampleIndpendent, (SamplerV1()))
 ALL_HYPOTHESIS_TESTS(OwenTest, SampleDims01, (SamplerV2<0, 1>()))
 ALL_HYPOTHESIS_TESTS(OwenTest, SampleDims02, (SamplerV2<0, 2>()))
@@ -67,40 +81,142 @@ ALL_HYPOTHESIS_TESTS(OwenTest, SampleDims23, (SamplerV2<2, 3>()))
 
 TEST(OwenTest, 02Sequence)
 {
-	constexpr auto m = 8;
+	// Dimensions 0 and 1, and dimensions 2 and 3, each form a base-2
+	// (0, 2)-sequence. The second pair follows from the first through the
+	// pair relation of eq (13) (Ahmed et al. 2025).
+	constexpr auto m = 16;
 	constexpr auto n = 1 << m;
 
 	std::array<bool, n> strata;
-	for(int i = 0; i < m + 1; ++i)
+	for(int dim = 0; dim < 4; dim += 2)
 	{
-		const int xResolution = 1 << i;
-		const int yResolution = 1 << (m - i);
+		ASSERT_LT(dim + 1, 4);
 
-		ASSERT_EQ(xResolution * yResolution, n);
-
-		const std::uint32_t xWidth = UINT32_MAX / xResolution;
-		const std::uint32_t yWidth = UINT32_MAX / yResolution;
-
-		strata.fill(false);
-		for(int index = 0; index < n; ++index)
+		for(int i = 0; i < m + 1; ++i)
 		{
-			std::uint32_t out[2];
-			oqmc::shuffledScrambledSobol<2>(index, oqmc::pcg::hash(0), out);
+			const int xResolution = 1 << i;
+			const int yResolution = 1 << (m - i);
 
-			const int x = out[0] / xWidth;
-			const int y = out[1] / yWidth;
+			ASSERT_EQ(xResolution * yResolution, n);
 
-			const int coordinate = x + y * xResolution;
-			auto& stratum = strata[coordinate];
+			strata.fill(false);
+			for(int index = 0; index < n; ++index)
+			{
+				std::uint32_t out[4];
+				oqmc::shuffledScrambledSobol<4>(index, oqmc::pcg::hash(0), out);
 
-			ASSERT_FALSE(stratum);
+				const int x = stratumIndex(out[dim + 0], xResolution);
+				const int y = stratumIndex(out[dim + 1], yResolution);
 
-			stratum = true;
+				const int coordinate = x + y * xResolution;
+				auto& stratum = strata[coordinate];
+
+				ASSERT_FALSE(stratum);
+
+				stratum = true;
+			}
+
+			for(auto stratum : strata)
+			{
+				EXPECT_TRUE(stratum);
+			}
 		}
+	}
+}
 
-		for(auto stratum : strata)
+TEST(OwenTest, 02SequenceAllPairs)
+{
+	// Every pair of dimensions is a base-4 (0, 2)-sequence (Ahmed et al.
+	// 2025): each 4^a x 4^b split of the first 4^m samples has exactly one
+	// sample per stratum. Taking m to the full precision of the index covers
+	// every column of the generator matrices.
+	constexpr auto m = 8;
+	constexpr auto n = 1 << (2 * m);
+
+	std::array<bool, n> strata;
+	for(int dimA = 0; dimA < 4; ++dimA)
+	{
+		for(int dimB = dimA + 1; dimB < 4; ++dimB)
 		{
-			EXPECT_TRUE(stratum);
+			for(int i = 0; i < m + 1; ++i)
+			{
+				const int xResolution = 1 << (2 * i);
+				const int yResolution = 1 << (2 * (m - i));
+
+				ASSERT_EQ(xResolution * yResolution, n);
+
+				strata.fill(false);
+				for(int index = 0; index < n; ++index)
+				{
+					std::uint32_t out[4];
+					oqmc::shuffledScrambledSobol<4>(index, oqmc::pcg::hash(0),
+					                                out);
+
+					const int x = stratumIndex(out[dimA], xResolution);
+					const int y = stratumIndex(out[dimB], yResolution);
+
+					const int coordinate = x + y * xResolution;
+					auto& stratum = strata[coordinate];
+
+					ASSERT_FALSE(stratum);
+
+					stratum = true;
+				}
+
+				for(auto stratum : strata)
+				{
+					EXPECT_TRUE(stratum);
+				}
+			}
+		}
+	}
+}
+
+TEST(OwenTest, 04Sequence)
+{
+	// Dimensions 0-3 form a base-4 (0, 4)-sequence (Ahmed et al. 2025): each
+	// 4^a x 4^b x 4^c x 4^d split of the first 4^m samples has exactly one
+	// sample per stratum.
+	constexpr auto m = 8;
+	constexpr auto n = 1 << (2 * m);
+
+	std::array<bool, n> strata;
+	for(int a = 0; a <= m; ++a)
+	{
+		for(int b = 0; b <= m - a; ++b)
+		{
+			for(int c = 0; c <= m - a - b; ++c)
+			{
+				const int exponents[4] = {a, b, c, m - a - b - c};
+
+				strata.fill(false);
+				for(int index = 0; index < n; ++index)
+				{
+					std::uint32_t out[4];
+					oqmc::shuffledScrambledSobol<4>(index, oqmc::pcg::hash(0),
+					                                out);
+
+					int coordinate = 0;
+					for(int dim = 0; dim < 4; ++dim)
+					{
+						const int resolution = 1 << (2 * exponents[dim]);
+						const int digit = stratumIndex(out[dim], resolution);
+
+						coordinate = coordinate * resolution + digit;
+					}
+
+					auto& stratum = strata[coordinate];
+
+					ASSERT_FALSE(stratum);
+
+					stratum = true;
+				}
+
+				for(auto stratum : strata)
+				{
+					EXPECT_TRUE(stratum);
+				}
+			}
 		}
 	}
 }
@@ -143,71 +259,160 @@ TEST(OwenTest, ShirleyRemapping)
 	}
 }
 
-TEST(OwenTest, SobolReversedIndex)
+// clang-format off
+constexpr std::uint16_t masks[16] = {
+	0b0000000000000001,
+	0b0000000000000010,
+	0b0000000000000100,
+	0b0000000000001000,
+	0b0000000000010000,
+	0b0000000000100000,
+	0b0000000001000000,
+	0b0000000010000000,
+	0b0000000100000000,
+	0b0000001000000000,
+	0b0000010000000000,
+	0b0000100000000000,
+	0b0001000000000000,
+	0b0010000000000000,
+	0b0100000000000000,
+	0b1000000000000000,
+};
+
+constexpr std::uint16_t directions[4][16] = {
+	{
+	0b1000000000000000,
+	0b0100000000000000,
+	0b0010000000000000,
+	0b0001000000000000,
+	0b0000100000000000,
+	0b0000010000000000,
+	0b0000001000000000,
+	0b0000000100000000,
+	0b0000000010000000,
+	0b0000000001000000,
+	0b0000000000100000,
+	0b0000000000010000,
+	0b0000000000001000,
+	0b0000000000000100,
+	0b0000000000000010,
+	0b0000000000000001,
+	},
+
+	{
+	0b1111111111111111,
+	0b0101010101010101,
+	0b0011001100110011,
+	0b0001000100010001,
+	0b0000111100001111,
+	0b0000010100000101,
+	0b0000001100000011,
+	0b0000000100000001,
+	0b0000000011111111,
+	0b0000000001010101,
+	0b0000000000110011,
+	0b0000000000010001,
+	0b0000000000001111,
+	0b0000000000000101,
+	0b0000000000000011,
+	0b0000000000000001,
+	},
+
+	{
+	0b1110011110011110,
+	0b0111100111100111,
+	0b0011000100100011,
+	0b0001001000110001,
+	0b0000111000001001,
+	0b0000011100001110,
+	0b0000001100000010,
+	0b0000000100000011,
+	0b0000000011100111,
+	0b0000000001111001,
+	0b0000000000110001,
+	0b0000000000010010,
+	0b0000000000001110,
+	0b0000000000000111,
+	0b0000000000000011,
+	0b0000000000000001,
+	},
+
+	{
+	0b1001111001111001,
+	0b0111100111100111,
+	0b0010001100010010,
+	0b0001001000110001,
+	0b0000100100000111,
+	0b0000011100001110,
+	0b0000001000000001,
+	0b0000000100000011,
+	0b0000000010011110,
+	0b0000000001111001,
+	0b0000000000100011,
+	0b0000000000010010,
+	0b0000000000001001,
+	0b0000000000000111,
+	0b0000000000000010,
+	0b0000000000000001,
+	},
+};
+// clang-format on
+
+// Reference code multiplying the SZ generator matrices directly, produced
+// by the matrices cli tool. Verifies the Ahmed 2024 closed form programs
+// and the eq (13) evaluation of dimension 3 (PR #97).
+std::uint16_t szReference(std::uint16_t index, int dimension)
 {
-	// clang-format off
-	constexpr std::uint16_t masks[16] = {
-		0b0000000000000001,
-		0b0000000000000010,
-		0b0000000000000100,
-		0b0000000000001000,
-		0b0000000000010000,
-		0b0000000000100000,
-		0b0000000001000000,
-		0b0000000010000000,
-		0b0000000100000000,
-		0b0000001000000000,
-		0b0000010000000000,
-		0b0000100000000000,
-		0b0001000000000000,
-		0b0010000000000000,
-		0b0100000000000000,
-		0b1000000000000000,
-	};
-
-	constexpr std::uint16_t directions[4][16] = {
-		{0x8000, 0x4000, 0x2000, 0x1000, 0x0800, 0x0400, 0x0200, 0x0100,
-		 0x0080, 0x0040, 0x0020, 0x0010, 0x0008, 0x0004, 0x0002, 0x0001},
-		{0xffff, 0x5555, 0x3333, 0x1111, 0x0f0f, 0x0505, 0x0303, 0x0101,
-		 0x00ff, 0x0055, 0x0033, 0x0011, 0x000f, 0x0005, 0x0003, 0x0001},
-		{0xaa09, 0x7706, 0x3903, 0x1601, 0x09aa, 0x0677, 0x0339, 0x0116,
-		 0x00a3, 0x0071, 0x003a, 0x0017, 0x0009, 0x0006, 0x0003, 0x0001},
-		{0xa0c3, 0x4041, 0x302d, 0x101e, 0x0b67, 0x079a, 0x02a4, 0x011b,
-		 0x00c9, 0x0045, 0x002e, 0x001f, 0x000a, 0x0004, 0x0003, 0x0001},
-	};
-	// clang-format on
-
-	// Reference code from the classic scalar implementation. Verifies that
-	// Ahmed 2024 closed form output matches (PR #97).
-	const auto reference = [&](std::uint16_t index, int dimension) {
-		if(dimension == 0)
+	std::uint16_t sample = 0;
+	for(int i = 0; i < 16; ++i)
+	{
+		if((index & masks[i]) != 0)
 		{
-			return oqmc::reverseBits16(index);
+			sample ^= directions[dimension][i];
 		}
+	}
 
-		const auto matrix = directions[dimension];
+	return sample;
+}
 
-		std::uint16_t sample = 0;
-		for(int i = 0; i < 16; ++i)
+TEST(OwenTest, SzReversedBasis)
+{
+	for(int dimension = 0; dimension < 4; ++dimension)
+	{
+		for(std::uint32_t index = 0; index < (1u << 16); ++index)
 		{
-			if((index & masks[i]) != 0)
-			{
-				sample ^= matrix[i];
-			}
+			const auto reversed = static_cast<std::uint16_t>(index);
+
+			EXPECT_EQ(oqmc::szReversedBasis(reversed, dimension),
+			          szReference(reversed, dimension));
 		}
+	}
+}
 
-		return sample;
-	};
-
+TEST(OwenTest, SzToReversed)
+{
 	for(int dimension = 0; dimension < 4; ++dimension)
 	{
 		for(std::uint32_t index = 0; index < (1u << 16); ++index)
 		{
 			const auto value = static_cast<std::uint16_t>(index);
 
-			EXPECT_EQ(oqmc::sobolReversedIndex(value, dimension),
-			          reference(value, dimension));
+			EXPECT_EQ(oqmc::szToReversed(value, dimension),
+			          szReference(oqmc::reverseBits16(value), dimension));
 		}
+	}
+}
+
+TEST(OwenTest, SzPairRelation)
+{
+	// The host path of oqmc::shuffledScrambledSobol takes dimension 3 from
+	// dimension 2, P * SZ[2] == SZ[3] (Ahmed et al. 2025, eq (13)).
+	for(std::uint32_t index = 0; index < (1u << 16); ++index)
+	{
+		const auto value = static_cast<std::uint16_t>(index);
+
+		EXPECT_EQ(oqmc::szToReversed(oqmc::szToReversed(value, 2), 1),
+		          oqmc::szToReversed(value, 3));
 	}
 }
 

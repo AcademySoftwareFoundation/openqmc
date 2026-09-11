@@ -164,13 +164,17 @@ module.oqmc_plot_error.argtypes = [
     ctypes.c_char_p,
     ctypes.c_int,
     ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
     np.ctypeslib.ndpointer(),
 ]
 
 
-def plot_error(shape, sampler, nsequences, nsamples):
+def plot_error(shape, sampler, nsequences, nsamples, dimension_a=0, dimension_b=1):
     errors = np.zeros((nsamples, 2), dtype=np.float32)
-    valid = module.oqmc_plot_error(shape, sampler, nsequences, nsamples, errors)
+    valid = module.oqmc_plot_error(
+        shape, sampler, dimension_a, dimension_b, nsequences, nsamples, errors
+    )
 
     if not valid:
         sys.exit()

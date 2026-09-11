@@ -108,7 +108,8 @@ void plotZoneplate(int nsamples, int resolution, float* out)
 }
 
 template <typename Shape, typename Sampler>
-void plotError(Shape shape, int nsequences, int nsamples, float* out)
+void plotError(Shape shape, int dimensionA, int dimensionB, int nsequences,
+               int nsamples, float* out)
 {
 	void* cache;
 	OQMC_ALLOCATE(&cache, Sampler::cacheSize);
@@ -130,10 +131,11 @@ void plotError(Shape shape, int nsequences, int nsamples, float* out)
 		{
 			const auto domain = Sampler(0, 0, 0, index, cache).newDomain(seed);
 
-			float rnd[2];
-			domain.template drawSample<2>(rnd);
+			float rnd[4];
+			domain.template drawSample<4>(rnd);
 
-			const auto result = shape.evaluate(rnd[0], rnd[1]);
+			const auto result =
+			    shape.evaluate(rnd[dimensionA], rnd[dimensionB]);
 
 			buffer[seed] += result;
 
@@ -152,34 +154,37 @@ void plotError(Shape shape, int nsequences, int nsamples, float* out)
 }
 
 template <typename Shape>
-bool plotError(const char* sampler, Shape shape, int nsequences, int nsamples,
-               float* out)
+bool plotError(const char* sampler, Shape shape, int dimensionA, int dimensionB,
+               int nsequences, int nsamples, float* out)
 {
 	if(std::string(sampler) == "pmj")
 	{
-		plotError<Shape, oqmc::PmjSampler>(shape, nsequences, nsamples, out);
+		plotError<Shape, oqmc::PmjSampler>(shape, dimensionA, dimensionB,
+		                                   nsequences, nsamples, out);
 
 		return true;
 	}
 
 	if(std::string(sampler) == "sobol")
 	{
-		plotError<Shape, oqmc::SobolSampler>(shape, nsequences, nsamples, out);
+		plotError<Shape, oqmc::SobolSampler>(shape, dimensionA, dimensionB,
+		                                     nsequences, nsamples, out);
 
 		return true;
 	}
 
 	if(std::string(sampler) == "lattice")
 	{
-		plotError<Shape, oqmc::LatticeSampler>(shape, nsequences, nsamples,
-		                                       out);
+		plotError<Shape, oqmc::LatticeSampler>(shape, dimensionA, dimensionB,
+		                                       nsequences, nsamples, out);
 
 		return true;
 	}
 
 	if(std::string(sampler) == "rng")
 	{
-		plotError<Shape, RngSampler>(shape, nsequences, nsamples, out);
+		plotError<Shape, RngSampler>(shape, dimensionA, dimensionB, nsequences,
+		                             nsamples, out);
 
 		return true;
 	}
@@ -660,52 +665,63 @@ OQMC_CABI bool oqmc_plot_zoneplate(const char* sampler, int nsamples,
 }
 
 OQMC_CABI bool oqmc_plot_error(const char* shape, const char* sampler,
-                               int nsequences, int nsamples, float* out)
+                               int dimensionA, int dimensionB, int nsequences,
+                               int nsamples, float* out)
 {
 	assert(shape);
 	assert(sampler);
+	assert(dimensionA >= 0 && dimensionA <= 3);
+	assert(dimensionB >= 0 && dimensionB <= 3);
 	assert(nsequences >= 0);
 	assert(nsamples >= 0);
 	assert(out);
 
 	if(std::string(shape) == "qdisk")
 	{
-		return plotError(sampler, QuarterDisk(), nsequences, nsamples, out);
+		return plotError(sampler, QuarterDisk(), dimensionA, dimensionB,
+		                 nsequences, nsamples, out);
 	}
 
 	if(std::string(shape) == "fdisk")
 	{
-		return plotError(sampler, FullDisk(), nsequences, nsamples, out);
+		return plotError(sampler, FullDisk(), dimensionA, dimensionB,
+		                 nsequences, nsamples, out);
 	}
 
 	if(std::string(shape) == "qgauss")
 	{
-		return plotError(sampler, QuarterGaussian(), nsequences, nsamples, out);
+		return plotError(sampler, QuarterGaussian(), dimensionA, dimensionB,
+		                 nsequences, nsamples, out);
 	}
 
 	if(std::string(shape) == "fgauss")
 	{
-		return plotError(sampler, FullGaussian(), nsequences, nsamples, out);
+		return plotError(sampler, FullGaussian(), dimensionA, dimensionB,
+		                 nsequences, nsamples, out);
 	}
 
 	if(std::string(shape) == "bilin")
 	{
-		return plotError(sampler, Bilinear(), nsequences, nsamples, out);
+		return plotError(sampler, Bilinear(), dimensionA, dimensionB,
+		                 nsequences, nsamples, out);
 	}
 
 	if(std::string(shape) == "linx")
 	{
-		return plotError(sampler, LinearX(), nsequences, nsamples, out);
+		return plotError(sampler, LinearX(), dimensionA, dimensionB, nsequences,
+		                 nsamples, out);
 	}
 
 	if(std::string(shape) == "liny")
 	{
-		return plotError(sampler, LinearY(), nsequences, nsamples, out);
+		return plotError(sampler, LinearY(), dimensionA, dimensionB, nsequences,
+		                 nsamples, out);
 	}
 
 	if(std::string(shape) == "heavi")
 	{
-		return plotError(sampler, orientedHeaviside, nsequences, nsamples, out);
+		return plotError(sampler, orientedHeaviside, dimensionA, dimensionB,
+		                 nsequences, nsamples, out);
 	}
 
 	return false;
