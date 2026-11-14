@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Migrated the project from C++14 to C++17, moving the minimum supported VFX Reference Platform from CY2018 to CY2021, and the minimum NVCC version from 10 to 11. Blue noise tables are now `inline constexpr`, so header-only installs no longer duplicate table data across compilation units.
 - Sped up scalar paths of `oqmc::sobolReversedIndex` using the construction method from Ahmed 2024.
+- Changed the scratch buffer in `oqmc::stochasticPmjInit` to allocate with `std::malloc` in place of `new`, removing the last dependency on the C++ runtime library.
 - Replaced the classic Sobol direction matrices behind `oqmc::SobolSampler` and `oqmc::SobolBnSampler` with the SZ sequence construction from Ahmed et al. 2025. Dimensions 0 and 1 are unchanged and the blue noise tables still apply, but dimensions 2 and 3 produce different values. `oqmc::sobolReversedIndex` becomes `oqmc::szReversedBasis`, joined by `oqmc::szToReversed` which takes the index in its natural bit order.
 
 ### Deprecated
