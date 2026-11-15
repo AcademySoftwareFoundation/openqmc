@@ -10,12 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - GPU coverage on the CI pipeline is restored using ASWF hosted T4 runners, building the tools as CUDA and validating device results against CPU reference data.
+- A C ABI in `oqmc/oqmc_c.h` for using the samplers from C, and other languages with a C foreign function interface. The optional `liboqmc` library is built with the `OPENQMC_BUILD_CABI` CMake option and exported as `OpenQMC::CABI`, wrapping the sampler set by `OPENQMC_CABI_SAMPLER`. `OPENQMC_CABI_SHARED_LIB` and `OPENQMC_CABI_FORCE_PIC` select the library type, and the library depends on nothing beyond the C standard library (libc).
+- C ABI coverage on the CI pipeline, testing the C ABI against the C++ API for every sampler, checking the shared library depends only on the C standard library, and building a downstream C example.
 
 ### Changed
 
 - Migrated the project from C++14 to C++17, moving the minimum supported VFX Reference Platform from CY2018 to CY2021, and the minimum NVCC version from 10 to 11. Blue noise tables are now `inline constexpr`, so header-only installs no longer duplicate table data across compilation units.
 - Sped up scalar paths of `oqmc::sobolReversedIndex` using the construction method from Ahmed 2024.
 - Changed the scratch buffer in `oqmc::stochasticPmjInit` to allocate with `std::malloc` in place of `new`, removing the last dependency on the C++ runtime library.
+- The format and lint scripts now also check C source files.
 - Replaced the classic Sobol direction matrices behind `oqmc::SobolSampler` and `oqmc::SobolBnSampler` with the SZ sequence construction from Ahmed et al. 2025. Dimensions 0 and 1 are unchanged and the blue noise tables still apply, but dimensions 2 and 3 produce different values. `oqmc::sobolReversedIndex` becomes `oqmc::szReversedBasis`, joined by `oqmc::szToReversed` which takes the index in its natural bit order.
 
 ### Deprecated
