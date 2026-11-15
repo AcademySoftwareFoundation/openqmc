@@ -17,7 +17,7 @@
 /// @defgroup samplers Sampler API
 /// Higher level sampler API and sampler types.
 ///
-/// This module outlines the higher level sampler API, as well as each availble
+/// This module outlines the higher level sampler API, as well as each available
 /// sampler type. Sampler type implementations are non-public, and all
 /// functionality is accessible via the SamplerInterface. There are two variants
 /// for each sampler, a base variant and a blue noise variant. Sampler types and
@@ -96,7 +96,7 @@ namespace oqmc
 /// allowing for new implementations to be tested and compared without changing
 /// the calling code. The interface is static, so all functions should be
 /// inlined to allow for zero cost abstraction. This also means that enabling
-/// compile time optimisations might provide a noticable improvement.
+/// compile time optimisations might provide a noticeable improvement.
 ///
 /// Samplers can only be constructed, their state cannot change. In most cases
 /// the object variable can be marked constant. New samplers are created from a
@@ -115,7 +115,7 @@ class SamplerInterface
 	// Prevent value-construction.
 	OQMC_HOST_DEVICE SamplerInterface(Impl impl);
 
-	// Implemention type.
+	// Implementation type.
 	Impl impl;
 
   public:
@@ -166,7 +166,7 @@ class SamplerInterface
 	/// object is valid and ready for use.
 	///
 	/// For each pixel this constructor is expected to be called multiple times,
-	/// once for each index. Pixels might have a varying number of indicies when
+	/// once for each index. Pixels might have a varying number of indices when
 	/// adaptive sampling.
 	///
 	/// @param [in] x Pixel coordinate on the x axis.
@@ -207,14 +207,14 @@ class SamplerInterface
 	/// domain can have a higher sample rate based on a fixed multiplier.
 	///
 	/// The result from taking N indexed domains with this function will be both
-	/// a locally and a gloablly well distributed sub-pattern. This sub-pattern
-	/// will of the highest quality due to being globally correlated with the
+	/// a locally and a globally well distributed sub-pattern. This sub-pattern
+	/// will be of the highest quality due to being globally correlated with the
 	/// sub-patterns of other samples.
 	///
-	/// If a mutliplier is adaptive (non-constant or unknown) then either the
+	/// If a multiplier is adaptive (non-constant or unknown) then either the
 	/// newDomainDistrib or newDomainChain functions should be used instead.
 	/// These methods relax the constraint for a fixed multiplier, allowing for
-	/// adaptive multilpiers in excahnge for a reduction in the quality
+	/// adaptive multipliers in exchange for a reduction in the quality.
 	///
 	/// Calling code should use a constant key for any given domain while then
 	/// incrementing the index value N times to increase the sampling rate by N
@@ -222,7 +222,7 @@ class SamplerInterface
 	/// each unique index. N must be passed as 'size' and remain constant.
 	///
 	/// @param [in] key Index key of next domain.
-	/// @param [in] size Sample index multiplier. Must greater than zero.
+	/// @param [in] size Sample index multiplier. Must be greater than zero.
 	/// @param [in] index Sample index of next domain. Must be positive.
 	/// @return Child domain based on the current object state, key and size.
 	OQMC_HOST_DEVICE SamplerInterface newDomainSplit(int key, int size,
@@ -239,9 +239,9 @@ class SamplerInterface
 	/// quality when combined with the sub-patterns of other samples. That is
 	/// because the correlation between the sub-patterns globally is lost.
 	///
-	/// If a mutliplier is fixed (constant and known) then the newDomainSplit
+	/// If a multiplier is fixed (constant and known) then the newDomainSplit
 	/// function will produce better quality sample points and should be used
-	/// instead. This is because newDomainSplit will preserved correlation
+	/// instead. This is because newDomainSplit will preserve correlation
 	/// between sub-patterns from other samples.
 	///
 	/// Calling code should use a constant key for any given domain while then
@@ -266,9 +266,9 @@ class SamplerInterface
 	/// quality when looking at the local correlation between different index
 	/// values. But, each index will be correlated globally.
 	///
-	/// If a mutliplier is fixed (constant and known) then the newDomainSplit
+	/// If a multiplier is fixed (constant and known) then the newDomainSplit
 	/// function will produce better quality sample points and should be used
-	/// instead. This is because newDomainSplit will preserved correlation
+	/// instead. This is because newDomainSplit will preserve correlation
 	/// between local points from different index values.
 	///
 	/// Calling code should use a constant key for any given domain while then
