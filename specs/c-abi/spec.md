@@ -307,16 +307,18 @@ does not propagate `cxx_std_17`, so a C only downstream project can consume it
 without a C++ toolchain requirement. Both libraries are built with hidden
 symbol visibility, so the static library's symbols stay private to any binary
 that links it, and the shared library exports only the C ABI functions.
+The library links no default libraries except libc, so the C example fails to
+link on any other dependency.
 
 ## Testing
 
 Two test targets are needed under either option, because they check different
 things:
 
-- **A C compiled target** — a small program built by the C compiler with
-  `-std=c11 -Wall -Wextra -pedantic`, linked against the C ABI library and
-  nothing else. This is the only test that proves the header is valid C and
-  that the symbols link from C.
+- **`cmake/examples/cabi/main.c`** — the downstream C example, a separate C
+  only CMake project built by CI as C11 with strict warnings, and linked
+  against the installed C ABI library and nothing else. This is the only test
+  that proves the header is valid C and that the symbols link from C.
 - **`src/tests/oqmc_c.cpp`** — a GoogleTest target that includes both
   `oqmc/oqmc_c.h` and the C++ headers, verifying the C results bit for bit
   against the equivalent `SamplerInterface` calls: `create`, all four domain

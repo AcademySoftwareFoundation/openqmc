@@ -6,7 +6,7 @@
 set -e
 
 clang-tidy --version
-git ls-files | grep -E '\.(cpp)$' | grep -v -E '^cmake/examples/' | xargs clang-tidy -p build/compile_commands.json --warnings-as-errors='*' --quiet
+git ls-files | grep -E '\.(c|cpp)$' | grep -v -E '^cmake/examples/' | xargs clang-tidy -p build/compile_commands.json --warnings-as-errors='*' --quiet
 
 ruff --version
 git ls-files | grep -E '\.(py)$' | xargs ruff check --quiet

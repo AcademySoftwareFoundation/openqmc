@@ -45,6 +45,27 @@ jobs:
       - run: cmake --build --preset base
       - run: ./scripts/check-cabi-deps.sh build/src/liboqmc.so
 
+  check-symbols:
+    name: Check C ABI symbols
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        sampler: [PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE, LATTICEBN]
+        shared: [OFF]
+
+        # Symbol use varies by sampler and is the same for both library
+        # types, so one shared build per platform covers symbol export
+        include:
+          - {os: ubuntu-24.04, sampler: PMJBN, shared: ON}
+          - {os: macos-15, sampler: PMJBN, shared: ON}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: cmake --preset base -D CMAKE_BUILD_TYPE=Debug -D CMAKE_INSTALL_PREFIX=install -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=${{ matrix.shared }} -D OPENQMC_CABI_SAMPLER=${{ matrix.sampler }}
+      - run: cmake --build --preset base --target install && rm -rf build
+      - run: cmake -S cmake/examples/cabi -B build -D CMAKE_INSTALL_PREFIX=install -D CMAKE_C_EXTENSIONS=OFF -D CMAKE_C_FLAGS="-Wall -Wextra -Wpedantic -Werror"
+      - run: cmake --build build && ./build/example-cabi
+
   install:
     name: Install library
     needs:
@@ -52,6 +73,7 @@ jobs:
       - check-static-analyzer
       - check-documentation
       - check-dynamic-dependencies
+      - check-symbols
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
