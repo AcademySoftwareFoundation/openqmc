@@ -317,7 +317,7 @@ things:
   `-std=c11 -Wall -Wextra -pedantic`, linked against the C ABI library and
   nothing else. This is the only test that proves the header is valid C and
   that the symbols link from C.
-- **`src/tests/oqmc_impl.cpp`** — a GoogleTest target that includes both
+- **`src/tests/oqmc_c.cpp`** — a GoogleTest target that includes both
   `oqmc/oqmc_c.h` and the C++ headers, verifying the C results bit for bit
   against the equivalent `SamplerInterface` calls: `create`, all four domain
   derivations, and all draw functions at every size in 1 to 4, plus value
