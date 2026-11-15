@@ -36,12 +36,22 @@ jobs:
       - uses: cachix/install-nix-action@v25
       - run: nix develop -ic scripts/check-documentation.sh
 
+  check-dynamic-dependencies:
+    name: Check dynamic dependencies
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: cmake --preset base -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=ON
+      - run: cmake --build --preset base
+      - run: ./scripts/check-cabi-deps.sh build/src/liboqmc.so
+
   install:
     name: Install library
     needs:
       - check-formatting
       - check-static-analyzer
       - check-documentation
+      - check-dynamic-dependencies
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
