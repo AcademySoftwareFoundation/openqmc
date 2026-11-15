@@ -169,6 +169,9 @@ keeps the two copies invisible to each other:
 
 Building the implementation with `-fvisibility=hidden` has the same effect.
 Linking the static `liboqmc` into a plugin requires position independent code.
+Both builds of `liboqmc` use hidden visibility, so a plugin linking the static
+library gets private symbols without a version script, and the shared library
+exports only the C ABI functions.
 
 ## Building
 
@@ -183,7 +186,7 @@ Under CMake, a cache variable selects the sampler and maps to the compile
 definition on that translation unit:
 
 ```cmake
-set(OPENQMC_CABI_SAMPLER "pmjbn" CACHE STRING
+set(OPENQMC_CABI_SAMPLER "PMJBN" CACHE STRING
     "Sampler implementation wrapped by the C ABI library.")
 ```
 

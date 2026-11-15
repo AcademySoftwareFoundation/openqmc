@@ -20,7 +20,7 @@ it possible. Full detail lives in [optiona.md](optiona.md) and
 ## Prerequisites
 
 The C++14 to C++17 migration and the removal of the `OPENQMC_ENABLE_BINARY`
-CMake option are complete. This spec introduces a new `OPENQMC_ENABLE_C_ABI`
+CMake option are complete. This spec introduces a new `OPENQMC_BUILD_CABI`
 CMake option for the C ABI library build.
 
 ## Design Constraints
@@ -294,16 +294,19 @@ effort and out of scope here.
 ## Build Integration
 
 ```cmake
-option(OPENQMC_ENABLE_C_ABI "Build the C ABI shared/static library.")
+option(OPENQMC_BUILD_CABI "Build the C ABI library.")
 ```
 
 When enabled, `src/oqmc_impl.cpp` is compiled into a shared or static library,
-selected by the `OPENQMC_SHARED_LIB` and `OPENQMC_FORCE_PIC` options that were
-removed with the C++17 migration and need to be reinstated. The `oqmc_c.h`
+selected by the `OPENQMC_CABI_SHARED_LIB` and `OPENQMC_CABI_FORCE_PIC` options.
+These follow the `OPENQMC_SHARED_LIB` and `OPENQMC_FORCE_PIC` options that were
+removed with the C++17 migration, scoped to the C ABI library. The `oqmc_c.h`
 header installs with the other public headers regardless of the option. The
-compiled target is exported as a separate CMake target that does not propagate
-`cxx_std_17`, so a C only downstream project can consume it without a C++
-toolchain requirement.
+compiled target is exported as a separate CMake target, `OpenQMC::CABI`, that
+does not propagate `cxx_std_17`, so a C only downstream project can consume it
+without a C++ toolchain requirement. Both libraries are built with hidden
+symbol visibility, so the static library's symbols stay private to any binary
+that links it, and the shared library exports only the C ABI functions.
 
 ## Testing
 

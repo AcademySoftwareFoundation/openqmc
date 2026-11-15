@@ -34,11 +34,21 @@ if(NOT OPENQMC_ARCH_TYPE)
 		Scalar SSE AVX ARM GPU)
 endif()
 
+if(NOT OPENQMC_CABI_SAMPLER)
+	set(OPENQMC_CABI_SAMPLER PMJBN CACHE STRING
+		"Options are PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE or LATTICEBN." FORCE)
+	set_property(CACHE OPENQMC_CABI_SAMPLER PROPERTY STRINGS
+		PMJ PMJBN SOBOL SOBOLBN LATTICE LATTICEBN)
+endif()
+
 # Add other binary options
 
 option(OPENQMC_BUILD_TOOLS "Build the command line tools.")
 option(OPENQMC_BUILD_TESTING "Build the unit tests.")
+option(OPENQMC_BUILD_CABI "Build the C ABI library.")
 option(OPENQMC_FORCE_DOWNLOAD "Ignore installed dependencies.")
+option(OPENQMC_CABI_SHARED_LIB "Make a shared library, in place of static.")
+option(OPENQMC_CABI_FORCE_PIC "Force PIC for static libraries.")
 
 # Enable testing
 
