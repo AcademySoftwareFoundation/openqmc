@@ -60,14 +60,16 @@ header.
 
 The marshalling between the opaque value and the C++ type is written once,
 against the `Sampler` alias. Copies go through `memcpy`, which the compiler
-removes for small trivially copyable types, and two static assertions make an
-oversized or non-trivial sampler a compile error.
+removes for small trivially copyable types, and static assertions on size and
+alignment make an oversized sampler a compile error. Samplers are trivially
+copyable by design (see *Passing and packing samplers* in `sampler.h`); that
+is not asserted, as doing so needs `<type_traits>` or a compiler builtin.
 
 ```cpp
 static_assert(sizeof(Sampler) <= sizeof(oqmc_sampler),
               "Sampler must fit within the value storage.");
-static_assert(std::is_trivially_copyable<Sampler>::value,
-              "Sampler must be trivially copyable.");
+static_assert(alignof(Sampler) <= alignof(oqmc_sampler),
+              "Sampler alignment must not exceed the value alignment.");
 
 static Sampler load(const oqmc_sampler* sampler)
 {
@@ -99,42 +101,41 @@ static void draw(const Sampler& sampler, int size, T* out)
 }
 ```
 
-The entry points are then direct, one line each. Definitions carry the same
-`OQMC_API` linkage macro as their declarations (see *Linkage*):
+The entry points are then direct, one line each:
 
 ```cpp
 extern "C"
 {
 
-OQMC_API const char* oqmc_sampler_name(void)
+const char* oqmc_sampler_name(void)
 {
 	return samplerName;
 }
 
-OQMC_API size_t oqmc_sampler_cache_size(void)
+size_t oqmc_sampler_cache_size(void)
 {
 	return Sampler::cacheSize;
 }
 
-OQMC_API void oqmc_sampler_initialise_cache(void* cache)
+void oqmc_sampler_initialise_cache(void* cache)
 {
 	Sampler::initialiseCache(cache);
 }
 
-OQMC_API oqmc_sampler oqmc_sampler_create(int x, int y, int frame, int index,
-                                          const void* cache)
+oqmc_sampler oqmc_sampler_create(int x, int y, int frame, int index,
+                                 const void* cache)
 {
 	return store(Sampler(x, y, frame, index, cache));
 }
 
-OQMC_API oqmc_sampler oqmc_sampler_new_domain(const oqmc_sampler* sampler,
-                                              int key)
+oqmc_sampler oqmc_sampler_new_domain(const oqmc_sampler* sampler,
+                                     int key)
 {
 	return store(load(sampler).newDomain(key));
 }
 
-OQMC_API void oqmc_sampler_draw_sample_f(const oqmc_sampler* sampler, int size,
-                                         float* sample)
+void oqmc_sampler_draw_sample_f(const oqmc_sampler* sampler, int size,
+                                float* sample)
 {
 	draw(load(sampler), size, sample);
 }
@@ -146,29 +147,28 @@ OQMC_API void oqmc_sampler_draw_sample_f(const oqmc_sampler* sampler, int size,
 
 ## Linkage
 
-Every declaration and definition carries `OQMC_API`, defined at the top of
-the header:
+The functions have plain external C linkage, which is what `liboqmc` needs to
+export them. Defining `OQMC_CABI_EXPORT_SYMBOLS` marks them for export, as the
+shared `liboqmc` build does. Otherwise, whether the symbols are visible outside
+a binary is decided when that binary is linked.
 
-```c
-#ifndef OQMC_API
-#  ifdef OQMC_STATIC
-#    define OQMC_API static
-#  else
-#    define OQMC_API extern
-#  endif
-#endif
+This matters for plugins. If two plugins loaded into one host process each
+link the implementation with different samplers, both export
+`oqmc_sampler_create`, and on Linux the dynamic linker can bind every call in
+the process to whichever loaded first, so the second plugin silently runs the
+first plugin's sampler. Plugins typically link their dependencies statically
+and export only their own entry points with a linker version script, which
+keeps the two copies invisible to each other:
+
+```
+{
+	global: plugin_entry;
+	local: *;
+};
 ```
 
-The default, `extern`, is what `liboqmc` needs: symbols are exported so
-consumers can link against it. Defining `OQMC_STATIC` before including the
-header gives every function internal linkage instead. That exists for the
-opt-in case: if two plugins loaded into one host process each compile the
-implementation with different samplers, both export `oqmc_sampler_create`,
-and on Linux the dynamic linker binds every call in the process to whichever
-loaded first, so the second plugin silently runs the first plugin's sampler.
-With `OQMC_STATIC` the two copies are invisible to each other. Because the
-default is wrapped in `#ifndef`, an integrator may also define `OQMC_API` to
-something else, such as a DLL export attribute, without editing the header.
+Building the implementation with `-fvisibility=hidden` has the same effect.
+Linking the static `liboqmc` into a plugin requires position independent code.
 
 ## Building
 
@@ -205,8 +205,8 @@ cc main.c oqmc_impl.o -o main
 
 Nothing from OpenQMC's build system is involved, the sampler is chosen per
 binary, and the translation unit cross compiles with whatever builds the rest
-of the project. A plugin taking this route should also define `OQMC_STATIC`,
-per *Linkage*. The integrator's build needs a C++17 compiler for this one
+of the project. A plugin taking this route should also hide the symbols, per
+*Linkage*. The integrator's build needs a C++17 compiler for this one
 file; consumers with no C++ toolchain link the distributed `liboqmc`.
 
 ## Contributor Workflow
