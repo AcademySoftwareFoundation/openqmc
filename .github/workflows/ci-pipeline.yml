@@ -103,6 +103,22 @@ jobs:
       - run: cmake --build --preset unix --target tests
       - run: ctest --preset unix
 
+  test-cabi:
+    name: Run C ABI tests
+    needs:
+      - example-config
+      - example-submodule
+      - example-include
+    strategy:
+      matrix:
+        sampler: [PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE, LATTICEBN]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: cmake --preset unix -D OPENQMC_CABI_SAMPLER=${{ matrix.sampler }}
+      - run: cmake --build --preset unix --target tests
+      - run: ctest --preset unix -R OqmcCTest
+
   build-tools:
     name: Build tools library
     needs: test-unit
