@@ -69,6 +69,14 @@ target_compile_options(tests PRIVATE ${OPENQMC_CXX_FLAGS})
 target_compile_definitions(tests PRIVATE _USE_MATH_DEFINES)
 target_compile_definitions(tests PRIVATE OQMC_FORCE_SCALAR)
 
+# Add C ABI tests
+
+if(OPENQMC_BUILD_CABI)
+	target_sources(tests PRIVATE oqmc_c.cpp)
+	target_link_libraries(tests PRIVATE ${PROJECT_NAME}_CABI)
+	target_compile_definitions(tests PRIVATE OQMC_CABI_SAMPLER_${OPENQMC_CABI_SAMPLER})
+endif()
+
 # Register tests with CTest
 
 include(GoogleTest)

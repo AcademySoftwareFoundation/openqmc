@@ -53,7 +53,8 @@ Project features are:
 - Clear and extendable code base.
 - Unit and statistical testing.
 - Modern [CMake](https://cmake.org/) based build system.
-- Header only implementation.
+- Header only C++ implementation.
+- Optional C ABI support.
 - No library or STL dependencies.
 - Includes tools, docs and examples.
 
@@ -198,6 +199,10 @@ mark_as_advanced(FORCE OPENQMC_ARCH_TYPE)
 mark_as_advanced(FORCE OPENQMC_BUILD_TOOLS)
 mark_as_advanced(FORCE OPENQMC_BUILD_TESTING)
 mark_as_advanced(FORCE OPENQMC_FORCE_DOWNLOAD)
+mark_as_advanced(FORCE OPENQMC_BUILD_CABI)
+mark_as_advanced(FORCE OPENQMC_CABI_SAMPLER)
+mark_as_advanced(FORCE OPENQMC_CABI_SHARED_LIB)
+mark_as_advanced(FORCE OPENQMC_CABI_FORCE_PIC)
 
 # Add dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenQMC::OpenQMC)
@@ -248,6 +253,63 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_include_directories(${PROJECT_NAME} PRIVATE path/to/library/include)
 ```
 
+### Add C library
+
+The library can also be used from C, or any language with a C foreign function
+interface, through a C ABI. Enable the `OPENQMC_BUILD_CABI` option to build
+the `liboqmc` library, then link the `OpenQMC::CABI` target using either the
+submodule or config-module method above.
+
+```cmake
+# Add dependencies
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenQMC::CABI)
+```
+
+The C API mirrors the C++ API, with the sampler as a small value type:
+
+```c
+#include <oqmc/oqmc_c.h>
+
+void* cache = malloc(oqmc_sampler_cache_size());
+oqmc_sampler_initialise_cache(cache);
+
+const oqmc_sampler pixel = oqmc_sampler_create(x, y, 0, index, cache);
+const oqmc_sampler domain = oqmc_sampler_new_domain(&pixel, 0);
+
+float sample[2];
+oqmc_sampler_draw_sample_f(&domain, 2, sample);
+
+free(cache);
+```
+
+Sampler type is chosen when it is built using the `OPENQMC_CABI_SAMPLER` option,
+and `oqmc_sampler_name` returns its name.
+
+Alternatively you can compile the implementation in your own project, without
+the CMake build, by defining `OQMC_IMPLEMENTATION` before including the header
+in a single C++17 source file. The sampler is then chosen by defining one of:
+
+- `OQMC_CABI_SAMPLER_PMJ`
+- `OQMC_CABI_SAMPLER_PMJBN`
+- `OQMC_CABI_SAMPLER_SOBOL`
+- `OQMC_CABI_SAMPLER_SOBOLBN`
+- `OQMC_CABI_SAMPLER_LATTICE`
+- `OQMC_CABI_SAMPLER_LATTICEBN`
+
+With no definition it defaults to `OQMC_CABI_SAMPLER_PMJBN`.
+
+```cpp
+#define OQMC_IMPLEMENTATION
+#include <oqmc/oqmc_c.h>
+```
+
+Plugins that each include the library, loaded into a single host application,
+should keep its symbols private, so that copies wrapping different samplers
+can't bind to one another. The static `liboqmc` library does this for you.
+
+When compiling with hidden visibility, define `OQMC_CABI_EXPORT_SYMBOLS` to
+export only the C functions from a shared library.
+
 ### Library build options
 
 When adding the library using CMake, there are a set of configuration options
@@ -256,6 +318,17 @@ which apply to downstream projects. The options are:
 - `OPENQMC_ARCH_TYPE`: Sets the architecture to optimise for on the CPU, or to
   target NVIDIA GPUs. Option values can be `Scalar`, `SSE`, `AVX`, `ARM` or
   `GPU`. Default value is `Scalar`.
+- `OPENQMC_BUILD_CABI`: Builds the C ABI library for use from C and other
+  languages. Option values can be `ON` or `OFF`. Default value is `OFF`.
+- `OPENQMC_CABI_SAMPLER`: Sets the sampler wrapped by the C ABI library. Option
+  values can be `PMJ`, `PMJBN`, `SOBOL`, `SOBOLBN`, `LATTICE` or `LATTICEBN`.
+  Default value is `PMJBN`.
+- `OPENQMC_CABI_SHARED_LIB`: You can request a shared C library instead of the
+  default static. This also automatically enables PIC. Option values can be `ON`
+  or `OFF`. Default value is `OFF`.
+- `OPENQMC_CABI_FORCE_PIC`: When compiling a static C library and the downstream
+  project is a shared library, you can force enable PIC. Option values can be
+  `ON` or `OFF`. Default value is `OFF`.
 
 ## Versioning
 

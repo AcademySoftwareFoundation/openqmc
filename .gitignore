@@ -63,8 +63,11 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-# Ignore all files in any directory named build
+# Ignore all paths in any directory named build
 build/
+
+# Ignore all paths in any directory named install
+install/
 
 # Exclude macOS files
 .DS_Store
