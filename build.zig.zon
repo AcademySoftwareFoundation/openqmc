@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright Contributors to the OpenQMC Project.
+
+.{
+    .name = .openqmc,
+    .version = "0.1.0",
+    .fingerprint = 0x3040b1d1e014e24f,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .translate_c = .{
+            .url = "git+https://codeberg.org/ziglang/translate-c?ref=2.0.2#c11030012dc325d446474d17b78c242fd1d622ec",
+            .hash = "translate_c-2.0.2-Q_BUWvBNBwBgPKQJPblip6M7AHNK_IPNPmyv4rSIQMQc",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "include/oqmc",
+        "src/oqmc_impl.cpp",
+        "LICENSE",
+        "LICENSE-NVIDIA",
+    },
+}
