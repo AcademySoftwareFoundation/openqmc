@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the OpenQMC Project.
 
-import sys
-import os
 import ctypes
+import os
+import sys
+
 import numpy as np
 
 module = np.ctypeslib.load_library("libtools", os.environ["TOOLSPATH"])

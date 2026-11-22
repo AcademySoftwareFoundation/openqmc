@@ -2,6 +2,7 @@
 # Copyright Contributors to the OpenQMC Project.
 
 import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import wrapper as oqmc
@@ -34,7 +35,7 @@ def save_light_dark_figure(id, function, *args, **kwargs):
         plt.style.use(style)
 
     def build_path(name, type):
-        return "../../images/plots/{}-{}.png".format(name, type)
+        return f"../../images/plots/{name}-{type}.png"
 
     def save_figure(path):
         plt.savefig(path, dpi=200, bbox_inches="tight", transparent=True)
