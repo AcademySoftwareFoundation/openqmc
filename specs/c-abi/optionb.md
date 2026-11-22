@@ -61,8 +61,9 @@ permanent commitment of this design.
 Templates generate the per-sampler code. A `Vtable` holds one slot per API
 function, a `Thunks` template translates between the opaque value and a
 concrete C++ sampler, and a `constexpr` registry maps enumerators to tables.
-Two static assertions per sampler make an oversized or non-trivial sampler a
-compile error.
+Two static assertions per sampler make an oversized or over aligned sampler a
+compile error. As in Option A, trivial copyability is by design and not
+asserted.
 
 ```cpp
 struct Vtable
@@ -80,8 +81,8 @@ template <typename Sampler> struct Thunks
 {
 	static_assert(sizeof(Sampler) <= sizeof(oqmc_sampler),
 	              "Sampler must fit within the value storage.");
-	static_assert(std::is_trivially_copyable<Sampler>::value,
-	              "Sampler must be trivially copyable.");
+	static_assert(alignof(Sampler) <= alignof(oqmc_sampler),
+	              "Sampler alignment must not exceed the value alignment.");
 
 	static Sampler load(const oqmc_sampler* sampler)
 	{

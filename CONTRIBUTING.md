@@ -114,6 +114,26 @@ Then follow the steps in [Testing](README.md#testing) to build the unit test bin
 ./scripts/check-coverage.sh
 ```
 
+## C ABI
+
+The shared C ABI library should only depend on the C standard library (libc). The CI pipeline checks this, and you can run the same check locally:
+
+```bash
+./scripts/check-cabi-deps.sh build/src/liboqmc.so
+```
+
+On macOS the library is `build/src/liboqmc.dylib` instead. You can also validate that there are no missing symbols by running the example C program:
+
+```bash
+# First build and install the library to a local install path
+cmake --preset base -D CMAKE_BUILD_TYPE=Debug -D CMAKE_INSTALL_PREFIX=install -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=ON
+cmake --build --preset base --target install && rm -rf build
+
+# Then build the example C program and run to test
+cmake -S cmake/examples/cabi -B build -D CMAKE_INSTALL_PREFIX=install -D CMAKE_C_EXTENSIONS=OFF -D CMAKE_C_FLAGS="-Wall -Wextra -Wpedantic -Werror"
+cmake --build build && ./build/example-cabi
+```
+
 ## Documentation style
 
 More general documentation outside of code itself follows the [Google developer documentation style guide](https://developers.google.com/style). Contributors should see this as a guide and not a list of rules. Strict compliance to the guide isn't required and isn't validated during the CI process. It's instead up to the PR process to make sure documentation is up-to-date and of high quality.

@@ -36,12 +36,44 @@ jobs:
       - uses: cachix/install-nix-action@v25
       - run: nix develop -ic scripts/check-documentation.sh
 
+  check-dynamic-dependencies:
+    name: Check dynamic dependencies
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: cmake --preset base -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=ON
+      - run: cmake --build --preset base
+      - run: ./scripts/check-cabi-deps.sh build/src/liboqmc.so
+
+  check-symbols:
+    name: Check C ABI symbols
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        sampler: [PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE, LATTICEBN]
+        shared: [OFF]
+
+        # Symbol use varies by sampler and is the same for both library
+        # types, so one shared build per platform covers symbol export
+        include:
+          - {os: ubuntu-24.04, sampler: PMJBN, shared: ON}
+          - {os: macos-15, sampler: PMJBN, shared: ON}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: cmake --preset base -D CMAKE_BUILD_TYPE=Debug -D CMAKE_INSTALL_PREFIX=install -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=${{ matrix.shared }} -D OPENQMC_CABI_SAMPLER=${{ matrix.sampler }}
+      - run: cmake --build --preset base --target install && rm -rf build
+      - run: cmake -S cmake/examples/cabi -B build -D CMAKE_INSTALL_PREFIX=install -D CMAKE_C_EXTENSIONS=OFF -D CMAKE_C_FLAGS="-Wall -Wextra -Wpedantic -Werror"
+      - run: cmake --build build && ./build/example-cabi
+
   install:
     name: Install library
     needs:
       - check-formatting
       - check-static-analyzer
       - check-documentation
+      - check-dynamic-dependencies
+      - check-symbols
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -103,23 +135,39 @@ jobs:
       - run: cmake --build --preset unix --target tests
       - run: ctest --preset unix
 
+  test-cabi:
+    name: Run C ABI tests
+    needs:
+      - example-config
+      - example-submodule
+      - example-include
+    strategy:
+      matrix:
+        sampler: [PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE, LATTICEBN]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: cmake --preset unix -D OPENQMC_CABI_SAMPLER=${{ matrix.sampler }}
+      - run: cmake --build --preset unix --target tests
+      - run: ctest --preset unix -R OqmcCTest
+
   build-tools:
     name: Build tools library
     needs: test-unit
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-14, windows-2022]
+        os: [ubuntu-24.04, macos-15, windows-2022]
         arch: [Scalar, SSE, AVX, ARM]
         build: [Release, Debug]
         exclude:
           - {os: ubuntu-24.04, arch: ARM}
-          - {os: macos-14, arch: Scalar}
-          - {os: macos-14, arch: SSE}
-          - {os: macos-14, arch: AVX}
+          - {os: macos-15, arch: Scalar}
+          - {os: macos-15, arch: SSE}
+          - {os: macos-15, arch: AVX}
           - {os: windows-2022, arch: ARM}
         include:
           - {os: ubuntu-24.04, preset: unix, save: true}
-          - {os: macos-14, preset: unix, save: true}
+          - {os: macos-15, preset: unix, save: true}
           - {os: windows-2022, preset: windows}
     runs-on: ${{ matrix.os }}
     steps:
@@ -199,15 +247,15 @@ jobs:
     needs: pre-test-generate
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-14]
+        os: [ubuntu-24.04, macos-15]
         arch: [Scalar, SSE, AVX, ARM]
         build: [Release, Debug]
         sampler: [pmj, sobol, lattice]
         exclude:
           - {os: ubuntu-24.04, arch: ARM}
-          - {os: macos-14, arch: Scalar}
-          - {os: macos-14, arch: SSE}
-          - {os: macos-14, arch: AVX}
+          - {os: macos-15, arch: Scalar}
+          - {os: macos-15, arch: SSE}
+          - {os: macos-15, arch: AVX}
     runs-on: ${{ matrix.os }}
     steps:
       # Download tools build

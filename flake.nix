@@ -25,7 +25,7 @@
           stdenv = pkgs.clangStdenv;
         } {
           name = "devshell";
-          hardeningDisable = [ "fortify" ];
+          hardeningDisable = [ "all" ];
           packages = [
             pkgs.libllvm # For llvm-cov, etc
             pkgs.clang-tools # For clang-tidy, etc

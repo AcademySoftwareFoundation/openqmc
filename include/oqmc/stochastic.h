@@ -16,6 +16,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 
 namespace oqmc
 {
@@ -79,7 +80,11 @@ inline void stochasticPmjInit(int nsamples, std::uint32_t table[][4])
 	};
 	// clang-format on
 
-	const auto buffer = new std::uint32_t[nsamples][2];
+	// Allocate with malloc rather than new, so that consumers of the C ABI
+	// library do not acquire a dependency on the C++ runtime.
+	const auto buffer = static_cast<std::uint32_t (*)[2]>(
+	    std::malloc(sizeof(std::uint32_t[2]) * nsamples));
+	assert(buffer != nullptr);
 
 	auto state = pcg::init();
 
@@ -113,7 +118,7 @@ inline void stochasticPmjInit(int nsamples, std::uint32_t table[][4])
 		shuffledScrambledLookup<2, 2>(i, pcg::hash(1), buffer, &table[i][2]);
 	}
 
-	delete[] buffer;
+	std::free(buffer);
 }
 
 } // namespace oqmc
