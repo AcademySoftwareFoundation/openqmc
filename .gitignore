@@ -113,6 +113,11 @@ coverage-report/
 # Documentation site
 html/
 
+# Zig build output and fetched packages
+.zig-cache/
+zig-out/
+zig-pkg/
+
 # Doxygen Awesome theme
 doxygen-awesome.css
 doxygen-awesome-sidebar-only.css

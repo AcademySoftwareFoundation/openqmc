@@ -45,4 +45,14 @@
 
 # remove build and reset
 @clean:
-  rm -rf build result api-reference site docs coverage-report html doxygen-awesome* keys.txt ranks.txt
+  rm -rf build install
+  rm -rf result
+  rm -rf api-reference
+  rm -rf site
+  rm -rf docs
+  rm -rf coverage-report
+  rm -rf html
+  rm -rf doxygen-awesome*
+  rm -rf keys.txt ranks.txt
+  rm -rf .zig-cache zig-out zig-pkg
+  rm -rf examples/zig/.zig-cache examples/zig/zig-out examples/zig/zig-pkg

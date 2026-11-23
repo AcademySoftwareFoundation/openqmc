@@ -48,6 +48,8 @@
             pkgs.python313Packages.numpy
             pkgs.python313Packages.pillow
             pkgs.python313Packages.notebook
+            pkgs.zig
+            pkgs.zls
             hypothesis.packages.${system}.default
           ];
           inputsFrom = [

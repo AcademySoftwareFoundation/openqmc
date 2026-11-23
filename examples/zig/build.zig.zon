@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright Contributors to the OpenQMC Project.
+
+.{
+    .name = .example_zig,
+    .version = "0.0.0",
+    .fingerprint = 0xc0015f2736536464,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .openqmc = .{
+            .path = "../..",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

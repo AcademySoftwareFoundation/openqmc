@@ -41,9 +41,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v25
       - run: cmake --preset base -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=ON
       - run: cmake --build --preset base
-      - run: ./scripts/check-cabi-deps.sh build/src/liboqmc.so
+      - run: nix develop -ic ./scripts/check-cabi-deps.sh build/src/liboqmc.so
 
   check-symbols:
     name: Check C ABI symbols
@@ -119,12 +120,23 @@ jobs:
       - run: cmake --build build
       - run: ./build/example-include
 
+  example-zig:
+    name: Check Zig
+    needs: install
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v25
+      - run: nix develop -ik HOME -c zig build run
+        working-directory: examples/zig
+
   test-unit:
     name: Run unit tests
     needs:
       - example-config
       - example-submodule
       - example-include
+      - example-zig
     strategy:
       matrix:
         build: [Release, Debug]
@@ -141,6 +153,7 @@ jobs:
       - example-config
       - example-submodule
       - example-include
+      - example-zig
     strategy:
       matrix:
         sampler: [PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE, LATTICEBN]
