@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v7
       - run: cmake --preset base -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=ON
       - run: cmake --build --preset base
-      - run: ./scripts/check-cabi-deps.sh build/src/liboqmc.so
+      - run: nix develop -ic ./scripts/check-cabi-deps.sh build/src/liboqmc.so
 
   check-symbols:
     name: Check C ABI symbols
