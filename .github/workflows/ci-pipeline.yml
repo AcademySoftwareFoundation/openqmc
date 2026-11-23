@@ -120,12 +120,23 @@ jobs:
       - run: cmake --build build
       - run: ./build/example-include
 
+  example-zig:
+    name: Check Zig
+    needs: install
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v25
+      - run: nix develop -ik HOME -c zig build run
+        working-directory: examples/zig
+
   test-unit:
     name: Run unit tests
     needs:
       - example-config
       - example-submodule
       - example-include
+      - example-zig
     strategy:
       matrix:
         build: [Release, Debug]
@@ -142,6 +153,7 @@ jobs:
       - example-config
       - example-submodule
       - example-include
+      - example-zig
     strategy:
       matrix:
         sampler: [PMJ, PMJBN, SOBOL, SOBOLBN, LATTICE, LATTICEBN]
