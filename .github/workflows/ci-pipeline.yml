@@ -41,6 +41,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v25
       - run: cmake --preset base -D OPENQMC_BUILD_CABI=ON -D OPENQMC_CABI_SHARED_LIB=ON
       - run: cmake --build --preset base
       - run: nix develop -ic ./scripts/check-cabi-deps.sh build/src/liboqmc.so
